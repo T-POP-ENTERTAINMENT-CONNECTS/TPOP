@@ -1,0 +1,25 @@
+{
+  "product": "KOL_IDS",
+  "release": "1.2.0.5",
+  "releaseType": "intelligence-integrated-production-candidate",
+  "cohesion": {
+    "canonicalPerformanceField": "Normalized Performance Score",
+    "legacyPerformanceField": "Normalized Score",
+    "legacyFieldPolicy": "read-compatibility-only; canonical writes use Normalized Performance Score"
+  },
+  "invariants": [
+    "Creator ID is immutable identity; name is display-only",
+    "Canonical state is authoritative for active workflow state",
+    "UserProperties contains pointers/session metadata only",
+    "Learning observed score must map from canonical performance score",
+    "UI actions must resolve through the shared runtime/RPC path",
+    "Mutating operations require idempotency and locking where applicable"
+  ],
+  "certification": {
+    "staticPatchApplied": true,
+    "liveExecCertification": "PENDING",
+    "oauthCertification": "PENDING",
+    "multiAccountCertification": "PENDING",
+    "concurrencyCertification": "PENDING"
+  }
+}

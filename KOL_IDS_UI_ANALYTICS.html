@@ -1,0 +1,49 @@
+<script id="KOL_IDS_VALUE_PROOF">
+(function(){
+  'use strict';
+  function byId(id){return document.getElementById(id)}
+  function money(n){return 'THB '+Math.round(n).toLocaleString('en-US')}
+  function installValueProof(){
+    var gate=byId('accessGate'); if(!gate||byId('kidsValueProof'))return;
+    var anchor=byId('kidsSalesLayer')||byId('accessMessage'); if(!anchor)return;
+    var box=document.createElement('div');box.id='kidsValueProof';box.className='kids-value';
+    box.innerHTML='<div class="kids-value-head"><div><h3>Decision Exposure Illustration</h3><p>Make the budget exposure around creator-decision uncertainty visible before a purchase decision.</p></div><span class="kids-demo-tag">Illustrative only</span></div>'+
+      '<div class="kids-value-grid"><div class="kids-value-card"><h4>Use your own campaign assumptions</h4><div class="kids-value-fields">'+
+      '<div class="kids-value-field"><label>Campaign budget (THB)</label><input id="kidsVBudget" type="number" min="0" step="1000" value="300000"></div>'+
+      '<div class="kids-value-field"><label>Illustrative uncertainty %</label><input id="kidsVRisk" type="number" min="0" max="100" step="1" value="10"></div></div>'+
+      '</div>'+
+      '<div class="kids-value-card"><h4>What the number means</h4><div class="kids-value-output"><div class="kids-value-metric"><span>Illustrative budget exposure</span><b id="kidsVExposure">THB 30,000</b></div><div class="kids-value-metric"><span>Assumption used</span><b id="kidsVAssumption">10%</b></div></div></div></div>'+
+      '<div class="kids-value-note">This is <b>not business value, ROI, savings, revenue uplift, or a forecast</b>. It is a transparent scenario calculation: campaign budget × the user-selected uncertainty assumption. The result must be validated against the buyer’s real campaign evidence.</div>'+
+      '<div class="kids-plan-grid" id="kidsPlanGrid"></div>'+
+      '<div class="kids-value-cta"><b>The buying question:</b> Can better creator decisions improve the quality, consistency, and evidence of campaign decisions? The system does not claim a monetary return without real campaign evidence.</div>';
+    anchor.parentNode.insertBefore(box,anchor.nextSibling);
+    ['kidsVBudget','kidsVRisk'].forEach(function(id){var el=byId(id);if(el)el.addEventListener('input',calc)});
+    loadPlans();calc();
+  }
+  async function loadPlans(){
+    try{
+      var packs=await server('KOL_IDS_COMMERCIAL_PACKAGES');
+      var linkData=await server('KOL_IDS_COMMERCIAL_PLAN_FORM_URLS');
+      var grid=byId('kidsPlanGrid');if(!grid)return;
+      var urls=(linkData&&linkData.urls)||{};
+      var generic=String((linkData&&linkData.genericUrl)||'').trim();
+      grid.innerHTML=(packs||[]).map(function(p){
+        var u=String(urls[p.key]||generic||'').trim();
+        var body='<strong>'+String(p.name||'')+'</strong><span class="price">THB '+Number(p.price||0).toLocaleString('en-US')+'</span><small>'+Number(p.maxAccounts||1)+' Google Account'+(Number(p.maxAccounts||1)===1?'':'s')+'</small><span class="kids-plan-cta">Open order form →</span>';
+        return u
+          ? '<a class="kids-plan kids-plan-link" href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" data-plan-key="'+esc(p.key||'')+'" aria-label="Open order form for '+esc(p.name||'')+'">'+body+'</a>'
+          : '<div class="kids-plan kids-plan-disabled" aria-label="Order form unavailable for '+esc(p.name||'')+'">'+body+'</div>';
+      }).join('');
+    }catch(e){}
+  }
+  function calc(){
+    var b=Math.max(0,parseFloat((byId('kidsVBudget')||{}).value)||0);
+    var r=Math.max(0,Math.min(100,parseFloat((byId('kidsVRisk')||{}).value)||0));
+    var exposure=b*r/100;
+    if(byId('kidsVExposure'))byId('kidsVExposure').textContent=money(exposure);
+    if(byId('kidsVAssumption'))byId('kidsVAssumption').textContent=r.toFixed(0)+'%';
+  }
+  function boot(){installValueProof();window.KOL_IDS_SHOW_VALUE_PROOF=installValueProof}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>

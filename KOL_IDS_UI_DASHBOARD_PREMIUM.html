@@ -1,0 +1,212 @@
+
+<style id="KOL_IDS_DASHBOARD_PREMIUM_ENTERPRISE_V4" data-kol-ids-premium-v4="1">
+/* KOL IDS — Enterprise Executive Dashboard
+   Presentation-only layer. Decision/scoring/data contracts are untouched. */
+:root{
+  --dash-ink:#0B0C0E;
+  --dash-text:#15171A;
+  --dash-muted:#74787E;
+  --dash-line:#E6E7E9;
+  --dash-soft:#F5F6F7;
+  --dash-white:#FFFFFF;
+  --dash-accent:#B99A5A;
+  --dash-accent-soft:#F7F3EA;
+}
+#executiveCommandCenter{
+  margin-top:14px!important;
+  color:var(--dash-text)!important;
+}
+.kcc-shell{
+  background:var(--dash-white)!important;
+  border:1px solid #DCDDDF!important;
+  border-radius:24px!important;
+  box-shadow:0 24px 70px rgba(16,18,20,.08)!important;
+  overflow:hidden!important;
+}
+.kcc-shell:before{
+  height:2px!important;
+  background:var(--dash-ink)!important;
+  opacity:1!important;
+}
+.kcc-topline{
+  background:var(--dash-ink)!important;
+  padding:32px 34px 26px!important;
+}
+.kcc-eyebrow{
+  color:#BDBFC3!important;
+  letter-spacing:.22em!important;
+  font-size:9px!important;
+}
+.kcc-topline h2{
+  color:#fff!important;
+  font-size:34px!important;
+  font-weight:750!important;
+  letter-spacing:-.055em!important;
+  line-height:1.05!important;
+  margin-top:8px!important;
+}
+.kcc-topline p{
+  color:#AEB2B7!important;
+  font-size:12px!important;
+  max-width:760px!important;
+}
+.kcc-actions{gap:8px!important}
+.kcc-live{
+  border:1px solid #3A3D41!important;
+  background:#17191C!important;
+  color:#D7D9DC!important;
+  font-size:10px!important;
+}
+.kcc-live i{background:#B99A5A!important;box-shadow:0 0 0 3px rgba(185,154,90,.14)!important}
+.kcc-actions .btn.ghost{
+  color:#fff!important;
+  border-color:#3A3D41!important;
+  background:#17191C!important;
+}
+.kcc-kpis{
+  padding:16px 20px 8px!important;
+  gap:10px!important;
+  background:#fff!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+}
+.kcc-kpi{
+  min-height:126px!important;
+  border:1px solid var(--dash-line)!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+  padding:17px 16px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:space-between!important;
+}
+.kcc-kpi span{
+  color:#777B80!important;
+  font-size:9px!important;
+  font-weight:750!important;
+  letter-spacing:.11em!important;
+  text-transform:uppercase!important;
+}
+.kcc-kpi b{
+  color:var(--dash-ink)!important;
+  font-size:29px!important;
+  font-weight:760!important;
+  letter-spacing:-.045em!important;
+  line-height:1!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.kcc-kpi small{
+  color:#92969B!important;
+  font-size:9px!important;
+}
+.kcc-kpi.hero{
+  background:var(--dash-ink)!important;
+  border-color:var(--dash-ink)!important;
+}
+.kcc-kpi.hero span,.kcc-kpi.hero small{color:#AEB2B7!important}
+.kcc-kpi.hero b{color:#fff!important;font-size:34px!important}
+.kcc-grid2{
+  padding:8px 20px 0!important;
+  gap:10px!important;
+}
+.kcc-panel{
+  border:1px solid var(--dash-line)!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+.kcc-panel-head{
+  padding:17px 18px 13px!important;
+}
+.kcc-panel-head span{
+  color:#8A8E93!important;
+  font-size:9px!important;
+  font-weight:750!important;
+  letter-spacing:.13em!important;
+}
+.kcc-panel-head h3{
+  color:var(--dash-ink)!important;
+  font-size:17px!important;
+  letter-spacing:-.025em!important;
+  margin-top:4px!important;
+}
+.kcc-panel-head>b{
+  color:#7D8186!important;
+  font-size:10px!important;
+}
+.kcc-funnel-grid div,.kcc-budget div{
+  background:#FAFAFA!important;
+  border:1px solid #ECEDEE!important;
+  border-radius:13px!important;
+}
+.kcc-funnel-grid div:first-child{
+  border-top:2px solid var(--dash-ink)!important;
+}
+.kcc-funnel-grid b,.kcc-budget b{
+  color:var(--dash-ink)!important;
+  font-size:24px!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.kcc-funnel-grid span,.kcc-budget span{
+  color:#888C91!important;
+  font-size:9px!important;
+  text-transform:uppercase!important;
+  letter-spacing:.08em!important;
+}
+.kcc-mini-note{
+  color:#92969B!important;
+  background:#fff!important;
+  border-top:1px solid #F0F1F2!important;
+  font-size:9px!important;
+}
+.kcc-alloc{
+  background:#fff!important;
+  border-color:#ECEDEE!important;
+}
+.kcc-alloc b{color:var(--dash-ink)!important}
+.kcc-alloc small,.kcc-alloc-meta span{color:#8A8E93!important}
+.kcc-alloc-meta>b{font-size:13px!important;color:var(--dash-ink)!important}
+.kcc-legend{font-size:9px!important;color:#7D8186!important}
+.kcc-legend i.rev{background:var(--dash-ink)!important}
+.kcc-legend i.spend{background:#C7C9CC!important}
+.kcc-trend-row>span,.kcc-trend-row>b{color:#666A70!important;font-size:9px!important}
+.kcc-trend-bars{background:#F1F2F3!important}
+.kcc-trend-bars i{background:var(--dash-ink)!important}
+.kcc-trend-bars em{background:#C7C9CC!important}
+.kcc-risk-name span{color:#8A8E93!important}
+.kcc-risk-track{background:#EFF0F1!important}
+.kcc-risk-track i{background:var(--dash-ink)!important}
+.kcc-risk-row>strong{color:var(--dash-ink)!important;font-variant-numeric:tabular-nums!important}
+.kcc-bottom{
+  margin:10px 20px 20px!important;
+  background:#F7F7F6!important;
+  border:1px solid #E7E8E9!important;
+  border-radius:16px!important;
+}
+.kcc-bottom b{color:var(--dash-ink)!important;font-size:10px!important}
+.kcc-bottom span{color:#7C8085!important;font-size:9px!important}
+.kcc-loading{
+  border:1px solid #E2E3E5!important;
+  background:#FAFAFA!important;
+  color:var(--dash-ink)!important;
+  border-radius:18px!important;
+}
+.kcc-loading span{color:#85898E!important}
+.grade-good{color:var(--dash-ink)!important}
+.grade-warn{color:#8A6D31!important}
+.grade-bad{color:#777!important}
+@media(max-width:1200px){
+  .kcc-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+  .kcc-topline{padding:22px 18px 20px!important}
+  .kcc-topline h2{font-size:28px!important}
+  .kcc-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:12px 12px 4px!important}
+  .kcc-grid2{padding:6px 12px 0!important}
+  .kcc-bottom{margin:8px 12px 12px!important}
+  .kcc-kpi{min-height:112px!important}
+}
+@media(max-width:430px){
+  .kcc-kpis{grid-template-columns:1fr!important}
+}
+</style>

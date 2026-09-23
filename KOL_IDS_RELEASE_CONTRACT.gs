@@ -1,0 +1,12 @@
+/**
+ * KOL_IDS 1.1.0 — RELEASE CONTRACT
+ */
+var KOL_IDS_RELEASE = Object.freeze({
+  VERSION: '1.1.0',
+  STATUS: 'PRODUCTION_CANDIDATE',
+  INTEGRATION_LAYER: true,
+  DATA_MOAT: true,
+  IDEMPOTENCY: true,
+  MUTATION_LOCK: true,
+  STATE_MACHINE: true
+});

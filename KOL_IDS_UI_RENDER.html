@@ -1,0 +1,189 @@
+<script id="KOL_IDS_UX_HARDENING_4X_RUNTIME">
+(function(){
+  'use strict';
+  function byId(id){return document.getElementById(id)}
+  function busyButtonGuard(){
+    document.addEventListener('click',function(ev){
+      var b=ev.target&&ev.target.closest?ev.target.closest('button'):null;
+      if(!b)return;
+      /* The canonical workflow router owns all transactional controls.
+         Do not let this legacy 30-second guard swallow their next click. */
+      if(b.hasAttribute('data-kol-action'))return;
+      if(b.dataset.uxBusy==='1'){
+        ev.preventDefault();ev.stopImmediatePropagation();return;
+      }
+      if(b.hasAttribute('data-no-ux-busy'))return;
+      var text=(b.textContent||'').trim().toLowerCase();
+      if(/run decision|analyze kol|save |generate|regenerate|export|continue|refresh|check access|try again|subscribe/.test(text)){
+        b.dataset.uxBusy='1';
+        setTimeout(function(){if(document.body.contains(b))delete b.dataset.uxBusy},30000);
+      }
+    },true);
+  }
+  // Compatibility no-ops: the product now reports confirmed save states only.
+  window.KOL_IDS_UX_MARK_SAVED=function(){};
+  window.KOL_IDS_UX_MARK_DIRTY=function(){};
+
+  document.addEventListener('DOMContentLoaded',function(){
+    busyButtonGuard();
+    ['analysisStatus','reviewStatus','genCodeStatus','perfStatus','weightStatus','s1','bootStatus','accessStatus'].forEach(function(id){
+      var e=byId(id);if(e)e.setAttribute('aria-live','polite');
+    });
+  });
+
+  async function saveStageBeforeBack_(current){
+    try{
+      if(current===2 && typeof audiencePayload==='function'){
+        setStatus('s2','Saving Audience before going back…','busy');
+        var a=await KOL_IDS_UI_RPC_WITH_TIMEOUT_('KOL_IDS_SELF_SAVE_AUDIENCE_CONTEXT',audiencePayload(),90000);
+        if(!a||a.success===false)throw new Error(a.message||a.error||'Audience save was not confirmed.');
+        if(typeof KOL_IDS_CANONICAL_apply_==='function')KOL_IDS_CANONICAL_apply_(a);
+        setStatus('s2','Audience saved.','good'); return true;
+      }
+      if(current===3 && typeof buildPayload==='function'){
+        setStatus('analysisStatus','Saving KOL workspace before going back…','busy');
+        var k=await KOL_IDS_UI_RPC_WITH_TIMEOUT_('KOL_IDS_SELF_SAVE',buildPayload(),90000);
+        if(!k||k.success===false)throw new Error(k.message||k.error||'KOL workspace save was not confirmed.');
+        if(typeof KOL_IDS_CANONICAL_apply_==='function')KOL_IDS_CANONICAL_apply_(k);
+        setStatus('analysisStatus','KOL workspace saved.','good'); return true;
+      }
+      if(current===4 && typeof state!=='undefined' && state.decision){
+        setStatus('weightStatus','Saving decision framework before going back…','busy');
+        var d=await KOL_IDS_UI_RPC_WITH_TIMEOUT_('KOL_IDS_SELF_SAVE_DECISION_CONTEXT',{decisionParameters:state.decision},90000);
+        if(!d||d.success===false)throw new Error(d.message||d.error||'Decision framework save was not confirmed.');
+        if(typeof KOL_IDS_CANONICAL_apply_==='function')KOL_IDS_CANONICAL_apply_(d);
+        setStatus('weightStatus','Decision framework saved.','good'); return true;
+      }
+      if(current===5 && typeof state!=='undefined'){
+        var selected=(state.kols||[]).filter(function(k){return k.selected&&k.analyzed});
+        setStatus('reviewStatus','Saving creator shortlist before going back…','busy');
+        var ids=selected.map(function(k){return String(k.creatorId||k.id||'')}).filter(Boolean);
+        var names=selected.map(function(k){return k.name});
+        var x=await KOL_IDS_UI_RPC_WITH_TIMEOUT_('KOL_IDS_SELF_SAVE_SELECTION',{selectedCreatorIds:ids,selectedCreators:names,decisionParameters:state.decision||{}},90000);
+        if(!x||x.success===false)throw new Error(x.message||x.error||'Creator shortlist save was not confirmed.');
+        if(typeof KOL_IDS_CANONICAL_apply_==='function')KOL_IDS_CANONICAL_apply_(x);
+        setStatus('reviewStatus','Creator shortlist saved.','good'); return true;
+      }
+    }catch(e){
+      var msg=String(e&&e.message||e);
+      var sid=current===2?'s2':current===3?'analysisStatus':current===4?'weightStatus':'reviewStatus';
+      if(typeof setStatus==='function')setStatus(sid,msg,'bad');
+    }
+    return false;
+  }
+
+  window.KOL_IDS_UX_SAFE_BACK_=function(target){
+    var n=Number(target);
+    if(!n)return false;
+    if(typeof KOL_IDS_UI_SET_STEP_==='function')return KOL_IDS_UI_SET_STEP_(n);
+    if(typeof window.go==='function')return window.go(n);
+    return false;
+  };
+  window.saveStageBeforeBack_=saveStageBeforeBack_;
+})();
+</script>
+
+<script id="KOL_IDS_EXECUTIVE_VISUAL_REPORT_1_1_0">
+/* KOL IDS 1.1.0 — Executive Visual Report hardening.
+   Purpose: answer the executive question in ~10 seconds without inventing data.
+   Source of truth remains the canonical report/performance payload. */
+(function(){
+  'use strict';
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function norm(v){return String(v==null?'':v).trim().toLowerCase()}
+  function num(v){if(v===null||v===undefined||v==='')return null;var n=Number(String(v).replace(/[%,$,\s]/g,''));return isFinite(n)?n:null}
+  function idx(headers,names){var h=(headers||[]).map(norm);for(var i=0;i<names.length;i++){var x=h.indexOf(norm(names[i]));if(x>=0)return x}return -1}
+  function val(row,i){return i>=0&&row?row[i]:''}
+  function first(row,headers,names){var i=idx(headers,names);return i<0?null:val(row,i)}
+  function pct(v){var n=num(v);return n===null?'—':(Math.abs(n)<=1?n*100:n).toFixed(0)+'%'}
+  function score(v){var n=num(v);return n===null?'—':n.toFixed(0)}
+  function text(v){return v==null||String(v).trim()===''?'—':String(v)}
+  function decisionLabel(v){
+    var s=text(v).toUpperCase();
+    if(/avoid|reject|decline|not recommended|do not/.test(s))return 'AVOID';
+    if(/select|proceed|approved|recommended|strong|scale/.test(s))return 'RECOMMEND';
+    if(/pilot|test|review|conditional|watch|control/.test(s))return 'REVIEW';
+    return s==='—'?'REVIEW':s.slice(0,24);
+  }
+  function render(rows,headers,report){
+    var anchor=document.getElementById('reportTable');if(!anchor||document.getElementById('kidsExecutiveReport'))return;
+    rows=Array.isArray(rows)?rows:[];headers=Array.isArray(headers)?headers:[];
+    var scoreI=idx(headers,['Decision Score','Overall Score','Fit Score','Brand Fit Score','Score']);
+    var confI=idx(headers,['Confidence Score','Confidence']);
+    var decisionI=idx(headers,['Decision','Recommendation','Status']);
+    var nameI=idx(headers,['KOL Name','Creator Name','Name']);
+    var idI=idx(headers,['KOL ID','Creator ID','kol_id']);
+    var predI=idx(headers,['Predicted Score','Prediction Score','Predicted']);
+    var actualI=idx(headers,['Actual Goal Score','Actual Score','Actual']);
+    var behaviorI=idx(headers,['Behavior Fit','Behavior Score','Behavior']);
+    var riskI=idx(headers,['Risk','Risk Level','Price Risk']);
+    var effI=idx(headers,['Commercial Efficiency','Efficiency Score','Efficiency']);
+    var top=null;
+    rows.forEach(function(r){
+      var s=num(val(r,scoreI));if(s!==null&&(!top||s>top.score))top={row:r,score:s};
+    });
+    var topRow=top?top.row:(rows[0]||[]);
+    var verdict=decisionLabel(val(topRow,decisionI));
+    var conf=val(topRow,confI);
+    var predicted=num(val(topRow,predI)),actual=num(val(topRow,actualI));
+    var variance=(predicted!==null&&actual!==null)?actual-predicted:null;
+    var ps=report&&report.channelPerformance?report.channelPerformance:{};
+    var pk=Object.keys(ps);
+    var roas=null,normPerf=null;
+    if(pk.length){
+      var rv=[],nv=[];
+      pk.forEach(function(k){var x=ps[k]||{};var r=num(x.roas),n=num(x.normalizedScore);if(r!==null)rv.push(r);if(n!==null)nv.push(n)});
+      if(rv.length)roas=rv.reduce(function(a,b){return a+b},0)/rv.length;
+      if(nv.length)normPerf=nv.reduce(function(a,b){return a+b},0)/nv.length;
+    }
+    var creator=text(val(topRow,nameI)||val(topRow,idI)||'Top creator');
+    var risk=text(val(topRow,riskI));
+    var behavior=score(val(topRow,behaviorI));
+    var eff=score(val(topRow,effI));
+    var predictedTxt=predicted===null?'—':predicted.toFixed(0);
+    var actualTxt=actual===null?'—':actual.toFixed(0);
+    var varianceTxt=variance===null?'—':(variance>0?'+':'')+variance.toFixed(0);
+    var confidenceTxt=pct(conf);
+    var evidence=(report&&report.integrity&&report.integrity.ok===true)?'Verified report structure':'Evidence state not available';
+    var actions=[];
+    if(verdict==='RECOMMEND')actions.push('Proceed with controlled allocation');
+    else if(verdict==='AVOID')actions.push('Do not scale; review alternatives');
+    else actions.push('Pilot / review before scaling');
+    if(risk!=='—')actions.push('Risk: '+risk);
+    if(variance!==null&&Math.abs(variance)>10)actions.push('Recheck prediction variance');
+    var el=document.createElement('div');el.id='kidsExecutiveReport';el.className='kids-exec-report';
+    el.innerHTML=
+      '<div class="kids-exec-head"><div><div class="kids-exec-kicker">Executive decision brief</div>'+
+      '<h2>What should management know now?</h2><p>One-screen decision summary from the canonical report. No inferred business value is presented as fact.</p></div>'+
+      '<div class="kids-exec-verdict"><small>Primary decision</small><b>'+esc(verdict)+'</b><div class="kids-exec-confidence">Confidence '+esc(confidenceTxt)+'</div></div></div>'+
+      '<div class="kids-exec-kpis">'+
+      '<div class="kids-exec-kpi"><span>Top creator</span><b style="font-size:17px">'+esc(creator)+'</b><small>Highest available decision score</small></div>'+
+      '<div class="kids-exec-kpi"><span>Decision score</span><b>'+esc(score(top?top.score:null))+'</b><small>Canonical report value</small></div>'+
+      '<div class="kids-exec-kpi"><span>Confidence</span><b>'+esc(confidenceTxt)+'</b><small>Reported confidence</small></div>'+
+      '<div class="kids-exec-kpi"><span>Prediction → actual</span><b>'+esc(predictedTxt)+' → '+esc(actualTxt)+'</b><small>Variance '+esc(varianceTxt)+'</small></div>'+
+      '<div class="kids-exec-kpi"><span>Performance</span><b>'+esc(normPerf===null?'—':normPerf.toFixed(0))+'</b><small>'+esc(roas===null?'Verified channel score':'Avg channel ROAS '+roas.toFixed(2))+'</small></div>'+
+      '</div>'+
+      '<div class="kids-exec-grid"><div class="kids-exec-box"><h3>Why this decision?</h3>'+
+      '<div class="kids-exec-row"><span>Behavior intelligence</span><b>'+esc(behavior)+'</b></div>'+
+      '<div class="kids-exec-row"><span>Commercial efficiency</span><b>'+esc(eff)+'</b></div>'+
+      '<div class="kids-exec-row"><span>Risk state</span><b>'+esc(risk)+'</b></div>'+
+      '<div class="kids-exec-row"><span>Evidence</span><b>'+esc(evidence)+'</b></div>'+
+      '</div><div class="kids-exec-box"><h3>Management action</h3><div class="kids-exec-actions">'+actions.map(function(a){return '<span class="kids-exec-chip">'+esc(a)+'</span>'}).join('')+'</div>'+
+      '<div class="kids-exec-row" style="margin-top:8px"><span>Report coverage</span><b>'+rows.length+' creator'+(rows.length===1?'':'s')+'</b></div>'+
+      '<div class="kids-exec-row"><span>Analysis</span><b>'+esc(report&&report.activeAnalysisId||'Active analysis')+'</b></div>'+
+      '</div></div><div class="kids-exec-note">Interpretation rule: scores and scenarios support decisions; they are not guarantees of ROI, revenue uplift, causality, or savings. Actual outcomes should be verified through the performance authority.</div>';
+    anchor.parentNode.insertBefore(el,anchor);
+  }
+  function install(){
+    var r=window.state&&window.state.report;
+    if(r&&Array.isArray(r.rows))render(r.rows,r.headers||[],r);
+  }
+  window.KOL_IDS_UX_RENDER_EXECUTIVE_REPORT=render;
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(install,250)}, {once:true});
+  var old=window.KOL_IDS_UX_RENDER_REPORT;
+  if(typeof old==='function'&&!window.__KIDS_EXEC_WRAPPED__){
+    window.__KIDS_EXEC_WRAPPED__=true;
+    window.KOL_IDS_UX_RENDER_REPORT=function(rows,headers){old(rows,headers);var r=window.state&&window.state.report||{};render(rows,headers,r);}
+  }
+})();
+</script>

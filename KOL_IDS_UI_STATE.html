@@ -1,0 +1,636 @@
+<script id="KOL_IDS_CANONICAL_11_ENTERPRISE_UI_PATCH">
+/* ================================================================
+ * KOL IDS™ — ENTERPRISE CAMPAIGN OBJECTIVE + RUNTIME PATCH
+ * - Multi-select: 1–3 objectives
+ * - No visible checkbox/checkmark; selected state is card styling
+ * - Native inputs remain visually hidden for keyboard/screen-reader access
+ * - Primary objective = first selected; secondary objectives = remaining
+ * - Selection is persisted through the canonical campaign payload
+ * - Adds missing runtime helpers required by the current UI shell
+ * ================================================================ */
+(function(){
+  const MAX_OBJECTIVES=3;
+  const ENTERPRISE_OBJECTIVES=[
+    'Brand Awareness','Reach','Engagement','Consideration','Traffic','Lead Generation',
+    'Conversion','Sales','App Install','Product Trial','Community Growth','Brand Preference',
+    'Reputation','Product Launch','Repositioning','Retention','Advocacy','Purchase Intent',
+    'Customer Acquisition','Revenue Growth','Market Share'
+  ];
+  window.KOL_IDS_OBJECTIVE_CONFIG={max:MAX_OBJECTIVES,options:ENTERPRISE_OBJECTIVES.slice()};
+
+  function objectiveSelected(){
+    return Array.isArray(state.objectives)?state.objectives.slice():[];
+  }
+  function syncObjectiveDOM(){
+    const selected=new Set(objectiveSelected());
+    document.querySelectorAll('#objectiveChoices .objectiveChip').forEach(card=>{
+      const input=card.querySelector('input[type="checkbox"]');
+      const on=!!input && selected.has(input.value);
+      card.classList.toggle('selected',on);
+      card.setAttribute('aria-checked',on?'true':'false');
+      if(input) input.checked=on;
+    });
+    const meta=$('objectiveMeta');
+    if(meta){
+      const count=selected.size;
+      meta.innerHTML=`<div class="objectiveCount"><span>${count}/${MAX_OBJECTIVES} selected</span><span class="objectiveRule">Choose up to ${MAX_OBJECTIVES} · first selected = Primary objective</span></div>`;
+    }
+    const chips=$('selectedObjectiveChips');
+    if(chips){
+      const arr=[...selected];
+      chips.innerHTML=arr.length
+        ? `<div class="objectiveSummary"><span class="objectiveSummaryLabel">Decision priorities</span>${arr.map((o,i)=>`<span class="objectivePriority ${i===0?'primary':''}"><b>${i===0?'PRIMARY':'SECONDARY'}</b>${esc(o)}<button type="button" aria-label="Remove ${esc(o)}" data-remove-objective="${esc(o)}">×</button></span>`).join('')}</div>`
+        : '<span class="sub">No objectives selected yet. Choose one or more objectives above.</span>';
+      chips.querySelectorAll('[data-remove-objective]').forEach(btn=>btn.addEventListener('click',e=>{
+        e.preventDefault();e.stopPropagation();toggleObjectiveValue(btn.getAttribute('data-remove-objective'),false);
+      }));
+    }
+  }
+
+  window.renderObjectiveChoices=function(){
+    const host=$('objectiveChoices'); if(!host)return;
+    const selected=new Set(objectiveSelected());
+    host.innerHTML=ENTERPRISE_OBJECTIVES.map((o,i)=>{
+      const on=selected.has(o);
+      return `<label class="objectiveChip ${on?'selected':''}" role="checkbox" aria-checked="${on?'true':'false'}" tabindex="0" data-objective="${esc(o)}">
+        <input class="objectiveNative" type="checkbox" value="${esc(o)}" ${on?'checked':''} aria-label="${esc(o)}">
+        <span class="objectiveLabel"><span>${esc(o)}</span></span>
+      </label>`;
+    }).join('');
+    host.querySelectorAll('.objectiveChip').forEach(card=>{
+      const input=card.querySelector('input');
+      const activate=()=>toggleObjectiveValue(input.value,!input.checked);
+      card.addEventListener('click',e=>{
+        if(e.target.closest('button'))return;
+        e.preventDefault();
+        activate();
+      });
+      card.addEventListener('keydown',e=>{
+        if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}
+      });
+    });
+    syncObjectiveDOM();
+  };
+
+  function toggleObjectiveValue(value,on){
+    value=String(value||'').trim(); if(!value)return;
+    let arr=objectiveSelected();
+    const exists=arr.indexOf(value)>=0;
+    if(on && !exists){
+      if(arr.length>=MAX_OBJECTIVES){
+        setStatus('s1',`You can select up to ${MAX_OBJECTIVES} campaign objectives. Remove one before adding another.`,'warn');
+        syncObjectiveDOM(); return;
+      }
+      arr.push(value);
+    }else if(!on && exists){
+      arr=arr.filter(x=>x!==value);
+    }
+    state.objectives=arr;
+    state.objectiveOther='';
+    syncObjectiveDOM();
+    if($('s1')) setStatus('s1','', '');
+  }
+  window.toggleObjective=function(input){
+    if(!input)return;
+    toggleObjectiveValue(input.value,!!input.checked);
+  };
+  window.removeObjective=function(value){toggleObjectiveValue(value,false)};
+  window.getObjectives=function(){return objectiveSelected()};
+
+  window.formatBudgetInput=function(){
+    const el=$('budget'); if(!el)return;
+    const raw=String(el.value||'').replace(/,/g,'').replace(/[^0-9.]/g,'');
+    if(raw===''){el.value='';return;}
+    const parts=raw.split('.');
+    const whole=(parts.shift()||'').replace(/^0+(?=\d)/,'')||'0';
+    el.value=Number(whole).toLocaleString('en-US')+(parts.length?'.'+parts.join('').slice(0,2):'');
+  };
+  window.budgetNumber=function(){return Number(String($('budget')?.value||'').replace(/,/g,''))||0};
+
+  function buildPayload(){
+    const objectives=objectiveSelected();
+    const kols=(state.kols||[]).filter(k=>String(k.name||'').trim()).map((k,idx)=>({
+      id:k.id||`KOL-${String(idx+1).padStart(4,'0')}`,
+      name:String(k.name||'').trim(), platform:k.platform||'', secondaryPlatforms:Array.isArray(k.secondaryPlatforms)?k.secondaryPlatforms:[], category:k.category||'',
+      followers:k.followers===''?'':numericCreatorValue(k.followers),
+      engagementRate:k.engagementRate===''?'':Number(k.engagementRate)||0,
+      rate:k.rate===''?'':numericCreatorValue(k.rate), platformUrl:k.platformUrl||'', photoUrl:k.photoUrl||'',
+      audienceAge:k.audienceAge||'', audienceGender:k.audienceGender||'', audienceLocation:k.audienceLocation||'',
+      audienceBehavior:k.audienceBehavior||'', audienceInterest:k.audienceInterest||'', contentStyle:k.contentStyle||'',
+      previousBrandWork:k.previousBrandWork||'', previousCampaignResult:k.previousCampaignResult||'',
+      audienceEvidence:k.audienceEvidence||'', engagementEvidence:k.engagementEvidence||'', contentEvidence:k.contentEvidence||'',
+      performanceEvidence:k.performanceEvidence||'', reputationEvidence:k.reputationEvidence||'', riskLevel:k.riskLevel||'LOW',
+      description:k.description||'',
+      analyzed:!!k.analyzed, selected:!!k.selected, analysis:k.analysis||null
+    }));
+    return {
+      analysisId:state.analysis?.analysisId||state.flowContext?.analysisId||'',
+      campaignId:state.analysis?.campaignId||state.flowContext?.campaignId||'',
+      brandId:state.analysis?.brandId||state.flowContext?.brandId||'',
+      brand:{name:$('brandName')?.value||'',category:$('category')?.value||'',market:$('market')?.value||'',
+        positioning:$('positioning')?.value||'',promise:$('brandPromise')?.value||'',personality:$('brandPersonality')?.value||'',
+        tone:$('brandTone')?.value||'',values:$('brandValues')?.value||'',avoid:$('brandAvoid')?.value||'',
+        desiredPerception:$('desiredPerception')?.value||'',keyMessages:$('keyMessages')?.value||''},
+      campaign:{name:$('campaignName')?.value||'',goal:$('goal')?.value||'',objectives:objectives,
+        primaryObjective:objectives[0]||'',secondaryObjectives:objectives.slice(1),objectiveCount:objectives.length,
+        category:$('category')?.value||'',subCategory:$('subCategory')?.value||'',campaignType:$('campaignType')?.value||'',
+        market:$('market')?.value||'',budget:budgetNumber(),currency:$('currency')?.value||'THB',
+        startDate:$('startDate')?.value||'',endDate:$('endDate')?.value||''},
+      objectives:objectives, objective:objectives[0]||'',
+      audience:{description:$('audience')?.value||'',age:$('audienceAge')?.value||'',gender:$('audienceGender')?.value||'',
+        location:$('audienceLocation')?.value||'',behavior:$('audienceBehavior')?.value||'',goalsNeeds:$('audienceGoals')?.value||'',
+        painPoints:$('audiencePain')?.value||'',lifestyle:$('audienceLifestyle')?.value||''},
+      targetAudience:$('audience')?.value||'', kols:kols
+    };
+  }
+  window.buildPayload=buildPayload;
+
+  let _campaignSaveBusy=false;
+function setCampaignSaveBusy(busy){
+  _campaignSaveBusy=!!busy;
+  document.querySelectorAll('.step1-actions button').forEach(function(btn){
+    btn.disabled=!!busy;
+    btn.setAttribute('aria-busy',busy?'true':'false');
+  });
+}
+async function saveCampaignContextAndContinue_(mode){
+  if(_campaignSaveBusy)return false;
+  if(mode!=='draft' && !validateCampaignRoot())return false;
+  setCampaignSaveBusy(true);
+  try{
+    setStatus('s1',mode==='draft'?'Saving campaign draft…':'Saving campaign foundation…','busy');
+    const r=await server(mode==='draft'?'KOL_IDS_SELF_SAVE_CAMPAIGN_DRAFT':'KOL_IDS_SELF_SAVE_CAMPAIGN_CONTEXT',buildPayload());
+    if(!r || r.success===false)throw new Error((r&& (r.message||r.error)) || 'Campaign save was not accepted.');
+    if(typeof window.KOL_IDS_CANONICAL_apply_==='function') window.KOL_IDS_CANONICAL_apply_(r);
+    state.analysis=r;
+    if(typeof window.KOL_IDS_UX_MARK_SAVED==='function') window.KOL_IDS_UX_MARK_SAVED();
+    setStatus('s1',mode==='draft'?'Campaign draft saved successfully. You can continue later without losing the canonical context.':'Campaign saved. Downstream stages are marked for recalculation.','good');
+    if(mode==='continue')go(2);
+    return true;
+  }catch(e){
+    setStatus('s1',String(e?.message||e),'bad');
+    return false;
+  }finally{
+    setCampaignSaveBusy(false);
+  }
+}
+// PUBLIC BRIDGE: expose the real promise-returning save function for every router.
+window.saveCampaignContextAndContinue_=saveCampaignContextAndContinue_;
+
+window.saveCampaignDraft=async function(){
+  /* FIX: return the real server-confirmed result to every caller.
+     Previously the wrapper awaited the save but returned undefined, so
+     transactional Home/Draft handlers interpreted a successful save as false. */
+  return await saveCampaignContextAndContinue_('draft');
+};
+
+  window.runAnalysis=async function(){
+    if(!state.selected?.length){setStatus('reviewStatus','Select at least one analyzed creator before running the decision analysis.','bad');return;}
+    setStatus('reviewStatus','Running the canonical decision analysis…','busy');
+    try{
+      const r=await server('KOL_IDS_SELF_RUN');
+      if(typeof window.KOL_IDS_CANONICAL_apply_==='function') window.KOL_IDS_CANONICAL_apply_(r);
+      setStatus('reviewStatus','Decision analysis completed. Loading Reports & Evidence…','busy');
+      const loaded=await loadReports();
+      if(loaded!==true)throw new Error('Reports & Evidence could not be loaded, so the workflow will stay on Review & Run.');
+      setStatus('reviewStatus','Decision analysis completed. Reports and evidence are ready.','good');
+      go(7);
+    }catch(e){setStatus('reviewStatus',String(e?.message||e),'bad')}
+  };
+
+  window.resetAnalysis=async function(){
+    if(!confirm('Start a new analysis? The current workspace history will be preserved.'))return;
+    try{
+      setStatus('analysisStatus','Starting a new analysis workspace…','busy');
+      const r=await server('KOL_IDS_SELF_RESET');
+      state={step:1,kols:[],selected:[],objectives:[],objectiveOther:'',analysis:null,report:null,history:null,boot:state.boot,genCodes:[],genCodePlan:null,decision:{brand:25,audience:25,campaign:20,confidence:10,value:10,risk:10,threshold:70,ceiling:60}};
+      document.querySelectorAll('input,textarea').forEach(el=>{if(el.type!=='file')el.value='';});
+      if($('currency'))$('currency').value='THB';
+      renderObjectiveChoices();renderKOLs();go(1);
+      setStatus('s1','New analysis workspace is ready.','good');
+    }catch(e){setStatus('analysisStatus',String(e?.message||e),'bad')}
+  };
+
+  window.loadReports=async function(){
+    const host=$('reportTable');
+    if(!host)throw new Error('Report container is unavailable.');
+    host.innerHTML='<div class="status busy"><i class="dotStatus"></i><span>Loading current decision report…</span></div>';
+    try{
+      const r=await server('KOL_IDS_SELF_GET_REPORT');
+      if(!r || r.success===false)throw new Error((r&&(r.message||r.error))||'Report server response was not confirmed.');
+      const rows=Array.isArray(r.rows)?r.rows:[], headers=Array.isArray(r.headers)?r.headers:[];
+      if(!headers.length || !rows.length){
+        host.innerHTML='<div class="empty">No decision report is available yet. Complete the analysis run first.</div>';
+        return false;
+      }
+      state.report=r;
+      host.innerHTML='<div class="tablewrap"><table><thead><tr>'+headers.map(h=>`<th>${esc(h)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+headers.map((_,i)=>`<td>${esc(row[i]??'')}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>';
+      return true;
+    }catch(e){
+      host.innerHTML=`<div class="status bad"><i class="dotStatus"></i><span>${esc(String(e?.message||e))}</span></div>`;
+      return false;
+    }
+  };
+  window.loadHistory=async function(){
+    const host=$('historyTable');if(!host)return;
+    host.innerHTML='<div class="status busy"><i class="dotStatus"></i><span>Loading decision history…</span></div>';
+    try{const r=await server('KOL_IDS_SELF_GET_HISTORY');const rows=r.rows||r.history||[];
+      if(!rows.length){host.innerHTML='<div class="empty">No historical decision evidence yet.</div>';return;}
+      if(Array.isArray(rows)&&rows.length&&typeof rows[0]==='object'&&!Array.isArray(rows[0])){
+        const keys=Object.keys(rows[0]);host.innerHTML='<div class="tablewrap"><table><thead><tr>'+keys.map(k=>`<th>${esc(k)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+keys.map(k=>`<td>${esc(row[k]??'')}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>';
+      }else host.innerHTML=`<div class="tablewrap"><table><tbody>${rows.map(r=>`<tr>${(Array.isArray(r)?r:[]).map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    }catch(e){host.innerHTML=`<div class="status bad"><i class="dotStatus"></i><span>${esc(String(e?.message||e))}</span></div>`}
+  };
+  window.exportCurrent=async function(){
+    try{setStatus('reviewStatus','Preparing export…','busy');const r=await server('KOL_IDS_SELF_EXPORT_CURRENT');
+      if(r?.url)window.open(r.url,'_blank');else if(r?.dataUrl){const a=document.createElement('a');a.href=r.dataUrl;a.download=r.fileName||'KOL_IDS_Report.csv';a.click();}
+      else setStatus('reviewStatus','Export prepared, but no downloadable file was returned by the workspace.','warn');
+    }catch(e){setStatus('reviewStatus',String(e?.message||e),'bad')}
+  };
+
+  // Make validation authoritative at the client boundary as well as the server boundary.
+  const originalValidateCampaignRoot=window.validateCampaignRoot;
+  window.validateCampaignRoot=function(){
+    const ok=typeof originalValidateCampaignRoot==='function'?originalValidateCampaignRoot():true;
+    if(!ok)return false;
+    const n=objectiveSelected().length;
+    if(n<1){setStatus('s1','Select at least one campaign objective.','bad');return false;}
+    if(n>MAX_OBJECTIVES){setStatus('s1',`Select no more than ${MAX_OBJECTIVES} campaign objectives.`,'bad');return false;}
+    return true;
+  };
+
+  // Keep the canonical flow context and UI selection synchronized after every server mutation.
+  const originalApply=window.KOL_IDS_CANONICAL_apply_;
+  if(typeof originalApply==='function'){
+    window.KOL_IDS_CANONICAL_apply_=function(r){
+      originalApply(r);
+      const c=r?.context||r?.canonical?.context||r?.flowContext;
+      const camp=c?.campaign||{};
+      if(Array.isArray(camp.objectives)){state.objectives=camp.objectives.slice(0,MAX_OBJECTIVES);renderObjectiveChoices();}
+    };
+  }
+
+  function initEnterpriseObjectiveUI(){
+    const host=document.getElementById('objectiveChoices');
+    if(!host)return;
+    try{
+      if(typeof window.state==='undefined'||!window.state) window.state={objectives:[]};
+      if(!Array.isArray(window.state.objectives)) window.state.objectives=[];
+      // Render objectives independently from the budget formatter. A formatter failure
+      // must never blank the Objectives control or turn it into a false error state.
+      if(typeof window.renderObjectiveChoices==='function') window.renderObjectiveChoices();
+      else {
+        const selected=new Set(window.state.objectives);
+        host.innerHTML=ENTERPRISE_OBJECTIVES.map(function(o){
+          const on=selected.has(o);
+          return '<label class=\"objectiveChip '+(on?'selected':'')+'\" role=\"checkbox\" aria-checked=\"'+(on?'true':'false')+'\" tabindex=\"0\"><input type=\"checkbox\" value=\"'+String(o).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;')+'\" '+(on?'checked':'')+'><span class=\"objectiveLabel\">'+String(o)+'</span></label>';
+        }).join('');
+      }
+    }catch(e){
+      console.error('KOL IDS objective UI render failed',e);
+      host.innerHTML='';
+      // Last-resort static render: the objective choices themselves are safe local data.
+      ENTERPRISE_OBJECTIVES.forEach(function(o){
+        const card=document.createElement('label');
+        card.className='objectiveChip';
+        card.setAttribute('role','checkbox');
+        card.setAttribute('aria-checked','false');
+        card.tabIndex=0;
+        const input=document.createElement('input');
+        input.type='checkbox'; input.value=o; input.setAttribute('aria-label',o);
+        const span=document.createElement('span'); span.className='objectiveLabel'; span.textContent=o;
+        card.appendChild(input); card.appendChild(span); host.appendChild(card);
+        card.addEventListener('click',function(ev){
+          if(ev.target===input)return;
+          ev.preventDefault(); input.checked=!input.checked;
+          if(typeof window.toggleObjective==='function') window.toggleObjective(input);
+        });
+        input.addEventListener('change',function(){
+          if(typeof window.toggleObjective==='function') window.toggleObjective(input);
+        });
+      });
+    }
+    try{ if(typeof window.formatBudgetInput==='function') window.formatBudgetInput(); }catch(e){ console.warn('Budget formatter skipped:',e); }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initEnterpriseObjectiveUI,{once:true});
+  else initEnterpriseObjectiveUI();
+})();
+</script>
+
+<script id="KOL_IDS_OBJECTIVES_FINAL_RECOVERY">
+(function(){
+  /* FINAL OBJECTIVES RECOVERY: completely independent of the large application
+     script and of the budget formatter. It must render the objective choices even
+     if another UI module failed during initialization. */
+  var OPTIONS=[
+    'Brand Awareness','Reach','Engagement','Consideration','Traffic','Lead Generation',
+    'Conversion','Sales','App Install','Product Trial','Community Growth','Brand Preference',
+    'Reputation','Product Launch','Repositioning','Retention','Advocacy','Purchase Intent',
+    'Customer Acquisition','Revenue Growth','Market Share'
+  ];
+  var MAX=3;
+  function byId(id){return document.getElementById(id)}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function readSelected(){
+    try{
+      if(window.state && Array.isArray(window.state.objectives)) return window.state.objectives.slice(0,MAX);
+    }catch(e){}
+    var host=byId('objectiveChoices');
+    if(!host)return [];
+    return Array.prototype.slice.call(host.querySelectorAll('input[type="checkbox"]:checked')).map(function(x){return x.value});
+  }
+  function writeState(arr){
+    try{
+      if(window.state && typeof window.state==='object') window.state.objectives=arr.slice(0,MAX);
+    }catch(e){}
+  }
+  function syncMeta(arr){
+    var meta=byId('objectiveMeta');
+    if(meta)meta.innerHTML='<div class="objectiveCount"><span>'+arr.length+'/'+MAX+' selected</span><span class="objectiveRule">Choose up to '+MAX+' · first selected = Primary objective</span></div>';
+    var chips=byId('selectedObjectiveChips');
+    if(chips){
+      if(!arr.length){chips.innerHTML='<span class="sub">No objectives selected yet. Choose one or more objectives above.</span>';return}
+      chips.innerHTML='<div class="objectiveSummary"><span class="objectiveSummaryLabel">Decision priorities</span>'+arr.map(function(o,i){return '<span class="objectivePriority '+(i===0?'primary':'')+'"><b>'+(i===0?'PRIMARY':'SECONDARY')+'</b>'+esc(o)+'</span>'}).join('')+'</div>';
+    }
+  }
+  function paint(arr){
+    var host=byId('objectiveChoices');if(!host)return;
+    var set={};arr.forEach(function(x){set[x]=true});
+    Array.prototype.forEach.call(host.querySelectorAll('.objectiveChip'),function(card){
+      var input=card.querySelector('input[type="checkbox"]');
+      var on=!!input&&!!set[input.value];
+      if(input)input.checked=on;
+      card.classList.toggle('selected',on);
+      card.setAttribute('aria-checked',on?'true':'false');
+    });
+    syncMeta(arr);
+  }
+  function toggle(value){
+    value=String(value||'').trim();if(!value)return;
+    var arr=readSelected();var i=arr.indexOf(value);
+    if(i>=0)arr.splice(i,1);
+    else {if(arr.length>=MAX){var st=byId('s1');if(st){st.textContent='You can select up to '+MAX+' campaign objectives.';st.className='status warn'}return}arr.push(value)}
+    writeState(arr);paint(arr);
+  }
+  function render(){
+    var host=byId('objectiveChoices');if(!host)return;
+    var arr=readSelected();
+    host.innerHTML=OPTIONS.map(function(o){
+      var on=arr.indexOf(o)>=0;
+      return '<label class="objectiveChip '+(on?'selected':'')+'" role="checkbox" aria-checked="'+(on?'true':'false')+'" tabindex="0" data-objective="'+esc(o)+'"><input class="objectiveNative" type="checkbox" value="'+esc(o)+'" '+(on?'checked':'')+' aria-label="'+esc(o)+'"><span class="objectiveLabel"><span>'+esc(o)+'</span></span></label>';
+    }).join('');
+    Array.prototype.forEach.call(host.querySelectorAll('.objectiveChip'),function(card){
+      card.addEventListener('click',function(e){
+        if(e.target && e.target.tagName==='INPUT')return;
+        e.preventDefault();var input=card.querySelector('input[type="checkbox"]');toggle(input&&input.value);
+      });
+      card.addEventListener('keydown',function(e){
+        if(e.key==='Enter'||e.key===' '){e.preventDefault();var input=card.querySelector('input[type="checkbox"]');toggle(input&&input.value)}
+      });
+      var input=card.querySelector('input[type="checkbox"]');
+      if(input)input.addEventListener('change',function(){toggle(input.value)});
+    });
+    paint(arr);
+  }
+  function init(){
+    try{render()}catch(e){
+      var host=byId('objectiveChoices');
+      if(host){host.innerHTML='';OPTIONS.forEach(function(o){var input=document.createElement('input');input.type='checkbox';input.value=o;input.addEventListener('change',function(){toggle(o)});host.appendChild(input);host.appendChild(document.createTextNode(' '+o));host.appendChild(document.createElement('br'))})}
+    }
+  }
+  window.KOL_IDS_FINAL_OBJECTIVES_RENDER=render;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+  setTimeout(init,500);
+})();
+</script>
+
+<script id="KOL_IDS_V25_18_1_SAVE_PREVIEW_RUNTIME">
+(function(){
+  'use strict';
+
+  var saveBusy=false;
+  var lastSavedPayload=null;
+  var lastSavedAt='';
+
+  function byId(id){return document.getElementById(id)}
+  function esc(v){
+    return String(v==null?'':v).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function val(id){var e=byId(id);return e?String(e.value||'').trim():''}
+  function money(v,c){
+    var n=Number(v);
+    if(!isFinite(n)||n<=0)return '';
+    return n.toLocaleString('en-US')+' '+(c||'THB');
+  }
+  function ensureUi(){
+    if(!byId('campaignSaveState')){
+      var actions=document.querySelector('.step1-actions');
+      if(actions){
+        var st=document.createElement('div');
+        st.id='campaignSaveState';
+        st.setAttribute('aria-live','polite');
+        st.innerHTML='<div class="saveStateInner"><i class="saveStateDot"></i><span>Not saved yet</span></div>';
+        actions.parentNode.insertBefore(st,actions);
+      }
+    }
+    if(!byId('campaignSavedPreview')){
+      var actions=document.querySelector('.step1-actions');
+      var host=document.querySelector('.step1-shell');
+      if(host){
+        var card=document.createElement('div');
+        card.id='campaignSavedPreview';
+        card.innerHTML=
+          '<div class="previewHead"><div><div class="previewTitle">SAVED CAMPAIGN PREVIEW</div><div class="previewMeta" id="campaignPreviewMeta"></div></div><span class="status good" style="margin:0">Saved</span></div>'+
+          '<div class="previewBody"><div class="previewGrid" id="campaignPreviewGrid"></div>'+
+          '<div class="previewActions"><span class="previewHint">You can edit the fields above at any time. Save again to update this preview.</span><div class="previewButtons"><button type="button" class="previewEdit" id="campaignPreviewEdit">Edit saved information</button><button type="button" class="btn blue previewContinue" id="campaignPreviewContinue">Continue → Audience</button></div></div></div>';
+        if(actions) host.insertBefore(card,actions); else host.appendChild(card);
+        byId('campaignPreviewEdit').addEventListener('click',function(){
+          var first=byId('campaignName')||byId('brandName');
+          if(first){first.focus();first.scrollIntoView({behavior:'smooth',block:'center'})}
+          setSaveState('','');
+          var previewCard=byId('campaignSavedPreview');
+          if(previewCard)previewCard.classList.add('editing');
+        });
+        byId('campaignPreviewContinue').addEventListener('click',function(){
+          /* Continue from the saved preview still performs the canonical save
+             path, so edits made after the previous save can never be lost. */
+          save('continue');
+        });
+      }
+    }
+  }
+  function setSaveState(type,msg,meta){
+    ensureUi();
+    var e=byId('campaignSaveState');if(!e)return;
+    e.className=type||'';
+    var inner=e.querySelector('.saveStateInner');
+    if(!inner)return;
+    inner.querySelector('span').textContent=msg||'';
+    if(meta){
+      var small=inner.querySelector('.saveStateMeta');
+      if(!small){small=document.createElement('span');small.className='saveStateMeta';small.style.marginLeft='auto';small.style.fontSize='10px';small.style.opacity='.8';inner.appendChild(small)}
+      small.textContent=meta;
+    }
+  }
+  function preview(payload,r){
+    ensureUi();
+    var p=payload||{};
+    var c=p.campaign||{}, b=p.brand||{};
+    var objectives=Array.isArray(c.objectives)?c.objectives:(Array.isArray(p.objectives)?p.objectives:[]);
+    var items=[
+      ['Brand name',b.name],
+      ['Campaign name',c.name],
+      ['Commercial goal',c.goal],
+      ['Campaign objectives',objectives.join(' · ')],
+      ['Category',c.category||b.category],
+      ['Market',c.market||b.market],
+      ['Budget',money(c.budget,c.currency)],
+      ['Campaign period',(c.startDate&&c.endDate)?(c.startDate+' → '+c.endDate):''],
+      ['Brand positioning',b.positioning],
+      ['Brand promise',b.promise],
+      ['Brand personality',b.personality],
+      ['Brand tone',b.tone],
+      ['Brand values',b.values],
+      ['Brand avoid / things to avoid',b.avoid],
+      ['Desired perception',b.desiredPerception],
+      ['Key brand messages',b.keyMessages]
+    ];
+    var grid=byId('campaignPreviewGrid');
+    if(grid){
+      grid.innerHTML=items.filter(function(x){return String(x[1]||'').trim()}).map(function(x){
+        return '<div class="previewItem"><span class="previewLabel">'+esc(x[0])+'</span><span class="previewValue">'+esc(x[1])+'</span></div>';
+      }).join('');
+    }
+    var meta=byId('campaignPreviewMeta');
+    if(meta){
+      var id=(r&&r.analysisId)||p.analysisId||'';
+      var rev=(r&&r.revision!=null)?r.revision:'';
+      meta.textContent='Saved '+lastSavedAt+(id?' · Analysis '+id:'')+(rev!==''?' · Revision '+rev:'');
+    }
+    var previewCard=byId('campaignSavedPreview');
+    if(previewCard){previewCard.classList.add('show');previewCard.classList.remove('editing');}
+    lastSavedPayload=p;
+  }
+
+  async function save(mode){
+    if(saveBusy)return false;
+    ensureUi();
+
+    if(mode==='continue' && typeof validateCampaignRoot==='function' && !validateCampaignRoot())return false;
+
+    saveBusy=true;
+    var buttons=document.querySelectorAll('.step1-actions button');
+    buttons.forEach(function(b){b.disabled=true;b.setAttribute('aria-busy','true')});
+    setSaveState('busy',mode==='draft'?'Saving draft…':'Saving campaign foundation…');
+
+    try{
+      var payload=buildPayload();
+      var fn=mode==='draft'?'KOL_IDS_SELF_SAVE_CAMPAIGN_DRAFT':'KOL_IDS_SELF_SAVE_CAMPAIGN_CONTEXT';
+      var r=await server(fn,payload);
+      if(!r||r.success===false)throw new Error((r&&(r.message||r.error))||'The system did not confirm the save.');
+
+      if(typeof KOL_IDS_CANONICAL_apply_==='function')KOL_IDS_CANONICAL_apply_(r);
+      if(typeof state==='object'){
+        state.analysis=r;
+        if(r.context)state.flowContext=r.context;
+      }
+
+      lastSavedAt=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      var label=mode==='draft'
+        ?'Saved successfully · Draft is stored'
+        :'Saved successfully · Campaign foundation is stored';
+      setSaveState('saved',label,lastSavedAt);
+
+      /* Keep the saved-state UI synchronized after a confirmed server save. */
+      if(typeof window.KOL_IDS_UX_MARK_SAVED==='function')window.KOL_IDS_UX_MARK_SAVED();
+      preview((r&&r.context)?r.context:payload,r);
+
+      if(mode==='continue'){
+        setStatus('s1','Saved successfully · Opening Audience…','good');
+        /* go(2) remains the canonical navigation gate; it re-checks the same
+           campaign requirements before opening Audience. */
+        if(typeof window.KOL_IDS_UI_OPEN_AUDIENCE_AFTER_SAVE==='function')window.KOL_IDS_UI_OPEN_AUDIENCE_AFTER_SAVE(); else if(typeof window.go==='function')window.go(2);
+      }else{
+        setStatus('s1','Saved successfully. Your campaign draft is safe. You can edit and save again before continuing.','good');
+      }
+      return true;
+    }catch(e){
+      setSaveState('error','Save failed — nothing was confirmed as saved.',String(e&&e.message||e));
+      setStatus('s1','Save failed: '+String(e&&e.message||e),'bad');
+      return false;
+    }finally{
+      saveBusy=false;
+      buttons.forEach(function(b){b.disabled=false;b.removeAttribute('aria-busy')});
+    }
+  }
+
+  /* Canonical post-save navigation: the save response has already passed the
+     server-side campaign contract, so do not make the user save twice just
+     because a second client-side validator disagrees with the hydrated state. */
+  window.KOL_IDS_UI_OPEN_AUDIENCE_AFTER_SAVE=function(){
+    /* Save has already been confirmed by the server. Do not run a second
+       client-side validator here; it can block a confirmed save from moving
+       to Audience. */
+    try{
+      state.step=2;
+      document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
+      var next=byId('v2');
+      if(!next)throw new Error('Audience view is unavailable.');
+      next.classList.add('active');
+      document.querySelectorAll('#nav button').forEach(function(b){
+        var step=Number(b.dataset.step);
+        b.classList.toggle('active',step===2);
+        b.classList.toggle('done',step<2);
+        b.disabled=false;
+      });
+      var progress=byId('progress');
+      if(progress)progress.style.width=((2-1)/6*100)+'%';
+      var s1=byId('s1');
+      if(s1)setStatus('s1','Saved successfully · Audience is ready.','good');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(e){
+      state.step=1;
+      var s1=byId('s1');
+      if(s1){s1.innerHTML='<div class="status bad"><i class="dotStatus"></i><span>Campaign was saved, but Audience could not be opened: '+esc(String(e&&e.message||e))+'</span></div>';}
+    }
+  };
+
+  /* One canonical Step-1 save engine. Keep Home, Draft and Continue on the
+     same server-confirmed transaction so there is no split behavior between
+     duplicate client save implementations. */
+  window.saveCampaignDraft=function(){return saveCampaignContextAndContinue_('draft')};
+  window.continueToAudience=function(){return saveCampaignContextAndContinue_('continue')};
+
+  function init(){
+    ensureUi();
+    /* If the workspace already contains context, show a preview without
+       writing anything back to the server. */
+    try{
+      if(typeof state!=='undefined' && state.flowContext){
+        var ctx=state.flowContext;
+        var p={
+          analysisId:ctx.analysisId||'',
+          campaignId:ctx.campaignId||'',
+          brandId:ctx.brandId||'',
+          brand:ctx.brand||{},
+          campaign:ctx.campaign||{},
+          objectives:Array.isArray(ctx.campaign&&ctx.campaign.objectives)?ctx.campaign.objectives:(Array.isArray(ctx.objectives)?ctx.objectives:[])
+        };
+        if((p.brand&&p.brand.name)||(p.campaign&&p.campaign.name)){
+          preview(p,{analysisId:p.analysisId,revision:ctx.meta&&ctx.meta.revision});
+          lastSavedAt='loaded from workspace';
+          setSaveState('saved','Saved campaign loaded from workspace','');
+        }
+      }
+    }catch(e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+  setTimeout(init,800);
+
+})();
+</script>
+
+

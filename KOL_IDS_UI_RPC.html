@@ -1,0 +1,821 @@
+<script>
+var $=function(id){return document.getElementById(id)};function cryptoRandomId_(){try{if(window.crypto&&window.crypto.randomUUID)return window.crypto.randomUUID().replace(/-/g,'').slice(0,16).toUpperCase()}catch(e){}return String(Date.now().toString(36)+Math.random().toString(36).slice(2,10)).toUpperCase().slice(-16)}
+const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
+var state={step:1,kols:[],selected:[],selectedCreatorIds:[],objectives:[],objectiveOther:'',analysis:null,report:null,history:null,boot:null,genCodes:[],genCodePlan:null,decision:{brand:25,audience:25,campaign:20,confidence:10,value:10,risk:10,threshold:70,ceiling:60}};
+let _appsScriptBridge=null;let _appsScriptBridgePromise=null;
+function appsScriptRun(){if(typeof google!=='undefined'&&google&&google.script&&google.script.run)return google.script.run;return null}
+function waitForAppsScriptBridge(timeoutMs){if(_appsScriptBridge)return Promise.resolve(_appsScriptBridge);if(_appsScriptBridgePromise)return _appsScriptBridgePromise;_appsScriptBridgePromise=new Promise((resolve,reject)=>{const started=Date.now();(function poll(){const run=appsScriptRun();if(run){_appsScriptBridge=run;return resolve(run)}if(Date.now()-started>=timeoutMs){_appsScriptBridgePromise=null;return reject(new Error('Google Apps Script bridge is unavailable. Please open the deployed Web App URL, not the HTML preview, and try again.'))}setTimeout(poll,50)})()});return _appsScriptBridgePromise}
+const OP_STATUS_LABELS={
+  KOL_IDS_SELF_SAVE:'Saving data…',
+  KOL_IDS_SELF_SAVE_CAMPAIGN_CONTEXT:'Saving campaign context…',
+  KOL_IDS_SELF_SAVE_CAMPAIGN_DRAFT:'Saving campaign draft…',
+  KOL_IDS_SELF_SAVE_AUDIENCE_CONTEXT:'Saving audience context…',
+  KOL_IDS_SELF_SAVE_DECISION_CONTEXT:'Saving decision framework…',
+  KOL_IDS_SELF_SAVE_SELECTION:'Saving selected creators…',
+  KOL_IDS_SELF_SAVE_PERFORMANCE:'Saving performance…',
+  KOL_IDS_SELF_SAVE_GEN_CODES:'Saving Gen Codes…',
+  KOL_IDS_SELF_RUN:'Analyzing creator candidates…',
+  KOL_IDS_SAVE_VERIFIED_PERFORMANCE:'Verifying and saving performance…',
+  KOL_IDS_DECISION_SAVE_DECISION_MEMO:'Saving decision memo…',
+  KOL_IDS_SIMULATE_DECISION:'Simulating decision…',
+  KOL_IDS_SELF_GET_REPORT:'Loading report…',
+  KOL_IDS_SELF_GET_HISTORY:'Loading history…',
+  KOL_IDS_SELF_GET_STATE:'Loading workspace…',
+  KOL_IDS_SELF_FAST_BOOT:'Starting system…',
+  KOL_IDS_SELF_INIT_WORKSPACE:'Preparing workspace…',
+  KOL_IDS_GET_READINESS:'Checking system readiness…',
+  KOL_IDS_GET_DECISION_BOARD:'Building decision board…',
+  KOL_IDS_SELF_EXPORT_CURRENT:'Preparing export…',
+  KOL_IDS_SELF_RESET:'Starting a new workspace…',
+  KOL_IDS_COMMERCIAL_GET_ACCESS:'Checking access…',
+  KOL_IDS_COMMERCIAL_PACKAGES:'Loading packages…',
+  KOL_IDS_COMMERCIAL_TRIAL_INFO:'Loading trial…',
+  KOL_IDS_COMMERCIAL_ENABLE_SELF_TEST:'Enabling test mode…'
+};
+function setGlobalOpStatus(message,kind='busy'){
+  let e=$('globalOpStatus');
+  if(!e){
+    e=document.createElement('div');e.id='globalOpStatus';e.className='globalOpStatus';
+    document.body.appendChild(e);
+  }
+  e.className='globalOpStatus '+kind;
+  e.innerHTML=`<span class="globalOpSpinner"></span><div><b>${esc(message)}</b><small>Please wait. The system is working.</small></div>`;
+  e.classList.add('show');
+}
+function clearGlobalOpStatus(){
+  const e=$('globalOpStatus');if(e)e.classList.remove('show');
+}
+const RPC_TIMEOUTS_MS={
+  /* Production Apps Script calls can legitimately exceed the old 20–45s
+     UI window while canonical state, sheets and execution logging are being
+     committed. Keep the UI responsive, but do not falsely report a save/run
+     failure before the server has had a reasonable time to finish. */
+  KOL_IDS_SYSTEM_SAAS_SIGN_IN:30000,
+  KOL_IDS_SYSTEM_SAAS_GET_SESSION:10000,
+  KOL_IDS_SELF_FAST_BOOT:30000,
+  KOL_IDS_SELF_INIT_WORKSPACE:60000,
+  KOL_IDS_SELF_GET_STATE:60000,
+  KOL_IDS_SELF_SAVE_CAMPAIGN_CONTEXT:90000,
+  KOL_IDS_SELF_SAVE_CAMPAIGN_DRAFT:90000,
+  KOL_IDS_SELF_SAVE_AUDIENCE_CONTEXT:90000,
+  KOL_IDS_SELF_SAVE:90000,
+  KOL_IDS_SELF_SAVE_DECISION_CONTEXT:90000,
+  KOL_IDS_SELF_SAVE_SELECTION:90000,
+  KOL_IDS_SELF_RUN:120000,
+  KOL_IDS_SELF_SAVE_GEN_CODES:90000,
+  KOL_IDS_SELF_SAVE_PERFORMANCE:90000,
+  KOL_IDS_SELF_GET_REPORT:60000,
+  KOL_IDS_SELF_GET_HISTORY:60000
+};
+function server(fn,...args){
+  return waitForAppsScriptBridge(10000).then(run=>new Promise((resolve,reject)=>{
+    let settled=false;
+    const timeoutMs=RPC_TIMEOUTS_MS[fn]||90000;
+    const finish=(handler,value)=>{
+      if(settled)return;
+      settled=true;
+      clearTimeout(timer);
+      clearGlobalOpStatus();
+      handler(value);
+    };
+    const timer=setTimeout(()=>{
+      finish(reject,new Error((OP_STATUS_LABELS[fn]||'System operation')+' timed out. Please try again'));
+    },timeoutMs);
+    const call=run
+      .withSuccessHandler(result=>finish(resolve,result))
+      .withFailureHandler(error=>finish(reject,error));
+    setGlobalOpStatus(OP_STATUS_LABELS[fn]||'Processing…');
+    switch(fn){
+      case 'KOL_IDS_SELF_FAST_BOOT': return call.KOL_IDS_SELF_FAST_BOOT(...args);
+      case 'KOL_IDS_SELF_INIT_WORKSPACE': return call.KOL_IDS_SELF_INIT_WORKSPACE(...args);
+      case 'KOL_IDS_SELF_GET_STATE': return call.KOL_IDS_SELF_GET_STATE(...args);
+      case 'KOL_IDS_SELF_SAVE': return call.KOL_IDS_SELF_SAVE(...args);
+      case 'KOL_IDS_SELF_SAVE_CAMPAIGN_CONTEXT': return call.KOL_IDS_SELF_SAVE_CAMPAIGN_CONTEXT(...args);
+      case 'KOL_IDS_SELF_SAVE_CAMPAIGN_DRAFT': return call.KOL_IDS_SELF_SAVE_CAMPAIGN_DRAFT(...args);
+      case 'KOL_IDS_SELF_SAVE_AUDIENCE_CONTEXT': return call.KOL_IDS_SELF_SAVE_AUDIENCE_CONTEXT(...args);
+      case 'KOL_IDS_SELF_SAVE_DECISION_CONTEXT': return call.KOL_IDS_SELF_SAVE_DECISION_CONTEXT(...args);
+      case 'KOL_IDS_SELF_RUN': return call.KOL_IDS_SELF_RUN(...args);
+      case 'KOL_IDS_SELF_SAVE_SELECTION': return call.KOL_IDS_SELF_SAVE_SELECTION(...args);
+      case 'KOL_IDS_SELF_SAVE_PERFORMANCE': return call.KOL_IDS_SELF_SAVE_PERFORMANCE(...args);
+      case 'KOL_IDS_SELF_SAVE_GEN_CODES': return call.KOL_IDS_SELF_SAVE_GEN_CODES(...args);
+      case 'KOL_IDS_SELF_GET_GEN_CODES': return call.KOL_IDS_SELF_GET_GEN_CODES(...args);
+      case 'KOL_IDS_SELF_GET_REPORT': return call.KOL_IDS_SELF_GET_REPORT(...args);
+      case 'KOL_IDS_SELF_GET_HISTORY': return call.KOL_IDS_SELF_GET_HISTORY(...args);
+      case 'KOL_IDS_SELF_EXPORT_CURRENT': return call.KOL_IDS_SELF_EXPORT_CURRENT(...args);
+      case 'KOL_IDS_SELF_RESET': return call.KOL_IDS_SELF_RESET(...args);
+      case 'KOL_IDS_SELF_UPLOAD_IMAGE': return call.KOL_IDS_SELF_UPLOAD_IMAGE(...args);
+      case 'KOL_IDS_SYSTEM_SAAS_SIGN_IN': return call.KOL_IDS_SYSTEM_SAAS_SIGN_IN(...args);
+      case 'KOL_IDS_SYSTEM_SAAS_GET_SESSION': return call.KOL_IDS_SYSTEM_SAAS_GET_SESSION(...args);
+      case 'KOL_IDS_COMMERCIAL_GET_ACCESS': return call.KOL_IDS_COMMERCIAL_GET_ACCESS(...args);
+      case 'KOL_IDS_COMMERCIAL_PACKAGES': return call.KOL_IDS_COMMERCIAL_PACKAGES(...args);
+      case 'KOL_IDS_COMMERCIAL_TRIAL_INFO': return call.KOL_IDS_COMMERCIAL_TRIAL_INFO(...args);
+      case 'KOL_IDS_COMMERCIAL_ENABLE_SELF_TEST': return call.KOL_IDS_COMMERCIAL_ENABLE_SELF_TEST(...args);
+      case 'KOL_IDS_GET_READINESS': return call.KOL_IDS_GET_READINESS(...args);
+      case 'KOL_IDS_VALIDATE_PERFORMANCE_IMPORT': return call.KOL_IDS_VALIDATE_PERFORMANCE_IMPORT(...args);
+      case 'KOL_IDS_SAVE_VERIFIED_PERFORMANCE': return call.KOL_IDS_SAVE_VERIFIED_PERFORMANCE(...args);
+      case 'KOL_IDS_GET_DECISION_BOARD': return call.KOL_IDS_GET_DECISION_BOARD(...args);
+      case 'KOL_IDS_SIMULATE_DECISION': return call.KOL_IDS_SIMULATE_DECISION(...args);
+      case 'KOL_IDS_DECISION_SAVE_DECISION_MEMO': return call.KOL_IDS_DECISION_SAVE_DECISION_MEMO(...args);
+      case 'KOL_IDS_IDI_GET_DASHBOARD': return call.KOL_IDS_IDI_GET_DASHBOARD(...args);
+      case 'KOL_IDS_SYSTEM_SAAS_GET_DASHBOARD': return call.KOL_IDS_SYSTEM_SAAS_GET_DASHBOARD(...args);
+      case 'KOL_IDS_SYSTEM_SAAS_GET_PORTFOLIO': return call.KOL_IDS_SYSTEM_SAAS_GET_PORTFOLIO(...args);
+      default: return finish(reject,new Error('Unknown Apps Script function: '+fn));
+    }
+  }));
+}
+function setStatus(id,msg,type=''){const e=$(id);if(!e)return;e.innerHTML=msg?`<div class="status ${type}"><i class="dotStatus"></i><span>${esc(msg)}</span></div>`:''}
+
+function validateAudience(){if(!$('brandName').value.trim()||!$('campaignName').value.trim()){go(1);alert('Brand name and campaign name are required.');return false}if(!getObjectives().length){go(1);alert('Select at least one campaign objective.');return false}if(!$('audience').value.trim()){alert('Audience description is required.');return false}return true}
+function addKOL(){const creatorId='CR-'+cryptoRandomId_();state.kols.push({creatorId:creatorId,id:creatorId,name:'',platform:'Instagram',category:$('category').value,followers:'',engagementRate:'',rate:'',platformUrl:'',photoUrl:'',audienceAge:'',audienceGender:'',audienceLocation:'',audienceBehavior:'',audienceInterest:'',contentStyle:'',previousBrandWork:'',previousCampaignResult:'',audienceEvidence:'',engagementEvidence:'',contentEvidence:'',performanceEvidence:'',reputationEvidence:'',riskLevel:'LOW',description:'',analyzed:false,selected:false,analysis:null});renderKOLs()}
+function removeKOL(i){state.kols.splice(i,1);state.kols.forEach(k=>{if(!k.creatorId)k.creatorId=k.id||('CR-'+cryptoRandomId_());if(!k.id)k.id=k.creatorId});renderKOLs()}
+function formatCreatorNumber(el){if(!el)return;const raw=String(el.value||'').replace(/,/g,'').replace(/[^0-9.]/g,'');if(raw===''){el.value='';return}const parts=raw.split('.');const whole=(parts.shift()||'').replace(/^0+(?=\d)/,'')||'0';el.value=Number(whole).toLocaleString('en-US')+(parts.length?'.'+parts.join('').slice(0,2):'')}
+function numericCreatorValue(v){return Number(String(v==null?'':v).replace(/,/g,''))||0}
+function renderKOLs(){if(!state.kols.length){$('kolList').innerHTML='<div class="empty">No KOLs yet. Add your first creator.</div>';return}$('kolList').innerHTML=state.kols.map((k,i)=>`<article class="kol"><div class="kolhead"><img class="photo" id="photo-${i}" src="${esc(k.photoUrl||'')}" onerror="this.style.display='none'"><div><div class="kolname">${esc(k.name||'KOL '+(i+1))}</div><div class="koldesc">${esc(k.platform||'')} · ${esc(k.category||'')} · ${k.followers?esc(Number(String(k.followers).replace(/,/g,'')) .toLocaleString('en-US'))+' followers':'Profile data pending'}</div></div><button class="btn danger" onclick="removeKOL(${i})">Remove</button></div><div class="grid3" style="margin-top:13px"><div class="field"><label>Name <em class="req">*</em></label><input value="${esc(k.name)}" placeholder="e.g. Tontawan / Pimtha / Creator Name" oninput="state.kols[${i}].name=this.value"></div><div class="field"><label>Platform</label><select onchange="state.kols[${i}].platform=this.value"><option ${k.platform==='Instagram'?'selected':''}>Instagram</option><option ${k.platform==='TikTok'?'selected':''}>TikTok</option><option ${k.platform==='YouTube'?'selected':''}>YouTube</option><option ${k.platform==='Facebook'?'selected':''}>Facebook</option></select></div><div class="field"><label>Followers</label><input type="text" inputmode="numeric" value="${esc(k.followers?Number(String(k.followers).replace(/,/g,'')).toLocaleString('en-US'):'')}" placeholder="e.g. 1,250,000" oninput="formatCreatorNumber(this);state.kols[${i}].followers=this.value" onblur="formatCreatorNumber(this)"></div><div class="field"><label>Engagement rate %</label><input type="number" min="0" max="100" step="0.01" value="${esc(k.engagementRate)}" placeholder="e.g. 4.8" oninput="state.kols[${i}].engagementRate=this.value"></div><div class="field"><label>Commercial rate</label><input type="text" inputmode="numeric" value="${esc(k.rate?Number(String(k.rate).replace(/,/g,'')).toLocaleString('en-US'):'')}" placeholder="e.g. 80,000 THB" oninput="formatCreatorNumber(this);state.kols[${i}].rate=this.value" onblur="formatCreatorNumber(this)"></div><div class="field"><label>Platform URL</label><input value="${esc(k.platformUrl)}" placeholder="https://instagram.com/creator" oninput="state.kols[${i}].platformUrl=this.value"></div></div><div class="upload" style="margin-top:12px"><label>Creator image <span class="sub">Upload — no image URL required</span></label><input type="file" accept="image/*" onchange="uploadPhoto(${i},this)"></div><h3>Creator audience evidence</h3><div class="grid3"><div class="field"><label>Age range <em class="req">*</em></label><input value="${esc(k.audienceAge)}" placeholder="e.g. 24–35" oninput="state.kols[${i}].audienceAge=this.value"></div><div class="field"><label>Gender <em class="req">*</em></label><input value="${esc(k.audienceGender)}" placeholder="e.g. Female / Mixed" oninput="state.kols[${i}].audienceGender=this.value"></div><div class="field"><label>Location</label><input value="${esc(k.audienceLocation)}" placeholder="e.g. Bangkok / Thailand" oninput="state.kols[${i}].audienceLocation=this.value"></div><div class="field"><label>Audience interests <em class="req">*</em></label><input value="${esc(k.audienceInterest||'')}" placeholder="e.g. women's fashion, styling, café, beauty" oninput="state.kols[${i}].audienceInterest=this.value"></div><div class="field"><label>Content style <em class="req">*</em></label><input value="${esc(k.contentStyle||'')}" placeholder="e.g. styling reels, GRWM, reviews, live shopping" oninput="state.kols[${i}].contentStyle=this.value"></div></div><div class="grid"><div class="field"><label>Observed behavior</label><textarea placeholder="e.g. followers save/share styling posts; strong comments on outfit content" oninput="state.kols[${i}].audienceBehavior=this.value">${esc(k.audienceBehavior)}</textarea><small class="hint">What the audience actually does, not what you hope they do.</small></div><div class="field"><label>Creator description</label><textarea placeholder="e.g. feminine fashion creator focused on wearable office-to-weekend styling" oninput="state.kols[${i}].description=this.value">${esc(k.description)}</textarea></div></div><h3>Campaign & evidence signals <span class="sub">These improve campaign-match confidence.</span></h3><div class="grid"><div class="field"><label>Audience evidence <em class="req">*</em></label><textarea placeholder="e.g. platform insight, audience screenshot summary, demographic source" oninput="state.kols[${i}].audienceEvidence=this.value">${esc(k.audienceEvidence||'')}</textarea></div><div class="field"><label>Engagement evidence</label><textarea placeholder="e.g. recent post ER, average comments/saves/shares, source/date" oninput="state.kols[${i}].engagementEvidence=this.value">${esc(k.engagementEvidence||'')}</textarea></div><div class="field"><label>Content evidence</label><textarea placeholder="e.g. examples showing styling/review/GRWM/product content fit" oninput="state.kols[${i}].contentEvidence=this.value">${esc(k.contentEvidence||'')}</textarea></div><div class="field"><label>Performance evidence</label><textarea placeholder="e.g. clicks, orders, revenue, ROAS or other verified campaign evidence" oninput="state.kols[${i}].performanceEvidence=this.value">${esc(k.performanceEvidence||'')}</textarea></div><div class="field"><label>Reputation / safety evidence</label><textarea placeholder="e.g. known brand-safety concerns or verified clean history" oninput="state.kols[${i}].reputationEvidence=this.value">${esc(k.reputationEvidence||'')}</textarea></div><div class="field"><label>Risk level</label><select onchange="state.kols[${i}].riskLevel=this.value"><option value="LOW" ${String(k.riskLevel||'LOW').toUpperCase()==='LOW'?'selected':''}>LOW</option><option value="MEDIUM" ${String(k.riskLevel||'').toUpperCase()==='MEDIUM'?'selected':''}>MEDIUM</option><option value="HIGH" ${String(k.riskLevel||'').toUpperCase()==='HIGH'?'selected':''}>HIGH</option></select><small class="hint">Use only when there is evidence; do not guess.</small></div></div>${k.analyzed?renderAnalysis(k,i):''}</article>`).join('')}
+function renderAnalysis(k,i){const a=k.analysis||{};const dims=[['Brand fit',a.brandFit],['Audience fit',a.audienceFit],['Campaign fit',a.campaignFit],['Content fit',a.contentFit],['Value fit',a.valueFit],['Confidence',a.confidence],['Impact',a.impact],['Safety',a.safety]];return `<div class="fitAction"><div class="koltop"><div><b>Analysis result</b><div class="koldesc">Calculated from the canonical decision engine.</div></div><span class="badge ${scoreClass(a.fit)}">Fit ${fmtScore(a.fit)}</span></div><div class="scoregrid">${dims.map(x=>`<div class="score"><span>${esc(x[0])}</span><b>${fmtScore(x[1])}</b><div class="bar"><i style="width:${Math.max(0,Math.min(100,num(x[1])))}%"></i></div></div>`).join('')}</div><div style="margin-top:10px;font-size:13px"><b>Decision:</b> ${esc(a.decision||'Review')} · <b>Risk:</b> ${esc(a.risk||'—')} · <b>Confidence:</b> ${fmtScore(a.confidence)}</div>${a.decision&&String(a.decision).toUpperCase().includes('NOT')?`<div class="status warn"><i class="dotStatus"></i><span><b>How to improve fit:</b> ${esc(a.remediation||'Strengthen audience alignment, content relevance, proof of performance and campaign-specific creative before selection.')}</span></div>`:''}<label class="selectline" style="margin-top:12px"><input type="checkbox" ${k.selected?'checked':''} onchange="toggleSelect(${i},this.checked)"> Select this KOL for the campaign shortlist</label></div>`}
+function scoreClass(v){return num(v)>=70?'b-good':num(v)>=50?'b-warn':'b-bad'}function fmtScore(v){return v===''||v==null?'—':Math.round(num(v))}
+async function uploadPhoto(i,input){const f=input.files&&input.files[0];if(!f)return;if(f.size>5*1024*1024){alert('Please use an image under 5 MB.');input.value='';return}const reader=new FileReader();reader.onload=async()=>{try{setStatus('analysisStatus','Uploading image…','busy');const r=await server('KOL_IDS_SELF_UPLOAD_IMAGE',{data:reader.result,name:f.name,mimeType:f.type});state.kols[i].photoUrl=r.url;renderKOLs();setStatus('analysisStatus','Image uploaded successfully.','good')}catch(e){setStatus('analysisStatus',e.message,'bad')}};reader.readAsDataURL(f)}
+function toggleSelect(i,on){const k=state.kols[i];if(!k)return;k.creatorId=String(k.creatorId||k.id||'').trim()||('CR-'+cryptoRandomId_());k.id=k.id||k.creatorId;k.selected=on;state.selected=state.kols.filter(x=>x.selected&&x.analyzed).map(x=>x.name);state.selectedCreatorIds=state.kols.filter(x=>x.selected&&x.analyzed).map(x=>String(x.creatorId||x.id||'')).filter(Boolean);}
+async function analyzeKOLs(){if(!validateAudience())return;const valid=state.kols.filter(k=>k.name.trim());if(!valid.length){alert('Add at least one KOL.');return}setStatus('analysisStatus','Saving campaign context and analyzing creator candidates…','busy');try{state.kols.forEach(k=>{if(!k.creatorId)k.creatorId=k.id||('CR-'+cryptoRandomId_());if(!k.id)k.id=k.creatorId});const payload=buildPayload();const save=await server('KOL_IDS_SELF_SAVE',payload);KOL_IDS_CANONICAL_apply_(save);state.analysis=save;const run=await server('KOL_IDS_SELF_RUN',{mode:'CANDIDATE_ANALYSIS'});KOL_IDS_CANONICAL_apply_(run);const report=await server('KOL_IDS_SELF_GET_REPORT');applyReportToKOLs(report);setStatus('analysisStatus',`Analysis complete · ${report.count||state.kols.length} creator results calculated. Select one or more creators to build the shortlist.`,'good');$('analysisPill').textContent=save.analysisId||'Active analysis';go(4);}catch(e){setStatus('analysisStatus',String(e?.message||e),'bad')}}
+function applyReportToKOLs(report){state.report=report;const h=report.headers||[];const idx={};h.forEach((x,i)=>idx[String(x).toLowerCase()]=i);state.kols.forEach(k=>{const row=(report.rows||[]).find(r=>String(r[idx['kol id']]||'')===String(k.id)||String(r[idx['kol name']]||'')===String(k.name));if(!row)return;const val=n=>idx[n]!=null?num(row[idx[n]]):'';k.analyzed=true;k.analysis={fit:val('brand fit score'),impact:val('brand impact score'),confidence:val('confidence score'),risk:idx['risk level']!=null?row[idx['risk level']]: '',decision:idx['decision']!=null?row[idx['decision']]: 'Review',brandFit:val('brand fit score'),audienceFit:val('audience fit'),campaignFit:val('content fit'),contentFit:val('content fit'),valueFit:val('value fit'),safety:100,remediation:idx['not ideal for']!=null?row[idx['not ideal for']]:''};});renderKOLs()}
+function getObjectives(){return [...document.querySelectorAll('#objectiveChoices input:checked')].map(x=>x.value)}
+const OBJECTIVES=['Brand Awareness','Reach','Engagement','Consideration','Traffic','Lead Generation','Conversion','Sales','App Install','Product Trial','Community Growth','Brand Preference','Reputation','Product Launch','Repositioning','Retention','Advocacy','Purchase Intent','Customer Acquisition','Revenue Growth','Market Share'];
+function renderObjectiveChoices(){
+  /* Canonical Objective renderer lives in the 1.0.0 enterprise runtime patch.
+     Delegate from the legacy local function so hydrateContext() always uses
+     the same state, selection limit, and visual renderer. */
+  if(typeof window.renderObjectiveChoices==='function' && window.renderObjectiveChoices!==renderObjectiveChoices){
+    return window.renderObjectiveChoices();
+  }
+  const selected=new Set(state.objectives||[]);
+  const host=$('objectiveChoices'); if(!host)return;
+  host.innerHTML=OBJECTIVES.map(o=>`<label class="objectiveChip ${selected.has(o)?'selected':''}"><input type="checkbox" value="${esc(o)}" ${selected.has(o)?'checked':''} onchange="toggleObjective(this)"><span>${esc(o)}</span></label>`).join('');
+}
+function renderAccessPlans(plans){const host=$('accessPlans');if(!host)return;const arr=Array.isArray(plans)?plans:[];const labels={decision:'Decision intelligence',shortlist:'Creator shortlist',report:'Reports / export',attribution:'Attribution',learning:'Outcome learning',benchmark:'Benchmarking',portfolio:'Portfolio intelligence',multi_brand:'Multi-brand workspace',priority:'Priority support'};host.innerHTML=arr.map((p,i)=>`<div class="accessPlan ${i===1?'featured':''}"><h3>${esc(p.name)}</h3><div class="sub">${Number(p.months||0)}-month full workspace access</div><div class="accessPrice">THB ${Number(p.price||0).toLocaleString('en-US')}</div><ul><li>Full intelligence workspace</li><li>${Number(p.maxAccounts||1)} Google Account${Number(p.maxAccounts||1)===1?'':'s'} · same Client ID + Access Key</li><li>Multi-brand</li><li>Campaigns & creator analysis</li><li>Outcome learning & benchmarking</li><li>${esc((p.features||[]).map(x=>labels[x]||x).join(' · '))}</li></ul></div>`).join('')}
+async function showAccessGate(message){$('app')?.classList.add('hidden');$('boot')?.classList.add('hidden');$('accessGate')?.classList.remove('hidden');if($('health'))$('health').textContent='Access required';if($('accessMessage'))$('accessMessage').textContent=message||'This account does not have an active plan yet.';try{const packs=await server('KOL_IDS_COMMERCIAL_PACKAGES');renderAccessPlans(packs);if($('trialPricingText'))$('trialPricingText').textContent=packs.map(p=>p.name+' · THB '+Number(p.price||0).toLocaleString('en-US')+' · '+Number(p.maxAccounts||1)+' Google Account'+(Number(p.maxAccounts||1)===1?'':'s')).join('  •  ');if($('trialFormLink')){try{const info=await server('KOL_IDS_COMMERCIAL_TRIAL_INFO');if(info?.url)$('trialFormLink').href=info.url;}catch(ignore){}}}catch(e){} }
+function toggleAccessKeyView(){const input=$('customerAccessKey'),btn=$('customerSessionBtn');if(!input)return;const show=input.type==='password';input.type=show?'text':'password';if(btn){btn.textContent=show?'Hide Access Key':'View Access Key';btn.setAttribute('aria-pressed',show?'true':'false');}input.focus();}
+async function customerSignIn(){
+  if(window.__KOL_IDS_SIGNIN_IN_FLIGHT__) return false;
+  const clientId=String($('customerClientId')?.value||'').trim();
+  const accessKey=String($('customerAccessKey')?.value||'').trim();
+  if(!clientId){setStatus('accessStatus','Client ID is required.','bad');$('customerClientId')?.focus();return false;}
+  if(!accessKey){setStatus('accessStatus','Access Key is required.','bad');$('customerAccessKey')?.focus();return false;}
+
+  window.__KOL_IDS_SIGNIN_IN_FLIGHT__=true;
+  const btn=$('customerSignInBtn');
+  if(btn){btn.disabled=true;btn.textContent='Verifying…';}
+  if($('accessMessage'))$('accessMessage').textContent='Checking access…';
+  setStatus('accessStatus','Verifying Client ID and Access Key…','busy');
+
+  try{
+    /* Authentication is the only blocking step. Workspace hydration runs
+       after the shell is visible so a slow spreadsheet cannot look like a
+       frozen Sign in button. */
+    const r=await server('KOL_IDS_SYSTEM_SAAS_SIGN_IN',{clientId:clientId,accessKey:accessKey});
+    if(!r?.success||!r?.authenticated)throw new Error(r?.message||'Customer authentication failed.');
+
+    const fallbackBoot={
+      success:true,
+      workspaceId:String(r.workspaceId||''),
+      workspaceName:String(r.clientName||''),
+      ready:false,
+      deferredInitialization:true
+    };
+    state.boot=fallbackBoot;
+    $('accessGate')?.classList.add('hidden');
+    $('boot')?.classList.add('hidden');
+    $('app')?.classList.remove('hidden');
+    if($('workspacePill'))$('workspacePill').textContent=r.clientName||r.clientId||'Workspace';
+    if($('health'))$('health').textContent='Connected';
+    setStatus('accessStatus','Signed in successfully · Opening workspace…','good');
+    setStatus('analysisStatus','Signed in successfully · Loading workspace…','busy');
+    if($('accessMessage'))$('accessMessage').textContent='Workspace opened. Saved data is loading in the background.';
+    if(btn){btn.disabled=false;btn.textContent='Sign in';}
+    window.__KOL_IDS_SIGNIN_IN_FLIGHT__=false;
+
+    /* Do not make the customer wait for the heavy spreadsheet operations. */
+    void (async()=>{
+      try{
+        const packet=await server('KOL_IDS_SELF_FAST_BOOT');
+        const b=packet?.boot||fallbackBoot;
+        const s0=packet?.state||{};
+        state.boot=b;
+        hydrateContext(s0.context||s0);
+        state.decision=s0.decisionParameters||null;
+        const selectedIds=new Set(Array.isArray(s0.selectedCreatorIds)?s0.selectedCreatorIds:[]); const selectedNames=new Set(Array.isArray(s0.selectedCreators)?s0.selectedCreators:[]);
+        if(Array.isArray(s0.kols)&&s0.kols.length){
+          state.kols=s0.kols.map(k=>({...k,analyzed:false,selected:selectedIds.has(String(k.creatorId||k.id||'')) || selectedNames.has(k.name)}));
+          renderKOLs();
+        }
+        if(s0.analysisId&&$('analysisPill'))$('analysisPill').textContent=s0.analysisId;
+      }catch(e){
+        setStatus('analysisStatus','Signed in, but initial loading is taking longer than expected. The system will continue in the background.','warn');
+      }
+
+      try{
+        await server('KOL_IDS_SELF_INIT_WORKSPACE');
+        const full=await server('KOL_IDS_SELF_GET_STATE');
+        if(full){
+          if(full.flowContext){state.flowContext=full.flowContext;hydrateContext(full.flowContext)}
+          else if(full.context){state.flowContext=full.context;hydrateContext(full.context)}
+          if(full.analysisId&&$('analysisPill'))$('analysisPill').textContent=full.analysisId;
+          const pickedIds=new Set(Array.isArray(full.selectedCreatorIds)?full.selectedCreatorIds:[]); const pickedNames=new Set(Array.isArray(full.selectedCreators)?full.selectedCreators:[]);
+          if(Array.isArray(full.kols)&&full.kols.length){
+            state.kols=full.kols.map(k=>({...k,analyzed:false,selected:pickedIds.has(String(k.creatorId||k.id||'')) || pickedNames.has(k.name)}));
+            renderKOLs();
+          }
+          if(full.decisionParameters)state.decision=full.decisionParameters;
+        }
+        setStatus('analysisStatus','Workspace ready · Saved data loaded successfully.','good');
+      }catch(e){
+        setStatus('analysisStatus','Workspace is open, but saved data is loading slowly. Please refresh later if needed.','warn');
+      }
+    })();
+    return true;
+  }catch(e){
+    const msg=String(e?.message||e);
+    setStatus('accessStatus','Sign-in failed: '+msg,'bad');
+    if($('accessMessage'))$('accessMessage').textContent='Check your credentials and try again, or open the deployed Web App URL again.';
+    if($('health'))$('health').textContent='Connection failed';
+    if(btn){btn.disabled=false;btn.textContent='Try again';}
+    window.__KOL_IDS_SIGNIN_IN_FLIGHT__=false;
+    return false;
+  }
+}
+async function checkCustomerSession(){
+  /* Non-blocking session probe. The login form remains usable even if the
+     Apps Script session RPC is slow or temporarily unavailable. */
+  const started=Date.now();
+  const timeoutMs=4500;
+  try{
+    const r=await Promise.race([
+      server('KOL_IDS_SYSTEM_SAAS_GET_SESSION'),
+      new Promise(resolve=>setTimeout(()=>resolve({__timeout:true}),timeoutMs))
+    ]);
+    if(r?.__timeout){
+      setStatus('accessStatus','Ready for sign-in. Session check is still connecting in the background.','warn');
+      return false;
+    }
+    if(r?.authenticated){
+      $('accessGate')?.classList.add('hidden'); $('app')?.classList.remove('hidden');
+      setStatus('accessStatus','Existing customer session found. Opening workspace…','good');
+      await boot(); return true;
+    }
+    setStatus('accessStatus','Ready. Enter your Client ID and Access Key.','warn');
+    return false;
+  }catch(e){
+    setStatus('accessStatus','Ready for sign-in. '+String(e?.message||e),'warn');
+    return false;
+  }
+}
+
+async function checkCommercialAccess(){try{const r=await server('KOL_IDS_COMMERCIAL_GET_ACCESS');if(r&&r.allowed){$('accessGate')?.classList.add('hidden');$('app')?.classList.remove('hidden');if($('accessStatus'))$('accessStatus').innerHTML='';boot();return true;}await showAccessGate(r?.message);return false}catch(e){await showAccessGate(String(e?.message||e));return false}}
+async function enableSelfTestAccess(plan){try{setStatus('accessStatus','Opening a clearly-marked demo workspace…','busy');const r=await server('KOL_IDS_COMMERCIAL_ENABLE_SELF_TEST',plan);if(r?.success){setStatus('accessStatus','Demo access enabled. This is not a paid license. Opening the product…','good');setTimeout(()=>{location.reload()},350);}}catch(e){setStatus('accessStatus',String(e?.message||e),'bad')}}
+async function boot(){
+  if(window.__KOL_IDS_SHELL_FAILSAFE__){clearTimeout(window.__KOL_IDS_SHELL_FAILSAFE__);window.__KOL_IDS_SHELL_FAILSAFE__=null;}
+  const processing=$('bootProcessing'), elapsedEl=$('bootElapsed');
+  const started=Date.now(), token=++_bootRunToken;
+  _bootServerBusy=true;
+  /* NON-BLOCKING PRODUCTION BOOT: never keep the customer outside the app
+     while a Google Apps Script RPC is pending. The shell is usable immediately;
+     workspace/context hydration continues asynchronously. */
+  $('app').classList.remove('hidden');
+  $('boot').classList.add('hidden');
+  if ($('health')) $('health').textContent='Connecting…';
+  processing.classList.remove('hidden'); $('retry').classList.add('hidden'); $('retry').disabled=true;
+  $('bootStatus').innerHTML=''; $('bootLiveBar').style.animationPlayState='running';
+  const timer=setInterval(()=>{const sec=Math.floor((Date.now()-started)/1000);elapsedEl.textContent=sec+'s';bootProgress(sec)},250);
+  bootProgress(0);
+  try{
+    const packet=await server('KOL_IDS_SELF_FAST_BOOT');
+    if(token!==_bootRunToken)return;
+    const b=packet.boot||{}, s=packet.state||{};
+    bootSetRow('b1','Ready','Secure access verified'); bootSetRow('b2', b.workspaceId ? 'Ready' : 'Processing', b.workspaceId ? 'Existing workspace found' : 'Preparing workspace after sign-in…'); bootSetRow('b3','Processing','Loading saved context…');
+    $('bootLiveBar').style.animation='none'; $('bootLiveBar').style.width='100%';
+    $('bootLiveHintText').textContent='Account verified — opening the intelligence workspace'; $('bootProcessingText').textContent='Open workspace'; $('bootMsg').textContent='Connected successfully. Opening Intelligence Workspace…';
+    state.boot=b; hydrateContext(s.context||s); state.decision=s.decisionParameters||null;
+    const selectedIds=new Set(Array.isArray(s.selectedCreatorIds)?s.selectedCreatorIds:[]); const selectedNames=new Set(Array.isArray(s.selectedCreators)?s.selectedCreators:[]);
+    if(s.kols?.length){state.kols=s.kols.map(k=>({...k,analyzed:false,selected:selectedIds.has(String(k.creatorId||k.id||'')) || selectedNames.has(k.name)}));renderKOLs()}
+    $('workspacePill').textContent=(b.access?.demo?'Demo · ':'')+(b.access?.planName||b.email||b.workspaceName||'Workspace'); $('health').textContent='Connected';
+    $('app').classList.remove('hidden'); $('boot').classList.add('hidden'); if(s.analysisId)$('analysisPill').textContent=s.analysisId;
+    /* Open the workspace immediately. Restore the heavier full state in the background. */
+    setStatus('analysisStatus', b.ready ? 'Workspace connected. Loading saved intelligence…' : 'Workspace opening. Finishing workspace setup in background…','busy');
+    const initPromise = server('KOL_IDS_SELF_INIT_WORKSPACE');
+    initPromise.then(()=>server('KOL_IDS_SELF_GET_STATE')).then(full=>{
+      if(!full)return;
+      if(full.flowContext){state.flowContext=full.flowContext; hydrateContext(full.flowContext)} else if(full.context){state.flowContext=full.context; hydrateContext(full.context)}
+      if(full.analysisId)$('analysisPill').textContent=full.analysisId;
+      const pickedIds=new Set(Array.isArray(full.selectedCreatorIds)?full.selectedCreatorIds:[]); const pickedNames=new Set(Array.isArray(full.selectedCreators)?full.selectedCreators:[]);
+      if(Array.isArray(full.kols)&&full.kols.length){state.kols=full.kols.map(k=>({...k,analyzed:false,selected:pickedIds.has(String(k.creatorId||k.id||'')) || pickedNames.has(k.name)}));renderKOLs()}
+      if(full.decisionParameters) state.decision=full.decisionParameters;
+      setStatus('analysisStatus','Workspace ready · saved intelligence restored.','good');
+    }).catch(err=>{
+      setStatus('analysisStatus','Workspace is open. Saved intelligence is still loading: '+String(err?.message||err),'warn');
+    });
+  }catch(e){
+    if(token!==_bootRunToken)return;
+    const msg=String(e&&e.message||e);
+    bootSetRow('b1','Failed','Connection failed'); bootSetRow('b2','Failed','No workspace response received'); bootSetRow('b3','Waiting','Saved context not loaded');
+    if(/NO_ACTIVE_LICENSE|access is not active|active plan|Customer access/i.test(msg)){
+      clearInterval(timer); _bootServerBusy=false; await showAccessGate(msg); return;
+    }
+    /* Keep the shell open only for transient transport/bridge failures. */
+    $('health').textContent='Connection pending';
+    $('analysisPill').textContent='Workspace connection pending';
+    $('bootMsg').textContent='Workspace is open. Connection is continuing in the background.';
+    $('bootProcessingText').textContent='Connecting in the background'; $('bootLiveHintText').textContent='You can stay in the workspace — the system will restore data when the connection succeeds';
+    $('bootStatus').innerHTML=`<div class="status warn"><i class="dotStatus"></i><span>${esc(msg)}</span></div>`;
+    $('retry').classList.remove('hidden'); $('retry').disabled=false;
+  }finally{
+    if(token===_bootRunToken){clearInterval(timer);_bootServerBusy=false;}
+  }
+}
+/* ================================================================
+ * LEGACY_V25.13 CANONICAL UI FLOW
+ * Campaign is the root; each forward transition persists the stage first.
+ * ================================================================ */
+function validateCampaignRoot(){
+  const required=[['brandName','Brand name'],['campaignName','Campaign name'],['goal','Commercial goal'],['category','Category'],['market','Market'],['budget','Budget'],['startDate','Start date'],['endDate','End date'],['positioning','Brand positioning'],['brandValues','Brand values'],['brandAvoid','Brand avoid'],['keyMessages','Key messages']];
+  for(const [id,label] of required){const el=$(id);if(!el||!String(el.value||'').trim()){setStatus('s1',label+' is required before continuing.','bad');el?.focus();return false;}}
+  if(!getObjectives().length){setStatus('s1','Select at least one campaign objective.','bad');return false;} if(getObjectives().includes('REMOVED_OPTION')&&!String($('objectiveOther')?.value||'').trim()){setStatus('s1','Specify the custom campaign objective when Other is selected.','bad');$('objectiveOther')?.focus();return false;}
+  if(budgetNumber()<=0){setStatus('s1','Budget must be greater than 0.','bad');return false;}
+  if(new Date($('endDate').value)<new Date($('startDate').value)){setStatus('s1','End date must be on or after start date.','bad');return false;}
+  return true;
+}
+function audiencePayload(){return {audience:{description:$('audience').value,age:$('audienceAge').value,gender:$('audienceGender').value,behavior:$('audienceBehavior').value,location:$('audienceLocation').value,goalsNeeds:$('audienceGoals').value,painPoints:$('audiencePain').value,lifestyle:$('audienceLifestyle').value}}}
+async function KOL_IDS_UI_LEGACY_continueToAudience_(){if(!validateCampaignRoot())return;try{setStatus('s1','Saving Campaign foundation…','busy');const p=buildPayload();const r=await server('KOL_IDS_SELF_SAVE_CAMPAIGN_CONTEXT',p);state.analysis=r;state.step=1;$('analysisPill').textContent=r.analysisId||'Active analysis';setStatus('s1','Campaign foundation saved. Moving to Audience…','good');go(2)}catch(e){setStatus('s1',String(e?.message||e),'bad')}}
+async function KOL_IDS_UI_LEGACY_continueToPersona_(){if(!validateAudience())return;try{setStatus('s2','Saving Audience intelligence into the active campaign…','busy');const r=await server('KOL_IDS_SELF_SAVE_AUDIENCE_CONTEXT',audiencePayload());setStatus('s2','Audience intelligence saved. Moving to KOL Persona…','good');go(3)}catch(e){setStatus('s2',String(e?.message||e),'bad')}}
+function KOL_IDS_UI_LEGACY_go_(n){
+  if(n<1||n>7)return;
+  if(n>state.step+1){alert('Complete the previous stage first. This workflow is intentionally sequential so every calculation uses the same campaign context.');return;}
+  if(n===2 && !validateCampaignRoot())return;
+  if(n===3 && !validateAudience())return;
+  if(n===4 && !state.kols.some(k=>k.analyzed)){alert('Analyze at least one KOL before opening Decision Parameters.');return;}
+  if(n===5 && !state.selected.length){alert('Select at least one analyzed KOL before Review.');return;}
+  state.step=n;document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$('v'+n).classList.add('active');document.querySelectorAll('#nav button').forEach(b=>{const s=Number(b.dataset.step);b.classList.toggle('active',s===n);b.classList.toggle('done',s<n);b.disabled=s>n+1});$('progress').style.width=((n-1)/6*100)+'%';if(n===5)renderReview();if(n===6)renderPerformance();if(n===7){loadReports();loadHistory();loadExecutiveCommandCenter(false)}window.scrollTo({top:0,behavior:'smooth'})
+}
+async function KOL_IDS_UI_LEGACY_saveDecisionParameters_(){
+  const vals=['brand','audience','campaign','confidence','value','risk'].map(x=>num($('w'+x[0].toUpperCase()+x.slice(1)).value));
+  const sum=vals.reduce((a,b)=>a+b,0);if(Math.round(sum)!==100){setStatus('weightStatus',`Weights total ${sum}. They must equal 100 before the framework can be saved.`,'bad');return}
+  state.decision={brand:vals[0],audience:vals[1],campaign:vals[2],confidence:vals[3],value:vals[4],risk:vals[5],threshold:num($('fitThreshold').value),ceiling:num($('riskCeiling').value)};
+  try{
+    await server('KOL_IDS_SELF_SAVE_DECISION_CONTEXT',{decisionParameters:state.decision});
+    let legacySelected=state.kols.filter(k=>k.selected&&k.analyzed);if(!legacySelected.length){const analyzedOnly=state.kols.filter(k=>k&&k.analyzed&&k.analysis);if(analyzedOnly.length===1){analyzedOnly[0].selected=true;legacySelected=analyzedOnly;state.selected=legacySelected.map(k=>k.name);state.selectedCreatorIds=legacySelected.map(k=>String(k.creatorId||k.id||'')).filter(Boolean)}}if(!legacySelected.length){setStatus('weightStatus','Decision framework saved. Select at least one analyzed KOL to continue.','warn');return}
+    const r=await server('KOL_IDS_SELF_SAVE_SELECTION',{selectedCreatorIds:legacySelected.map(k=>String(k.creatorId||k.id||'')).filter(Boolean),selectedCreators:legacySelected.map(k=>k.name),decisionParameters:state.decision});
+    setStatus('weightStatus',`Decision framework saved · ${r.count||legacySelected.length} KOLs shortlisted.`,'good');go(5)
+  }catch(e){setStatus('weightStatus',String(e?.message||e),'bad')}
+}
+function KOL_IDS_UI_LEGACY_renderReview_(){const sel=state.kols.filter(k=>k.selected&&k.analyzed);state.selected=sel.map(k=>k.name);const ctx=state.flowContext||{};const c=ctx.campaign||{},b=ctx.brand||{};$('reviewList').innerHTML=(sel.length?`<div class="card" style="margin-bottom:12px;background:#f8fdff"><b>Campaign context locked for this run</b><div class="sub" style="margin-top:5px">${esc(b.name||'')} · ${esc(c.name||'')} · ${esc(c.currency||'')} ${Number(c.budget||0).toLocaleString('en-US')} · ${esc((c.objectives||[]).join(' + '))}</div></div>`:'')+(sel.length?sel.map(k=>`<div class="review"><div><b>${esc(k.name)}</b><div class="sub">${esc(k.platform)} · Fit ${fmtScore(k.analysis?.fit)} · Impact ${fmtScore(k.analysis?.impact)} · Confidence ${fmtScore(k.analysis?.confidence)}</div></div><span class="badge ${scoreClass(k.analysis?.fit)}">${esc(k.analysis?.decision||'Review')}</span></div>`).join(''):'<div class="empty">No shortlisted KOLs. Return to KOL Persona and select analyzed creators.</div>');}
+function KOL_IDS_setResolvedSelect_(id,value){
+  const el=$(id);
+  if(!el)return;
+  const target=String(value??'');
+  const options=[...el.options];
+  const exact=options.find(o=>String(o.value)===target || String(o.textContent).trim()===target);
+  if(exact){
+    el.value=exact.value;
+    return;
+  }
+  // Keep the UI safe when saved data contains a value that is no longer
+  // present in the current select options. Do not throw and block boot.
+  el.value='';
+}
+function hydrateContext(ctx){if(!ctx)return;const c=ctx.campaign||{},b=ctx.brand||{},a=ctx.audience||{};$('brandName').value=b.name||'';$('category').value=b.category||'';$('subCategory').value=b.subCategory||c.subCategory||'';$('market').value=b.market||c.market||'';$('positioning').value=b.positioning||'';$('brandPromise').value=b.promise||b.brandPromise||'';$('brandPersonality').value=b.personality||'';$('brandTone').value=b.tone||'';$('brandValues').value=b.values||b.brandValues||'';$('brandAvoid').value=b.avoid||b.brandAvoid||'';$('desiredPerception').value=b.desiredPerception||'';$('keyMessages').value=b.keyMessages||b.keywords||'';$('campaignName').value=c.name||'';KOL_IDS_setResolvedSelect_('goal',c.goal||''); if($('goalOther'))$('goalOther').value=c.goalOther||((c.goal&&![...$('goal').options].some(o=>o.value===c.goal))?c.goal:''); KOL_IDS_setResolvedSelect_('campaignType',c.campaignType||''); if($('campaignTypeOther'))$('campaignTypeOther').value=c.campaignTypeOther||''; KOL_IDS_setResolvedSelect_('currency',c.currency||'THB'); if($('currencyOther'))$('currencyOther').value=c.currencyOther||'';$('budget').value=c.budget?Number(c.budget).toLocaleString('en-US'):'';$('startDate').value=c.startDate||'';$('endDate').value=c.endDate||'';$('audience').value=a.description||c.audience||'';$('audienceAge').value=a.age||'';$('audienceGender').value=a.gender||'';$('audienceLocation').value=a.location||'';$('audienceBehavior').value=a.behavior||'';$('audienceGoals').value=a.goalsNeeds||'';$('audiencePain').value=a.painPoints||'';$('audienceLifestyle').value=a.lifestyle||'';state.objectives=Array.isArray(c.objectives)?c.objectives:(Array.isArray(ctx.objectives)?ctx.objectives:(c.objective?[c.objective]:[]));state.objectiveOther=String(c.objectiveOther||ctx.objectiveOther||'').trim();renderObjectiveChoices();  if($('objectiveOther'))$('objectiveOther').value=state.objectiveOther; }
+
+document.addEventListener('DOMContentLoaded',()=>{
+  renderObjectiveChoices();
+  $('budget')?.addEventListener('input',formatBudgetInput);
+
+  /* 1.0.0 CLICK HARDENING: do not rely on inline onclick handlers in the
+     Apps Script HTML iframe. Bind the customer entry actions explicitly and
+     expose them on window for backwards compatibility. */
+  window.customerSignIn = customerSignIn;
+  window.checkCustomerSession = checkCustomerSession;
+  const signInBtn = $('customerSignInBtn');
+  const sessionBtn = $('customerSessionBtn');
+  if(signInBtn && !signInBtn.dataset.bound){
+    signInBtn.dataset.bound='1';
+    signInBtn.addEventListener('click', function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      customerSignIn();
+    });
+  }
+  if(sessionBtn && !sessionBtn.dataset.bound){
+    sessionBtn.dataset.bound='1';
+    sessionBtn.addEventListener('click', function(ev){ev.preventDefault();ev.stopPropagation();toggleAccessKeyView();});
+  }
+  ['customerClientId','customerAccessKey'].forEach(function(id){
+    const el=$(id);
+    if(el && !el.dataset.loginKeyBound){
+      el.dataset.loginKeyBound='1';
+      el.addEventListener('keydown', function(ev){
+        if(ev.key==='Enter'){ ev.preventDefault(); customerSignIn(); }
+      });
+    }
+  });
+});
+
+/* Customer entry no longer auto-runs a session probe; Sign in is explicit. */
+
+/* ================================================================
+ * V26 CANONICAL UI — single-context edit / recalculation behavior
+ * ================================================================ */
+window.KOL_IDS_CANONICAL_UI=window.KOL_IDS_CANONICAL_UI||{revision:0,stale:[]};
+function KOL_IDS_CANONICAL_apply_(r){
+  if(!r)return;
+  const c=r.context||r.flowContext||r.canonical?.context;
+  if(c){
+    state.flowContext=c;
+    const ids=new Set(c.selectedCreatorIds||c.selection?.creatorIds||[]), names=new Set(c.selectedCreators||c.selection?.names||[]);
+    state.selected=(c.selection?.names||c.selectedCreators||[]).slice();
+    state.selectedCreatorIds=(c.selection?.creatorIds||c.selectedCreatorIds||[]).slice();
+    if(Array.isArray(c.kols)&&c.kols.length){
+      state.kols=c.kols.map(k=>{const x={...k};x.creatorId=String(x.creatorId||x.id||'').trim()||('CR-'+cryptoRandomId_());x.id=x.id||x.creatorId;x.selected=ids.has(x.creatorId)||names.has(x.name);return x});
+    }
+    if(c.decisionParameters)state.decision=c.decisionParameters;
+    hydrateContext(c);
+  }
+  window.KOL_IDS_CANONICAL_UI.revision=Number(r.revision??r.canonical?.revision??0)||0;
+  window.KOL_IDS_CANONICAL_UI.stale=r.staleStages||r.canonical?.staleStages||[];
+}
+
+/* ================================================================
+ * WORKFLOW NAVIGATION — single deterministic owner
+ * ================================================================ */
+function KOL_IDS_UI_SET_STEP_(n){
+  n=Number(n);
+  if(!Number.isFinite(n)||n<1||n>7)return false;
+  state.step=n;
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
+  var view=document.getElementById('v'+n);
+  if(!view)throw new Error('Workflow view v'+n+' is unavailable.');
+  view.classList.add('active');
+  document.querySelectorAll('#nav button').forEach(function(b){
+    var step=Number(b.dataset.step);
+    b.classList.toggle('active',step===n);
+    b.classList.toggle('done',step<n);
+    b.disabled=false;
+  });
+  var progress=document.getElementById('progress');
+  if(progress)progress.style.width=((n-1)/6*100)+'%';
+  if(n===5&&typeof renderReview==='function')renderReview();
+  if(n===6&&typeof renderPerformance==='function')renderPerformance();
+  if(n===7){
+    /* Report loading is explicitly gated by the transactional workflow router.
+       Do not silently open a report view when the report request failed. */
+    if(typeof loadHistory==='function')loadHistory();
+    if(typeof loadExecutiveCommandCenter==='function')loadExecutiveCommandCenter(false);
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+  return true;
+}
+
+function go(n){
+  n=Number(n);
+  if(!Number.isFinite(n)||n<1||n>7){
+    setStatus('analysisStatus','Invalid workflow destination.','bad');
+    return false;
+  }
+  var current=Number(state.step||1);
+
+  /* Back navigation is UI-only: NEVER validate or call the server. */
+  if(n<current){
+    try{
+      KOL_IDS_UI_SET_STEP_(n);
+      setStatus('analysisStatus','Returned to stage '+n+'.','good');
+      return true;
+    }catch(e){
+      setStatus('analysisStatus','Navigation failed: '+String(e&&e.message||e),'bad');
+      return false;
+    }
+  }
+
+  if(n>current+1){
+    setStatus('analysisStatus','Complete the previous stage first. You can always go back and edit a completed stage.','warn');
+    return false;
+  }
+  if(n===2&&!validateCampaignRoot()){
+    setStatus('s1','Complete the required Campaign fields before opening Audience.','bad');
+    return false;
+  }
+  if(n===3&&!validateAudience()){
+    setStatus('s2','Complete the required Audience fields before opening KOL Persona.','bad');
+    return false;
+  }
+  if(n===4&&!state.kols.some(function(k){return k.analyzed})){
+    setStatus('analysisStatus','Analyze at least one KOL before opening Decision Parameters.','bad');
+    return false;
+  }
+  if(n===5&&!state.selected.length){
+    setStatus('reviewStatus','Select at least one analyzed KOL before Review.','bad');
+    return false;
+  }
+  try{
+    KOL_IDS_UI_SET_STEP_(n);
+    setStatus('analysisStatus','Opened workflow stage '+n+'.','good');
+    return true;
+  }catch(e){
+    setStatus('analysisStatus','Navigation failed: '+String(e&&e.message||e),'bad');
+    return false;
+  }
+}
+
+async function KOL_IDS_UI_LEGACY_continueToAudience__(){await saveCampaignContextAndContinue_('continue')}
+
+function KOL_IDS_UI_RPC_WITH_TIMEOUT_(fn,payload,ms){
+  ms=Number(ms)||25000;
+  return Promise.race([
+    Promise.resolve().then(function(){return server(fn,payload)}),
+    new Promise(function(_,reject){
+      setTimeout(function(){reject(new Error('The save request timed out. Please try again.'))},ms);
+    })
+  ]);
+}
+
+async function continueToPersona(){
+  if(window.__KOL_IDS_AUDIENCE_BUSY__)return;
+  if(!validateAudience())return;
+  var btns=document.querySelectorAll('#v2 .actions button');
+  window.__KOL_IDS_AUDIENCE_BUSY__=true;
+  btns.forEach(function(b){b.disabled=true;b.setAttribute('aria-busy','true')});
+  try{
+    setStatus('s2','Saving Audience intelligence…','busy');
+    var r=await KOL_IDS_UI_RPC_WITH_TIMEOUT_('KOL_IDS_SELF_SAVE_AUDIENCE_CONTEXT',audiencePayload(),25000);
+    if(!r||r.success===false)throw new Error((r&&(r.message||r.error))||'The system did not confirm the Audience save.');
+    if(typeof KOL_IDS_CANONICAL_apply_==='function')KOL_IDS_CANONICAL_apply_(r);
+    setStatus('s2','Audience saved. Moving to KOL Persona…','good');
+    KOL_IDS_UI_SET_STEP_(3);
+  }catch(e){
+    setStatus('s2',String(e&&e.message||e),'bad');
+  }finally{
+    window.__KOL_IDS_AUDIENCE_BUSY__=false;
+    btns.forEach(function(b){b.disabled=false;b.removeAttribute('aria-busy')});
+  }
+}
+async function saveDecisionParameters(){const vals=['brand','audience','campaign','confidence','value','risk'].map(x=>num($('w'+x[0].toUpperCase()+x.slice(1)).value));const sum=vals.reduce((a,b)=>a+b,0);if(Math.round(sum)!==100){setStatus('weightStatus',`Weights total ${sum}. They must equal 100 before the framework can be saved.`,'bad');return}state.decision={brand:vals[0],audience:vals[1],campaign:vals[2],confidence:vals[3],value:vals[4],risk:vals[5],threshold:num($('fitThreshold').value),ceiling:num($('riskCeiling').value)};try{setStatus('weightStatus','Saving decision framework…','busy');const r=await server('KOL_IDS_SELF_SAVE_DECISION_CONTEXT',{decisionParameters:state.decision});KOL_IDS_CANONICAL_apply_(r);let selectedKols=state.kols.filter(k=>k.selected&&k.analyzed);if(!selectedKols.length){const analyzedOnly=state.kols.filter(k=>k&&k.analyzed&&k.analysis);if(analyzedOnly.length===1){analyzedOnly[0].selected=true;selectedKols=analyzedOnly;state.selected=selectedKols.map(k=>k.name);state.selectedCreatorIds=selectedKols.map(k=>String(k.creatorId||k.id||'')).filter(Boolean)}}if(selectedKols.length){const selected=selectedKols.map(k=>k.name);const s=await server('KOL_IDS_SELF_SAVE_SELECTION',{selectedCreatorIds:selectedKols.map(k=>String(k.creatorId||k.id||'')).filter(Boolean),selectedCreators:selected,decisionParameters:state.decision});KOL_IDS_CANONICAL_apply_(s);setStatus('weightStatus',`Decision framework saved · ${selected.length} creators shortlisted.`,'good');go(5)}else{setStatus('weightStatus','Decision framework saved. Select at least one analyzed KOL to continue.','warn')}}catch(e){setStatus('weightStatus',String(e?.message||e),'bad')}}
+function renderReview(){const ctx=state.flowContext||{},c=ctx.campaign||{},b=ctx.brand||{},sel=Array.isArray(ctx.selection?.creators)&&ctx.selection.creators.length?ctx.selection.creators:state.kols.filter(k=>k.selected&&k.analyzed);state.selected=sel.map(k=>k.name);$('reviewList').innerHTML=(sel.length?`<div class="card" style="margin-bottom:12px;background:#f8fdff"><b>Canonical Campaign Context · Revision ${esc(String(ctx.meta?.revision||'—'))}</b><div class="sub" style="margin-top:5px">${esc(b.name||'')} · ${esc(c.name||'')} · ${esc(c.currency||'')} ${Number(c.budget||0).toLocaleString('en-US')} · ${esc((c.objectives||[]).join(' + '))}</div>${ctx.meta?.staleStages?.length?`<div class="sub" style="margin-top:7px">Recalculation required: ${esc(ctx.meta.staleStages.join(', '))}</div>`:''}</div>`:'')+(sel.length?sel.map(k=>`<div class="review"><div><b>${esc(k.name)}</b><div class="sub">${esc(k.platform||'')} · Fit ${fmtScore(k.analysis?.fit??k.fitScore)} · Impact ${fmtScore(k.analysis?.impact??k.impactScore)} · Confidence ${fmtScore(k.analysis?.confidence??k.confidence)}</div></div><span class="badge ${scoreClass(k.analysis?.fit??k.fitScore)}">${esc(k.analysis?.decision||'Review')}</span></div>`).join(''):'<div class="empty">No shortlisted creators. Return to Creator Selection.</div>')}
+
+/* ================================================================
+ * 1.0.0 GEN CODE + ATTRIBUTION UI
+ * ================================================================ */
+function applyGenCodeState(c){
+  if(!c)return;
+  state.genCodePlan=c.genCodePlan||null;
+  state.genCodes=Array.isArray(c.genCodes?.codes)?c.genCodes.codes:[];
+  const p=state.genCodePlan||{};
+  if($('gcPrefix'))$('gcPrefix').value=p.prefix||'KOL';
+  if($('gcDiscountType'))$('gcDiscountType').value=p.discountType||'PERCENT';
+  if($('gcDiscountValue'))$('gcDiscountValue').value=p.discountValue??10;
+  if($('gcCommission'))$('gcCommission').value=p.commissionRate??8;
+  if($('gcMaxUses'))$('gcMaxUses').value=p.maxUses??0;
+  if($('gcWindow'))$('gcWindow').value=p.attributionWindowDays??30;
+  if($('gcValidityMode'))$('gcValidityMode').value=p.validityMode||'DAYS';
+  if($('gcValidityDays')){const d=Number(p.validityDays||30);$('gcValidityDays').value=['7','14','30','60','90','180','365'].includes(String(d))?String(d):'CUSTOM';}
+  if($('gcCustomDays'))$('gcCustomDays').value=(p.validityDays&&![7,14,30,60,90,180,365].includes(Number(p.validityDays)))?p.validityDays:'';
+  if($('gcCustomDate'))$('gcCustomDate').value=p.expiresAt&&p.validityMode==='CUSTOM_DATE'?p.expiresAt:'';
+  if($('gcStartDate'))$('gcStartDate').value=p.startDate||$('startDate')?.value||'';
+  if($('gcEndDate'))$('gcEndDate').value=p.endDate||$('endDate')?.value||'';
+  if($('gcNotes'))$('gcNotes').value=p.notes||'';
+  toggleGenCodeValidity();
+  renderGenCodes();
+}
+function renderGenCodes(){
+  const list=$('genCodeList'); if(!list)return;
+  const selectedIds=new Set((state.kols||[]).filter(k=>k.selected&&k.analyzed).map(k=>String(k.creatorId||k.id||'')).filter(Boolean));
+  const codes=(state.genCodes||[]).filter(c=>selectedIds.has(String(c.creatorId||'')) || (!c.creatorId && (state.selected||[]).includes(c.creatorName)));
+  if(!codes.length){list.innerHTML='<div class="empty">No creator codes yet. Generate codes above after the analysis run.</div>';return;}
+  list.innerHTML=codes.map(c=>`<div class="card" style="margin-top:12px;margin-bottom:0;background:#fcfeff"><div class="koltop"><div><b>${esc(c.creatorName)}</b><div class="sub">${esc(c.platform||'')} · ${esc(c.status||'ACTIVE')}</div></div><span class="badge b-good">${esc(c.code)}</span></div><div class="grid3" style="margin-top:12px"><div class="score"><span>Discount</span><b>${esc(c.discountType==='PERCENT'?c.discountValue+'%':c.discountType==='FIXED'?String(c.discountValue):'None')}</b></div><div class="score"><span>Commission</span><b>${fmtScore(c.commissionRate)}%</b></div><div class="score"><span>Code validity</span><b>${esc(c.expiresAt||'—')}</b></div><div class="score"><span>Attribution window</span><b>${fmtScore(c.attributionWindowDays)}d</b></div></div></div>`).join('');
+}
+function toggleGenCodeValidity(){
+  const mode=$('gcValidityMode')?.value||'DAYS';
+  $('gcValidityDaysWrap')?.style.setProperty('display',mode==='DAYS'?'block':'none');
+  const custom=$('gcValidityDays')?.value==='CUSTOM';
+  $('gcCustomDaysWrap')?.style.setProperty('display',mode==='DAYS'&&custom?'block':'none');
+  $('gcCustomDateWrap')?.style.setProperty('display',mode==='CUSTOM_DATE'?'block':'none');
+  updateGenCodeExpiryPreview();
+}
+function updateGenCodeExpiryPreview(){
+  const mode=$('gcValidityMode')?.value||'DAYS'; let expiry='';
+  if(mode==='CAMPAIGN_END') expiry=$('gcEndDate')?.value||'';
+  else if(mode==='CUSTOM_DATE') expiry=$('gcCustomDate')?.value||'';
+  else { let d=$('gcValidityDays')?.value||'30'; let days=d==='CUSTOM'?Number($('gcCustomDays')?.value||0):Number(d); const base=$('gcStartDate')?.value?new Date($('gcStartDate').value+'T00:00:00'):new Date(); if(days>0){base.setDate(base.getDate()+days);expiry=base.toISOString().slice(0,10);} }
+  if($('gcExpiryPreview'))$('gcExpiryPreview').innerHTML=expiry?`Code will expire on <b>${esc(expiry)}</b>. This is separate from the attribution window.`:'Select a validity period to calculate the expiry date.';
+}
+['gcValidityDays','gcCustomDays','gcCustomDate','gcStartDate','gcEndDate'].forEach(id=>document.addEventListener('change',e=>{if(e.target?.id===id){toggleGenCodeValidity();}}));
+
+async function generateGenCodes(forceNew){
+  if(!state.selected?.length){alert('Select at least one analyzed Creator first.');return;}
+  const validityMode=$('gcValidityMode').value; const selectedValidity=$('gcValidityDays').value; const validityDays=selectedValidity==='CUSTOM'?num($('gcCustomDays').value):num(selectedValidity);
+  if(validityMode==='DAYS'&&validityDays<1){setStatus('genCodeStatus','Enter a valid code validity in days.','bad');return;}
+  if(validityMode==='CUSTOM_DATE'&&!$('gcCustomDate').value){setStatus('genCodeStatus','Select a custom expiry date.','bad');return;}
+  if(validityMode==='CAMPAIGN_END'&&!$('gcEndDate').value){setStatus('genCodeStatus','Set the Campaign end date first.','bad');return;}
+  const payload={plan:{prefix:$('gcPrefix').value,discountType:$('gcDiscountType').value,discountValue:num($('gcDiscountValue').value),commissionRate:num($('gcCommission').value),maxUses:num($('gcMaxUses').value),attributionWindowDays:num($('gcWindow').value),startDate:$('gcStartDate').value,endDate:$('gcEndDate').value,validityMode,validityDays,expiresAt:$('gcCustomDate').value,notes:$('gcNotes').value},forceNew:!!forceNew};
+  setStatus('genCodeStatus',forceNew?'Regenerating unique creator codes…':'Generating creator codes…','busy');
+  try{const r=await server('KOL_IDS_SELF_SAVE_GEN_CODES',payload);if(!r||r.success===false)throw new Error((r&&(r.message||r.error))||'Gen Code server confirmation was not received.');KOL_IDS_CANONICAL_apply_(r);applyGenCodeState(r.context);setStatus('genCodeStatus',`${r.data?.count||state.genCodes.length} creator codes are active and linked to this campaign.`,'good');renderPerformance();return true}catch(e){setStatus('genCodeStatus',String(e?.message||e),'bad');return false}
+}
+function renderPerformance(){
+  const sel=(state.kols||[]).filter(k=>k.selected&&k.analyzed), codes=state.genCodes||[], byId={};codes.forEach(c=>byId[c.creatorId||c.creatorName]=c);
+  const list=$('performanceList'); if(!list)return;
+  list.innerHTML=sel.length?sel.map(k=>{const c=byId[k.creatorId||k.name];return `<div class="card perf" data-creator-id="${esc(k.creatorId||k.id||'')}" data-name="${esc(k.name)}" style="margin-top:12px"><div class="koltop"><div><h2>${esc(k.name)}</h2><div class="sub">Creator ID: <b>${esc(k.creatorId||k.id||'')}</b> · ${c?`Gen Code: <b>${esc(c.code)}</b>`:'No Gen Code generated yet'}</div></div>${c?`<span class="badge b-good">${esc(c.code)}</span>`:''}</div><div class="grid3" style="margin-top:12px"><div class="field"><label>Impressions</label><input data-p="impressions" type="number" min="0"></div><div class="field"><label>Reach</label><input data-p="reach" type="number" min="0"></div><div class="field"><label>Views</label><input data-p="views" type="number" min="0"></div><div class="field"><label>Unique Viewers</label><input data-p="uniqueViewers" type="number" min="0"></div><div class="field"><label>Likes</label><input data-p="likes" type="number" min="0"></div><div class="field"><label>Comments</label><input data-p="comments" type="number" min="0"></div><div class="field"><label>Shares</label><input data-p="shares" type="number" min="0"></div><div class="field"><label>Saves</label><input data-p="saves" type="number" min="0"></div><div class="field"><label>Clicks / Link Clicks</label><input data-p="clicks" type="number" min="0"></div><div class="field"><label>Profile Visits</label><input data-p="profileVisits" type="number" min="0"></div><div class="field"><label>Engagements</label><input data-p="engagements" type="number" min="0"></div><div class="field"><label>Watch Time (sec)</label><input data-p="watchTimeSeconds" type="number" min="0"></div><div class="field"><label>Completion %</label><input data-p="completionRatePct" type="number" min="0" max="100" step="0.01"></div><div class="field"><label>Avg View Duration (sec)</label><input data-p="avgViewDurationSeconds" type="number" min="0"></div><div class="field"><label>Avg View %</label><input data-p="avgViewPercentage" type="number" min="0" max="100" step="0.01"></div><div class="field"><label>Attendance</label><input data-p="attendance" type="number" min="0"></div><div class="field"><label>Check-ins</label><input data-p="checkIns" type="number" min="0"></div><div class="field"><label>Leads</label><input data-p="leads" type="number" min="0"></div><div class="field"><label>QR Scans</label><input data-p="qrScans" type="number" min="0"></div><div class="field"><label>Code Uses</label><input data-p="codeUses" type="number" min="0"></div><div class="field"><label>Orders</label><input data-p="orders" type="number" min="0"></div><div class="field"><label>Conversions</label><input data-p="conversions" type="number" min="0"></div><div class="field"><label>New customers</label><input data-p="newCustomers" type="number" min="0"></div><div class="field"><label>Spend</label><input data-p="spend" type="number" min="0"></div><div class="field"><label>Revenue</label><input data-p="revenue" type="number" min="0"></div><div class="field"><label>Incremental sales</label><input data-p="incrementalSales" type="number" min="0"></div><div class="field"><label>Notes</label><input data-p="notes" placeholder="Evidence / commercial context"></div></div></div>`}).join(''):'<div class="empty">Run the analysis and select at least one creator to capture performance.</div>';
+  updatePerformanceMetricGuide();
+}
+function updatePerformanceMetricGuide(){
+  const map={TIKTOK:'Views · Reach · Avg watch time · Completion · Shares · Saves · Clicks · Conversions',INSTAGRAM:'Reach · Views · Likes · Comments · Shares · Saves · Profile visits · Link clicks',FACEBOOK:'Reach · Impressions · Video views · Reactions · Comments · Shares · Link clicks',YOUTUBE:'Views · Unique viewers · Watch time · Avg view duration · Avg % viewed · CTR · Subscribers',X:'Impressions · Engagements · Likes · Replies · Reposts · Link clicks',ONLINE_ADS:'Impressions · Reach · CTR · CPC · CVR · CPA · ROAS',OFFLINE_EVENT:'Attendance · Check-ins · Leads · QR scans · Code uses · Orders · Revenue',RETAIL_O2O:'Footfall · QR scans · Code uses · Orders · New customers · Revenue'};
+  if($('channelMetricGuide'))$('channelMetricGuide').textContent='Recommended metrics: '+(map[$('perfChannel')?.value]||'');
+}
+async function savePerformance(){
+  const rows=[...document.querySelectorAll('.perf')].map(c=>{const get=k=>c.querySelector(`[data-p="${k}"]`)?.value||'';const code=(state.genCodes||[]).find(x=>(x.creatorId&&x.creatorId===c.dataset.creatorId)||x.creatorName===c.dataset.name);return {creatorId:c.dataset.creatorId,name:c.dataset.name,genCode:code?.code||'',channel:$('perfChannel')?.value||'TIKTOK',contentType:$('perfContentType')?.value||'',objective:$('perfObjective')?.value||'AWARENESS',source:$('perfSource')?.value||'MANUAL_INPUT',sourceId:$('perfSourceId')?.value||'',verificationStatus:$('perfVerification')?.value||'UNVERIFIED',impressions:num(get('impressions')),reach:num(get('reach')),views:num(get('views')),uniqueViewers:num(get('uniqueViewers')),likes:num(get('likes')),comments:num(get('comments')),shares:num(get('shares')),saves:num(get('saves')),clicks:num(get('clicks')),profileVisits:num(get('profileVisits')),engagements:num(get('engagements')),watchTimeSeconds:num(get('watchTimeSeconds')),completionRatePct:num(get('completionRatePct')),avgViewDurationSeconds:num(get('avgViewDurationSeconds')),avgViewPercentage:num(get('avgViewPercentage')),attendance:num(get('attendance')),checkIns:num(get('checkIns')),leads:num(get('leads')),qrScans:num(get('qrScans')),codeUses:num(get('codeUses')),orders:num(get('orders')),conversions:num(get('conversions')),newCustomers:num(get('newCustomers')),spend:num(get('spend')),revenue:num(get('revenue')),incrementalSales:num(get('incrementalSales')),notes:get('notes'),reportedDate:new Date().toISOString()}});
+  setStatus('perfStatus','Validating channel-specific metrics and saving…','busy');
+  try{const r=await server('KOL_IDS_SELF_SAVE_PERFORMANCE',{rows,currency:$('currency').value});if(!r||r.success===false)throw new Error((r&&(r.message||r.error))||'Performance server confirmation was not received.');if(r.canonical?.context){state.flowContext=r.canonical.context;applyGenCodeState(r.canonical.context)}setStatus('perfStatus',`${r.count||rows.length} performance records saved · ${r.channelCount||1} channel(s) · calculated KPI + attribution ready for report.`,'good');if(r.report){state.report=r.report;}else{var refreshed=await loadReports();if(refreshed!==true)throw new Error('Performance saved, but the refreshed report could not be confirmed.');}return true}catch(e){setStatus('perfStatus',String(e?.message||e),'bad');return false}
+}
+if($('perfChannel'))$('perfChannel').addEventListener('change',updatePerformanceMetricGuide);
+
+const _KOL_IDS_CANONICAL_apply_original=KOL_IDS_CANONICAL_apply_;
+KOL_IDS_CANONICAL_apply_=function(r){_KOL_IDS_CANONICAL_apply_original(r);const c=r?.context||r?.canonical?.context||r?.flowContext;if(c)applyGenCodeState(c)};
+const _KOL_IDS_CANONICAL_boot_original=boot;
+boot=async function(){try{await _KOL_IDS_CANONICAL_boot_original();if(state.flowContext)applyGenCodeState(state.flowContext)}catch(e){const msg=String(e&&e.message||e);if(/NO_ACTIVE_LICENSE|access is not active|active plan|Customer access/i.test(msg)){await showAccessGate(msg);return;}try{if($('app'))$('app').classList.remove('hidden');if($('boot'))$('boot').classList.add('hidden');if($('health'))$('health').textContent='Connection pending';}catch(ignore){};console.error('KOL IDS boot wrapper error',e)}};
+
+
+/* ================================================================
+ * 1.1.0 PREMIUM EXECUTIVE COMMAND CENTER
+ * Presentation-only layer. All figures come from canonical report,
+ * performance authority, portfolio intelligence and IDI evidence.
+ * ================================================================ */
+var KOL_IDS_COMMAND_CENTER_IN_FLIGHT__=false;
+function KOL_IDS_CC_money(v,currency){const n=Number(v);return Number.isFinite(n)?(currency||'THB')+' '+n.toLocaleString('en-US',{maximumFractionDigits:0}):'—'}
+function KOL_IDS_CC_pct(v){const n=Number(v);return Number.isFinite(n)?n.toFixed(n%1?1:0)+'%':'—'}
+function KOL_IDS_CC_score(v){const n=Number(v);return Number.isFinite(n)?Math.round(n):'—'}
+function KOL_IDS_CC_evidenceClass(g){g=String(g||'').toUpperCase();return g==='A'||g==='B'?'good':g==='C'?'warn':'bad'}
+function KOL_IDS_CC_render(report,portfolio,idi){
+  const host=$('executiveCommandCenter'); if(!host)return;
+  const rows=Array.isArray(report?.performanceRows)?report.performanceRows:[];
+  const currency=String($('currency')?.value||'THB');
+  const spend=rows.reduce((a,r)=>a+num(r.Spend),0), revenue=rows.reduce((a,r)=>a+num(r.Revenue),0), conversions=rows.reduce((a,r)=>a+num(r.Conversions),0), clicks=rows.reduce((a,r)=>a+num(r.Clicks),0);
+  const roas=spend>0?revenue/spend:null;
+  const decisions=Array.isArray(report?.rows)?report.rows:[];
+  const decisionCount=decisions.length;
+  const recommended=decisions.filter(r=>String(r[(report.headers||[]).findIndex(h=>String(h).toLowerCase()==='decision')]||'').toUpperCase().includes('RECOMMENDED')).length;
+  const review=decisions.filter(r=>String(r[(report.headers||[]).findIndex(h=>String(h).toLowerCase()==='decision')]||'').toUpperCase().includes('REVIEW')).length;
+  const highRisk=decisions.filter(r=>String(r[(report.headers||[]).findIndex(h=>String(h).toLowerCase()==='risk level')]||'').toUpperCase()==='HIGH').length;
+  const p=portfolio||{}, im=idi?.metrics||{};
+  const utilization=Number(p.budget)>0?Number(p.plannedSpend||0)/Number(p.budget)*100:null;
+  const selected=Array.isArray(p.selected)?p.selected:[];
+  const trendMap={};
+  rows.forEach(r=>{const d=r['Observed At']||r['Reported Date']||r['Recorded At'];const key=d?new Date(d).toISOString().slice(0,10):'';if(!key)return;const g=trendMap[key]||(trendMap[key]={date:key,spend:0,revenue:0,rows:0});g.spend+=num(r.Spend);g.revenue+=num(r.Revenue);g.rows++;});
+  const trend=Object.values(trendMap).sort((a,b)=>a.date.localeCompare(b.date)).slice(-8);
+  const trendMax=Math.max(1,...trend.map(x=>Math.max(x.spend,x.revenue)));
+  const riskRows=(selected.length?selected:decisions.map((r,i)=>{const h=report.headers||[];const ix=k=>h.findIndex(x=>String(x).toLowerCase()===k);return{name:r[ix('kol name')]||r[ix('creator name')]||'Creator '+(i+1),score:num(r[ix('investment score')]||r[ix('decision score')]||r[ix('brand impact score')]),risk:String(r[ix('risk level')]||'UNKNOWN').toUpperCase(),cost:0,confidence:num(r[ix('confidence score')]||r[ix('confidence')])}})).slice(0,10);
+  const riskDots=riskRows.map(x=>`<div class="kcc-risk-row"><div class="kcc-risk-name"><b>${esc(x.name||'—')}</b><span>${esc(x.risk||'UNKNOWN')}</span></div><div class="kcc-risk-track"><i style="width:${Math.max(4,Math.min(100,KOL_IDS_CC_score(x.score)||10))}%"></i></div><strong>${KOL_IDS_CC_score(x.score)}</strong></div>`).join('')||'<div class="kcc-empty">No decision rows yet.</div>';
+  const allocation=selected.map(x=>`<div class="kcc-alloc"><div><b>${esc(x.name||'—')}</b><small>${esc(x.reason||'Portfolio-selected creator')}</small></div><div class="kcc-alloc-meta"><b>${KOL_IDS_CC_money(x.cost,currency)}</b><span>${KOL_IDS_CC_score(x.score)} score</span></div></div>`).join('')||'<div class="kcc-empty">Run Portfolio Intelligence after creator analysis to populate allocation.</div>';
+  const trendHtml=trend.length?trend.map(x=>`<div class="kcc-trend-row"><span>${esc(x.date.slice(5))}</span><div class="kcc-trend-bars"><i title="Revenue" style="width:${Math.max(2,x.revenue/trendMax*100)}%"></i><em title="Spend" style="width:${Math.max(2,x.spend/trendMax*100)}%"></em></div><b>${x.revenue>0?KOL_IDS_CC_money(x.revenue,currency):'—'}</b></div>`).join(''):'<div class="kcc-empty">No observed outcome trend yet. Capture verified performance to activate it.</div>';
+  const grade=im.evidenceGrade||'—', gradeClass=KOL_IDS_CC_evidenceClass(grade);
+  host.innerHTML=`<div class="kcc-shell">
+    <div class="kcc-topline"><div><span class="kcc-eyebrow">KOL IDS · EXECUTIVE DASHBOARD</span><h2>Executive Dashboard</h2><p>A single decision surface for campaign health, creator selection, capital deployment and verified evidence.</p></div><div class="kcc-actions"><span class="kcc-live"><i></i> Canonical data</span><button class="btn ghost" type="button" onclick="loadExecutiveCommandCenter(true)">Refresh</button></div></div>
+    <div class="kcc-kpis">
+      <div class="kcc-kpi hero"><span>Campaign health</span><b>${esc(String(report?.dashboard?.healthScore??report?.campaignHealth??'—'))}</b><small>Decision confidence layer</small></div>
+      <div class="kcc-kpi"><span>Spend tracked</span><b>${KOL_IDS_CC_money(spend,currency)}</b><small>Recorded spend</small></div>
+      <div class="kcc-kpi"><span>Observed revenue</span><b>${KOL_IDS_CC_money(revenue,currency)}</b><small>Evidence-bound</small></div>
+      <div class="kcc-kpi"><span>Observed ROAS</span><b>${roas==null?'—':roas.toFixed(2)+'x'}</b><small>Not a causal claim</small></div>
+      <div class="kcc-kpi"><span>Conversions</span><b>${conversions.toLocaleString('en-US')}</b><small>${clicks.toLocaleString('en-US')} clicks</small></div>
+      <div class="kcc-kpi"><span>Evidence strength</span><b class="grade-${gradeClass}">${esc(String(grade))}</b><small>${Number(im.pairedOutcomes||0)} paired outcomes</small></div>
+    </div>
+    <div class="kcc-grid2">
+      <article class="kcc-panel kcc-funnel"><div class="kcc-panel-head"><div><span>DECISION FUNNEL</span><h3>From analysis to action</h3></div><b>${decisionCount} creators</b></div><div class="kcc-funnel-grid"><div><b>${decisionCount}</b><span>Assessed</span></div><div><b>${recommended}</b><span>Recommended</span></div><div><b>${review}</b><span>Review</span></div><div><b>${highRisk}</b><span>High risk</span></div></div><div class="kcc-mini-note">Recommendation quality is separated from actual outcome evidence.</div></article>
+      <article class="kcc-panel"><div class="kcc-panel-head"><div><span>CAPITAL DEPLOYMENT</span><h3>Portfolio allocation</h3></div><b>${selected.length} selected</b></div><div class="kcc-budget"><div><span>Planned</span><b>${KOL_IDS_CC_money(p.plannedSpend,currency)}</b></div><div><span>Remaining</span><b>${KOL_IDS_CC_money(p.budgetRemaining,currency)}</b></div><div><span>Utilization</span><b>${utilization==null?'—':utilization.toFixed(0)+'%'}</b></div></div><div class="kcc-alloc-list">${allocation}</div></article>
+    </div>
+    <div class="kcc-grid2">
+      <article class="kcc-panel"><div class="kcc-panel-head"><div><span>OUTCOME TREND</span><h3>Revenue vs spend</h3></div><b>${trend.length?trend.length+' periods':'No data'}</b></div><div class="kcc-legend"><span><i class="rev"></i>Revenue</span><span><i class="spend"></i>Spend</span></div><div class="kcc-trend">${trendHtml}</div></article>
+      <article class="kcc-panel"><div class="kcc-panel-head"><div><span>RISK MATRIX</span><h3>Decision exposure</h3></div><b>${highRisk} high risk</b></div><div class="kcc-axis"><span>LOW</span><span>DECISION SCORE</span><span>HIGH</span></div><div class="kcc-risk">${riskDots}</div></article>
+    </div>
+    <div class="kcc-bottom"><div><b>Evidence status</b><span>${grade==='A'||grade==='B'?'Evidence loop is active.':'More verified outcomes are required before strong learning claims.'}</span></div><div><b>Decision accuracy</b><span>${im.decisionAccuracy==null?'—':im.decisionAccuracy+'%'} · Rank correlation ${im.predictionRankCorrelation==null?'—':im.predictionRankCorrelation}</span></div><div><b>Potentially inefficient spend</b><span>${KOL_IDS_CC_money(im.potentiallyInefficientSpend,currency)} flagged for review</span></div></div>
+  </div>`;
+}
+async function loadExecutiveCommandCenter(force){
+  const host=$('executiveCommandCenter'); if(!host||KOL_IDS_COMMAND_CENTER_IN_FLIGHT__)return;
+  KOL_IDS_COMMAND_CENTER_IN_FLIGHT__=true;
+  host.innerHTML='<div class="kcc-loading"><div class="kcc-loader"></div><b>Building Executive Command Center…</b><span>Reading canonical decision, portfolio and outcome evidence.</span></div>';
+  try{
+    const [d,p,i]=await Promise.all([
+      server('KOL_IDS_SYSTEM_SAAS_GET_DASHBOARD'),
+      server('KOL_IDS_SYSTEM_SAAS_GET_PORTFOLIO'),
+      server('KOL_IDS_IDI_GET_DASHBOARD')
+    ]);
+    const report=d?.report||{}; report.dashboard=d?.dashboard||{};
+    KOL_IDS_CC_render(report,p,i);
+    if($('executiveCommandStatus'))setStatus('executiveCommandStatus','Executive Command Center refreshed · canonical data only.','good');
+  }catch(e){
+    host.innerHTML=`<div class="status bad"><i class="dotStatus"></i><span>${esc(String(e?.message||e))}</span></div>`;
+  }finally{KOL_IDS_COMMAND_CENTER_IN_FLIGHT__=false;}
+}
+
+/* 1.0.0 product-readiness surface: one human-readable contract for the
+ * campaign, attribution ledger and integration layer. It is read-only. */
+function readinessIcon(level){return level==='PASS'?'🟢':level==='WARN'?'🟡':'🔴'}
+async function loadReadiness(){
+  const host=$('readinessTable');if(!host)return;
+  host.innerHTML='<div class="status busy"><i class="dotStatus"></i><span>Checking workspace readiness…</span></div>';
+  try{const r=await server('KOL_IDS_GET_READINESS');
+    const headline=r.status==='READY'?'Ready for live operations':r.status==='READY_WITH_ACTIONS'?'Ready with actions':'Setup required before live operations';
+    host.innerHTML=`<div class="status ${r.success?'good':'bad'}"><i class="dotStatus"></i><span>${esc(headline)} · ${esc(String(r.summary?.passed||0))} passed, ${esc(String(r.summary?.warned||0))} actions, ${esc(String(r.summary?.failed||0))} blockers.</span></div><div class="grid3" style="margin-top:12px">${(r.checks||[]).map(c=>`<div class="score"><span>${readinessIcon(c.level)} ${esc(c.label)}</span><b>${esc(c.level)}</b><div class="sub" style="margin-top:5px">${esc(c.detail)}</div></div>`).join('')}</div>`;
+  }catch(e){host.innerHTML=`<div class="status bad"><i class="dotStatus"></i><span>${esc(String(e?.message||e))}</span></div>`}
+}
+
+
+/* Decision Intelligence UI: live and no-save simulation views. */
+function decisionTone(rec){return rec==='PROCEED'?'good':rec==='REQUEST_EVIDENCE'?'warn':'bad'}
+
+async function loadExecutiveDashboard(){
+  const host=$('executiveDashboard'); if(!host)return;
+  host.innerHTML='<div class="exec-loading">Refreshing executive dashboard…</div>';
+  try{
+    const d=await server('KOL_IDS_SYSTEM_SAAS_GET_DASHBOARD');
+    const x=d&&d.dashboard?d.dashboard:{};
+    const report=d&&d.report?d.report:{};
+    const rows=Array.isArray(report.rows)?report.rows:[];
+    const headers=Array.isArray(report.headers)?report.headers:[];
+    function idx(names){for(const n of names){const i=headers.findIndex(h=>String(h||'').trim().toLowerCase()===n.toLowerCase());if(i>=0)return i}return -1}
+    const scoreI=idx(['Decision Score','Overall Score','Fit Score','Brand Fit Score']);
+    const nameI=idx(['KOL Name','Creator Name','Name']);
+    const decisionI=idx(['Decision','Recommendation','Status']);
+    const confI=idx(['Confidence Score','Confidence']);
+    const riskI=idx(['Risk']);
+    const scores=rows.map(r=>Number(r[scoreI])).filter(Number.isFinite);
+    const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0;
+    const recommended=rows.filter(r=>/select|proceed|approved|recommended|strong/i.test(String(r[decisionI]||''))).length;
+    const review=rows.filter(r=>/review/i.test(String(r[decisionI]||''))).length;
+    const top=[...rows].sort((a,b)=>(Number(b[scoreI])||0)-(Number(a[scoreI])||0)).slice(0,5);
+    const health=Number(x.healthScore);
+    const healthLabel=x.campaignHealth||'—';
+    const card=(label,val,sub,accent)=>`<div class="exec-kpi ${accent?'accent':''}"><span>${esc(label)}</span><b>${esc(String(val))}</b><small>${esc(sub||'')}</small></div>`;
+    const topName=top[0]?String(top[0][nameI]||'Top creator'):'—';
+    const decision=top[0]?String(top[0][decisionI]||'—'):'—';
+    const risk=top[0]?String(top[0][riskI]||'—'):'—';
+    host.innerHTML=
+      card('Campaign health',Number.isFinite(health)?health+'/100':healthLabel,'Canonical dashboard status',true)+
+      card('Creators assessed',rows.length,'Current decision report')+
+      card('Recommended',recommended,'Decision-positive records')+
+      card('Review required',review,'Needs evidence / review')+
+      `<div class="exec-decision"><div class="exec-eyebrow" style="color:#12a8c5">PRIMARY SIGNAL</div><strong>${esc(topName)}</strong><div style="margin-top:8px;color:#766a70">${esc(decision)} · Risk ${esc(risk)}</div><div style="margin-top:10px;font-size:28px;font-weight:900">${scores.length?avg(scores):'—'}<span style="font-size:12px;color:#766a70"> avg decision score</span></div></div>`+
+      `<div class="exec-rank"><div style="font-weight:900;margin-bottom:4px">Top creator ranking</div><div style="font-size:11px;color:#766a70;margin-bottom:7px">Sorted by current canonical decision score.</div>`+
+      top.map((r,i)=>`<div class="exec-rank-row"><b>#${i+1}</b><span>${esc(String(r[nameI]||'Creator'))}</span><span class="exec-score">${esc(String(Number(r[scoreI])||0))}</span><span class="exec-pill">${esc(String(r[decisionI]||'—'))}</span></div>`).join('')+
+      `</div>`;
+  }catch(e){
+    host.innerHTML=`<div class="exec-empty"><b>Dashboard could not be refreshed.</b><div style="margin-top:5px">${esc(String(e?.message||e))}</div></div>`;
+  }
+}
+
+async function loadInvestmentIntelligence(){const host=$('idiDashboard');if(!host)return;host.innerHTML='<div class="status busy"><i class="dotStatus"></i><span>Building evidence loop…</span></div>';try{const d=await server('KOL_IDS_IDI_GET_DASHBOARD');const m=d.metrics||{};const card=(label,value,sub)=>`<div class="score"><span>${esc(label)}</span><b>${value==null?'—':esc(String(value))}</b><div class="sub" style="margin-top:5px">${esc(sub||'')}</div></div>`;host.innerHTML=`<div class="grid3">${card('Decision records',m.decisions,'Immutable decision ledger entries')}${card('Verified outcomes',m.outcomes,'Captured from business-impact records')}${card('Decision accuracy',m.decisionAccuracy==null?'—':m.decisionAccuracy+'%','Within ±15 outcome-index points; descriptive')}${card('Observed avg ROAS',m.avgObservedROAS==null?'—':m.avgObservedROAS+'x','Observed result, not a causal claim')}${card('Potentially inefficient spend',m.potentiallyInefficientSpend==null?'—':Number(m.potentiallyInefficientSpend).toLocaleString('en-US')+' THB','Low-score spend identified for review')}${card('Evidence grade',m.evidenceGrade,'Strength of current evidence')}${card('Prediction rank correlation',m.predictionRankCorrelation==null?'—':m.predictionRankCorrelation,'Decision ordering vs observed outcome ordering')}${card('Paired predictions',m.pairedOutcomes,'Predictions with actual outcomes')}${card('Total tracked spend',m.totalSpend==null?'—':Number(m.totalSpend).toLocaleString('en-US')+' THB','Recorded spend in the outcome ledger')}</div><div class="status ${m.evidenceGrade==='A'||m.evidenceGrade==='B'?'good':'warn'}" style="margin-top:12px"><i class="dotStatus"></i><span><b>Learning status:</b> ${esc((d.nextActions||[]).join(' '))}</span></div><div style="margin-top:13px"><b>Evidence / proof ledger</b><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>Metric</th><th>Value</th><th>Baseline</th><th>Delta</th><th>Evidence</th><th>Status</th><th>Sample</th></tr></thead><tbody>${(d.proof||[]).slice(-12).reverse().map(x=>`<tr><td>${esc(x.metric)}</td><td>${esc(x.value)}</td><td>${esc(x.baseline==null?'—':x.baseline)}</td><td>${esc(x.delta==null?'—':x.delta)}</td><td>${esc(x.evidenceLevel||'—')}</td><td>${esc(x.causalStatus||'—')}</td><td>${esc(x.sampleSize||'—')}</td></tr>`).join('')||'<tr><td colspan="7" class="sub">No proof records yet. Capture verified campaign outcomes to activate the learning loop.</td></tr>'}</tbody></table></div></div>`}catch(e){host.innerHTML=`<div class="status bad"><i class="dotStatus"></i><span>${esc(String(e?.message||e))}</span></div>`}}
+
+function mountDecisionIntelligence(){
+  const view=$('v4');if(!view||$('decisionIntel'))return;
+  const host=document.createElement('div');host.className='card';host.id='decisionIntel';
+  host.innerHTML='<div class="actions" style="margin-top:0"><div><h2>Decision Intelligence</h2><div class="sub">Explain the recommendation, expose evidence gaps, and compare a no-save what-if scenario.</div></div><div style="display:flex;gap:7px"><button class="btn ghost" onclick="loadDecisionBoard(false)">Refresh</button><button class="btn blue" onclick="loadDecisionBoard(true)">Simulate weights</button></div></div><div id="decisionBoard" style="margin-top:13px"></div>';
+  view.appendChild(host);
+  const report=document.createElement('div');report.className='card';report.id='decisionReportSnapshot';
+  report.innerHTML='<div class="actions" style="margin-top:0"><div><h2>Current Analysis Report</h2><div class="sub">Live results from the same canonical report used by Reports & Evidence. This is read-only here and follows the active Analysis ID.</div></div><button class="btn ghost" type="button" onclick="loadDecisionReportSnapshot()">Refresh report</button></div><div id="decisionReportTable" style="margin-top:13px"></div>';
+  view.appendChild(report);
+}
+function decisionReportValue(row,idx,names){
+  for(const n of names){const i=idx[n.toLowerCase()];if(i!=null)return row[i];}
+  return '';
+}
+function renderDecisionReportSnapshot(r){
+  const host=$('decisionReportTable');if(!host)return;
+  const rows=r&&Array.isArray(r.rows)?r.rows:[], headers=r&&Array.isArray(r.headers)?r.headers:[];
+  if(!rows.length){host.innerHTML='<div class="empty">No current analysis report is available yet. Complete Analyze KOLs first.</div>';return;}
+  const idx={};headers.forEach((h,i)=>idx[String(h||'').trim().toLowerCase()]=i);
+  const cols=[
+    ['KOL Name',['kol name','creator name','name']],
+    ['Recommendation',['recommendation','decision']],
+    ['Decision Score',['decision score','overall score','fit score']],
+    ['Brand Fit',['brand fit score','brand fit']],
+    ['Audience Fit',['audience fit']],
+    ['Content Fit',['content fit']],
+    ['Confidence',['confidence score','confidence']],
+    ['Risk',['risk level','risk']],
+    ['Evidence',['evidence status','evidence quality','evidence']]
+  ];
+  host.innerHTML='<div class="status good" style="margin-top:0"><i class="dotStatus"></i><span><b>Report loaded.</b> '+rows.length+' creator result(s) · Analysis '+esc(r.activeAnalysisId||'active')+'</span></div><div class="tablewrap" style="margin-top:12px"><table><thead><tr>'+cols.map(c=>'<th>'+esc(c[0])+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+cols.map(c=>'<td>'+esc(decisionReportValue(row,idx,c[1])==null?'—':String(decisionReportValue(row,idx,c[1])))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div><div class="sub" style="margin-top:9px">Source: canonical creator decision report. Performance/outcome data remains separate evidence and is not inferred from this analysis.</div>';
+}
+async function loadDecisionReportSnapshot(){
+  const host=$('decisionReportTable');if(!host)return;
+  host.innerHTML='<div class="status busy"><i class="dotStatus"></i><span>Loading current analysis report…</span></div>';
+  try{const r=await server('KOL_IDS_SELF_GET_REPORT');state.report=r;renderDecisionReportSnapshot(r);return r;}
+  catch(e){host.innerHTML='<div class="status bad"><i class="dotStatus"></i><span>'+esc(String(e?.message||e))+'</span></div>';return null;}
+}
+function decisionScenario(){return {budget:budgetNumber(),weights:{brand:num($('wBrand')?.value),audience:num($('wAudience')?.value),campaign:num($('wCampaign')?.value),confidence:num($('wConfidence')?.value),value:num($('wValue')?.value),risk:num($('wRisk')?.value)}}}
+function renderDecisionBoard(b){const host=$('decisionBoard');if(!host)return;if(!b?.rankedCreators?.length){host.innerHTML=`<div class="status warn"><i class="dotStatus"></i><span>${esc((b?.nextBestActions||['Analyze creators before using Decision Intelligence.']).join(' '))}</span></div>`;return}host.innerHTML=`<div class="status ${b.decisionReady?'good':'warn'}"><i class="dotStatus"></i><span>${b.decisionReady?'Decision-ready context.':'Decision needs attention.'} ${esc((b.nextBestActions||[]).join(' '))}</span></div><div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Rank</th><th>Creator</th><th>Recommendation</th><th>Decision</th><th>Fit</th><th>Impact</th><th>Confidence</th><th>Risk</th><th>Evidence</th></tr></thead><tbody>${b.rankedCreators.map(r=>`<tr><td>${esc(r.rank)}</td><td><b>${esc(r.name)}</b><div class="sub">${esc(r.platform)}</div></td><td><span class="badge b-${decisionTone(r.recommendation)}">${esc(r.recommendation)}</span></td><td><b>${esc(r.decisionScore)}</b></td><td>${esc(r.fit)}</td><td>${esc(r.impact)}</td><td>${esc(r.confidence)}</td><td>${esc(r.risk)}</td><td>${esc(r.evidenceStatus)}</td></tr><tr><td></td><td colspan="8" class="sub">${esc((r.gaps||[]).join(' ')||r.reasons.map(x=>x.signal+': '+x.value).join(' · '))}</td></tr>`).join('')}</tbody></table></div>`}
+async function loadDecisionBoard(simulate){const host=$('decisionBoard');if(!host)return;host.innerHTML='<div class="status busy"><i class="dotStatus"></i><span>Building explainable recommendation…</span></div>';try{const b=simulate?await server('KOL_IDS_SIMULATE_DECISION',decisionScenario()):await server('KOL_IDS_GET_DECISION_BOARD');renderDecisionBoard(b)}catch(e){host.innerHTML=`<div class="status bad"><i class="dotStatus"></i><span>${esc(String(e?.message||e))}</span></div>`}}
+mountDecisionIntelligence();
+/* 1.0.0 canonical navigation wrapper: keep one go() wrapper only. */
+const _KOL_IDS_GO_BASE=go;
+go=function(n){
+  _KOL_IDS_GO_BASE(n);
+  if(n===4){loadDecisionBoard(false);loadDecisionReportSnapshot();}
+  if(n===6){applyGenCodeState(state.flowContext);renderGenCodes();renderPerformance();}
+  if(n===7){loadReadiness();loadInvestmentIntelligence();}
+};
+
+
+
+</script>

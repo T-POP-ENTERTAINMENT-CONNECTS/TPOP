@@ -1,0 +1,2848 @@
+<!doctype html>
+<html>
+<head>
+<base target="_top">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+
+/* =========================================================
+   KOL IDS™ — PREMIUM UI
+   Palette:
+   #000000  Black
+   #ffffff  White
+   #3d131b  Burgundy
+   #aeefff  Ice Blue
+   #d9e2ec  Soft Blue Grey
+   ========================================================= */
+
+
+
+:root{
+  --black:#000000;
+  --white:#ffffff;
+  --burgundy:#3d131b;
+  --ice:#aeefff;
+  --soft:#d9e2ec;
+
+  --bg:#f7f8fa;
+  --line:#e5e7eb;
+  --text:#111111;
+  --muted:#73777d;
+
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:22px;
+
+  --shadow:0 8px 30px rgba(0,0,0,.045);
+  --shadow-hover:0 14px 40px rgba(0,0,0,.08);
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+
+  /*
+    Sukhumvit is the primary UI font Sukhumvit
+  */
+  font-family:
+    "Sukhumvit Set",
+    "Sukhumvit",
+    Arial,
+    sans-serif;
+
+  font-size:14px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea{
+  font-family:
+    "Sukhumvit Set",
+    "Sukhumvit",
+    Arial,
+    sans-serif;
+}
+
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+.wrap{
+  width:min(1180px, calc(100% - 40px));
+  margin:0 auto;
+  padding:42px 0 80px;
+}
+
+header{
+  margin-bottom:28px;
+  padding:0 4px;
+}
+
+header h1{
+  margin:0;
+
+  font-size:38px;
+  line-height:1.05;
+  letter-spacing:-1.5px;
+  font-weight:800;
+
+  color:var(--black);
+}
+
+header h1::after{
+  content:"";
+  display:inline-block;
+
+  width:8px;
+  height:8px;
+
+  margin-left:7px;
+  margin-bottom:7px;
+
+  border-radius:50%;
+  background:var(--burgundy);
+}
+
+header .muted{
+  margin-top:8px;
+  font-size:13px;
+  letter-spacing:.15px;
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.card{
+  position:relative;
+
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+
+  padding:28px;
+  margin:16px 0;
+
+  box-shadow:var(--shadow);
+}
+
+.card h2{
+  margin:0 0 7px;
+
+  font-size:21px;
+  line-height:1.3;
+  letter-spacing:-.3px;
+
+  font-weight:750;
+}
+
+.card h3{
+  margin:0 0 6px;
+  font-size:16px;
+}
+
+.card p{
+  margin:8px 0 16px;
+}
+
+.card > .muted{
+  margin-bottom:20px;
+}
+
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+#login{
+  max-width:720px;
+  margin:70px auto 0;
+  padding:38px;
+}
+
+#login h2{
+  font-size:25px;
+}
+
+#login p{
+  color:var(--muted);
+  margin-bottom:18px;
+}
+
+#login .btn{
+  min-width:120px;
+}
+
+
+/* =========================================================
+   LICENSE BAR
+   ========================================================= */
+
+#license{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  min-height:62px;
+
+  border-radius:16px;
+  padding:17px 22px;
+
+  background:
+    linear-gradient(
+      100deg,
+      #ffffff 0%,
+      #ffffff 72%,
+      #f7fbfd 100%
+    );
+}
+
+#license b{
+  color:var(--burgundy);
+  font-weight:800;
+}
+
+
+/* =========================================================
+   TABS
+   ========================================================= */
+
+.tabs{
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  margin:20px 0 24px;
+
+  padding:5px;
+
+  background:#eef0f3;
+  border:1px solid #e4e6e9;
+
+  border-radius:16px;
+
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+
+.tabs::-webkit-scrollbar{
+  display:none;
+}
+
+.tab{
+  flex:0 0 auto;
+
+  padding:9px 16px;
+
+  border-radius:11px;
+
+  background:transparent;
+  color:#555;
+
+  cursor:pointer;
+
+  font-size:13px;
+  font-weight:650;
+
+  transition:
+    background .18s ease,
+    color .18s ease,
+    transform .18s ease;
+}
+
+.tab:hover{
+  color:var(--black);
+  background:#fff;
+}
+
+.tab.on{
+  background:var(--black);
+  color:#fff;
+
+  box-shadow:0 4px 12px rgba(0,0,0,.14);
+}
+
+
+/* =========================================================
+   SCREENS
+   ========================================================= */
+
+.screen{
+  display:none;
+
+  animation:screenIn .25s ease;
+}
+
+.screen.on{
+  display:block;
+}
+
+@keyframes screenIn{
+  from{
+    opacity:0;
+    transform:translateY(5px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:22px 20px;
+
+  margin-bottom:22px;
+}
+
+.grid3{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:22px 18px;
+
+  margin-bottom:22px;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+label{
+  display:block;
+
+  margin:0 0 7px;
+
+  color:#242424;
+
+  font-size:12px;
+  line-height:1.3;
+
+  font-weight:700;
+  letter-spacing:.15px;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+
+  padding:12px 14px;
+
+  color:var(--text);
+  background:#fff;
+
+  border:1px solid #d7dadd;
+  border-radius:11px;
+
+  outline:none;
+
+  font-size:14px;
+  line-height:1.45;
+
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    background .18s ease;
+}
+
+input{
+  min-height:46px;
+}
+
+select{
+  min-height:46px;
+}
+
+textarea{
+  min-height:104px;
+  resize:vertical;
+}
+
+input::placeholder,
+textarea::placeholder{
+  color:#a1a5aa;
+}
+
+input:hover,
+select:hover,
+textarea:hover{
+  border-color:#b9bdc2;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:var(--burgundy);
+
+  box-shadow:
+    0 0 0 3px rgba(61,19,27,.07);
+
+  background:#fff;
+}
+
+
+/* multiple select */
+
+select[multiple]{
+  min-height:120px;
+}
+
+
+
+/* =========================================================
+   V5.3 INTERACTION SYSTEM
+   ========================================================= */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #cfd8df;border-radius:999px;background:#fff;cursor:pointer;font-size:12px}
+.chip.selected{border-color:var(--ice);box-shadow:0 0 0 3px rgba(174,239,255,.35);background:#f7fdff}
+.chip button{border:0;background:transparent;padding:0;cursor:pointer;font-weight:800}
+.photo-box{display:flex;align-items:center;gap:14px;margin-top:8px}
+.photo-preview{width:72px;height:72px;border-radius:16px;object-fit:cover;border:1px solid var(--line);background:#f1f3f5;display:none}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:750;background:#f3f4f6;color:#555}
+.status-pill.actual{background:#eafff2}
+.status-pill.estimated{background:#eefaff}
+.decision-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+.complete{font-size:12px;font-weight:750;margin-left:8px}
+.metric .sub{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+
+  min-height:44px;
+
+  padding:11px 18px;
+
+  border:1px solid var(--black);
+  border-radius:11px;
+
+  background:var(--black);
+  color:#fff;
+
+  font-size:13px;
+  font-weight:750;
+  letter-spacing:.1px;
+
+  cursor:pointer;
+
+  transition:
+    transform .16s ease,
+    background .16s ease,
+    box-shadow .16s ease,
+    border-color .16s ease;
+}
+
+.btn:hover{
+  transform:translateY(-1px);
+
+  background:#181818;
+
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.14);
+}
+
+.btn:active{
+  transform:translateY(0);
+}
+
+.btn.alt{
+  background:#fff;
+  color:var(--black);
+
+  border-color:#cfd3d7;
+
+  box-shadow:none;
+}
+
+.btn.alt:hover{
+  background:#fafafa;
+  border-color:#9ea3a8;
+}
+
+.btn.burgundy{
+  background:var(--burgundy);
+  border-color:var(--burgundy);
+}
+
+.btn.ice{
+  background:var(--ice);
+  border-color:var(--ice);
+  color:#000;
+}
+
+
+/* =========================================================
+   BUTTON AREA
+   ========================================================= */
+
+.card > .btn{
+  margin-top:4px;
+}
+
+.card .btn + .btn{
+  margin-left:7px;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+#msg{
+  margin-top:14px;
+}
+
+#msg:empty{
+  display:none;
+}
+
+.ok,
+.warn,
+.bad{
+  border-radius:14px;
+}
+
+.ok{
+  background:#f5faf8;
+  border-color:#dcece4;
+}
+
+.warn{
+  background:#fcfaf5;
+  border-color:#eee4cf;
+}
+
+.bad{
+  background:#fff6f6;
+  border-color:#efdada;
+}
+
+
+/* =========================================================
+   METRICS
+   ========================================================= */
+
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+
+  margin:20px 0;
+}
+
+.metric{
+  min-height:82px;
+
+  padding:13px 14px;
+
+  background:#f8f9fa;
+  border:1px solid #eceef0;
+  border-radius:13px;
+}
+
+.metric b{
+  display:block;
+
+  margin-top:3px;
+
+  font-size:20px;
+  line-height:1.15;
+
+  font-weight:800;
+}
+
+
+/* =========================================================
+   DECISION RESULT
+   ========================================================= */
+
+.score{
+  font-size:25px;
+  line-height:1.2;
+
+  font-weight:850;
+  letter-spacing:-.4px;
+
+  margin-bottom:5px;
+}
+
+.decision{
+  font-size:18px;
+  font-weight:800;
+}
+
+.results{
+  margin-top:18px;
+}
+
+
+/* =========================================================
+   LIST ITEMS
+   ========================================================= */
+
+#personaList .card,
+#creatorList .card{
+  margin-top:10px;
+  margin-bottom:10px;
+
+  padding:16px 18px;
+
+  border-radius:14px;
+
+  box-shadow:none;
+}
+
+#personaList .card:hover,
+#creatorList .card:hover{
+  box-shadow:var(--shadow-hover);
+}
+
+#personaList b,
+#creatorList b{
+  color:var(--burgundy);
+}
+
+
+/* =========================================================
+   CHECKBOX
+   ========================================================= */
+
+.selectCreator{
+  width:auto;
+
+  min-height:auto;
+
+  accent-color:var(--burgundy);
+
+  margin-right:7px;
+}
+
+
+/* =========================================================
+   SMALL TEXT
+   ========================================================= */
+
+.muted{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.small{
+  font-size:11px;
+}
+
+
+/* =========================================================
+   SECTION RHYTHM
+   ========================================================= */
+
+section.screen > .card + .card{
+  margin-top:18px;
+}
+
+#brand .card:first-child{
+  border-left:3px solid var(--ice);
+}
+
+#persona .card:first-child{
+  border-left:3px solid var(--soft);
+}
+
+#creator .card:first-child{
+  border-left:3px solid var(--soft);
+}
+
+#decision .card:first-child{
+  border-left:3px solid var(--burgundy);
+}
+
+#campaign .card:first-child{
+  border-left:3px solid var(--ice);
+}
+
+#performance .card:first-child{
+  border-left:3px solid var(--soft);
+}
+
+#report .card:first-child{
+  border-left:3px solid var(--burgundy);
+}
+
+
+/* =========================================================
+   TABLE-LIKE REPORT
+   ========================================================= */
+
+#reportBox{
+  margin-top:22px;
+}
+
+#reportBox .card{
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease;
+}
+
+#reportBox .card:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-hover);
+}
+
+
+/* =========================================================
+   GLOBAL OPERATION STATUS
+   ========================================================= */
+.operation-status{
+  position:sticky;
+  top:10px;
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:max-content;
+  max-width:100%;
+  margin:0 0 12px auto;
+  padding:8px 13px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 6px 20px rgba(0,0,0,.06);
+  color:#555;
+  font-size:12px;
+  font-weight:650;
+  backdrop-filter:blur(8px);
+}
+.operation-status .dot{
+  width:8px;height:8px;border-radius:50%;background:#9aa0a6;
+}
+.operation-status.busy .dot{background:#d39b00;animation:pulse 1s infinite}
+.operation-status.success .dot{background:#16834a}
+.operation-status.error .dot{background:#b42318}
+@keyframes pulse{50%{opacity:.35;transform:scale(.75)}}
+
+/* =========================================================
+   SAVE FEEDBACK
+   ========================================================= */
+
+.save-status{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+
+  margin-left:10px;
+
+  font-size:12px;
+  color:#5f646a;
+
+  vertical-align:middle;
+}
+
+.save-status::before{
+  content:"";
+  width:7px;
+  height:7px;
+
+  border-radius:50%;
+
+  background:#aeb5bb;
+}
+
+.save-status.success{
+  color:var(--burgundy);
+}
+
+.save-status.success::before{
+  background:var(--burgundy);
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar{
+  width:8px;
+  height:8px;
+}
+
+::-webkit-scrollbar-track{
+  background:#f2f3f5;
+}
+
+::-webkit-scrollbar-thumb{
+  background:#c9cdd1;
+  border-radius:20px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background:#aeb3b8;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:900px){
+
+  .wrap{
+    width:min(100% - 28px, 760px);
+    padding-top:28px;
+  }
+
+  .grid3{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .metrics{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+
+}
+
+
+@media(max-width:650px){
+
+  .wrap{
+    width:calc(100% - 22px);
+    padding:20px 0 50px;
+  }
+
+  header{
+    margin-bottom:20px;
+  }
+
+  header h1{
+    font-size:30px;
+  }
+
+  .card{
+    padding:20px;
+    border-radius:17px;
+  }
+
+  #login{
+    margin-top:35px;
+    padding:25px 20px;
+  }
+
+  .grid,
+  .grid3{
+    grid-template-columns:1fr;
+    gap:17px;
+  }
+
+  .metrics{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  #license{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:3px;
+  }
+
+  .tabs{
+    margin-left:-2px;
+    margin-right:-2px;
+  }
+
+}
+
+
+@media(max-width:430px){
+
+  body{
+    font-size:13px;
+  }
+
+  .card{
+    padding:17px;
+  }
+
+  .metrics{
+    grid-template-columns:1fr;
+  }
+
+  .btn{
+    width:100%;
+    margin:5px 0 !important;
+  }
+
+  .score{
+    font-size:21px;
+  }
+
+}
+
+
+.workflow-note{padding:12px 14px;border:1px dashed var(--line);border-radius:12px;background:#fbfcfd;margin:10px 0 16px}
+.workflow-note b{display:block;margin-bottom:3px}
+
+/* =========================================================
+   V16.1 EXECUTIVE LUXURY LAYER — keeps the existing CI palette
+   ========================================================= */
+:root{
+  --ink:#151316;
+  --wine:#3d131b;
+  --wine-deep:#241015;
+  --wine-soft:#f5edef;
+  --champagne:#c9ae7a;
+  --pearl:#f8f7f5;
+  --mist:#ece9e5;
+  --shadow-luxe:0 18px 46px rgba(41,20,26,.08),0 2px 8px rgba(41,20,26,.03);
+}
+body{
+  color:var(--ink);
+  background:radial-gradient(circle at 4% -8%,rgba(174,239,255,.48),transparent 24rem),radial-gradient(circle at 96% 1%,rgba(61,19,27,.075),transparent 26rem),var(--pearl);
+  font-family:"Manrope","Noto Sans Thai","Sukhumvit Set",Arial,sans-serif;
+  letter-spacing:0;
+}
+button,input,select,textarea{font-family:"Manrope","Noto Sans Thai","Sukhumvit Set",Arial,sans-serif;}
+.wrap{width:min(1240px,calc(100% - 48px));padding-top:52px;}
+header{display:flex;align-items:end;justify-content:space-between;gap:24px;margin:0 0 30px;padding:0 8px 22px;border-bottom:1px solid rgba(61,19,27,.12);}
+header h1{font-family:"Manrope","Noto Sans Thai","Sukhumvit Set",sans-serif;font-size:39px;font-weight:800;letter-spacing:-2.1px;color:var(--wine-deep);}
+header .muted{max-width:500px;margin:0;color:#716a6c;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
+.card{overflow:hidden;border:1px solid rgba(61,19,27,.11);border-radius:20px;padding:30px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(255,255,255,.88));box-shadow:var(--shadow-luxe);}
+.card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--champagne),transparent);opacity:.5;}
+.card h2,.card h3{color:var(--wine-deep);letter-spacing:-.035em;}
+.card h2{font-family:"Manrope","Noto Sans Thai","Sukhumvit Set",sans-serif;font-size:22px;font-weight:800;letter-spacing:-.055em;}
+.card h3{font-size:17px;font-weight:700;}
+.tabs{position:sticky;top:12px;z-index:20;padding:6px;border-color:rgba(61,19,27,.10);border-radius:18px;background:rgba(255,255,255,.78);box-shadow:0 10px 26px rgba(40,23,28,.06);backdrop-filter:blur(16px);}
+.tab{padding:10px 17px;color:#726b6d;font-size:12px;font-weight:700;letter-spacing:.015em;}
+.tab:hover{color:var(--wine);background:var(--wine-soft);}
+.tab.on{color:#fff;background:linear-gradient(135deg,#55202a,#2e1017);box-shadow:0 6px 16px rgba(61,19,27,.23);}
+.btn{min-height:42px;border-radius:12px;border-color:var(--wine);background:linear-gradient(135deg,#55202a,#321018);box-shadow:0 8px 16px rgba(61,19,27,.16);font-size:12px;font-weight:700;letter-spacing:.02em;transition:transform .2s ease,box-shadow .2s ease,background .2s ease;}
+.btn:hover{transform:translateY(-1px);background:linear-gradient(135deg,#6a2835,#3d131b);box-shadow:0 12px 22px rgba(61,19,27,.23);}
+.btn.alt{border-color:rgba(61,19,27,.18);background:rgba(255,255,255,.82);color:var(--wine);box-shadow:none;}
+.btn.alt:hover{background:var(--wine-soft);box-shadow:0 8px 18px rgba(61,19,27,.08);}
+.btn.burgundy{background:linear-gradient(135deg,#56212b,#2c0e15);}
+input,select,textarea{border-color:rgba(61,19,27,.16)!important;border-radius:11px!important;background:rgba(255,255,255,.82)!important;color:var(--ink)!important;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;}
+input:focus,select:focus,textarea:focus{border-color:var(--champagne)!important;box-shadow:0 0 0 4px rgba(201,174,122,.16)!important;background:#fff!important;outline:none;}
+label{font-size:11px!important;font-weight:700!important;letter-spacing:.08em;color:#746a6b!important;text-transform:uppercase;}
+.metric{border:1px solid rgba(61,19,27,.09);border-radius:14px;background:linear-gradient(135deg,#fff,#fcfaf8);box-shadow:none;}
+.metric b{color:var(--wine-deep);font-size:20px;}
+.status-pill{border:1px solid rgba(61,19,27,.14);background:var(--wine-soft);color:var(--wine);font-weight:700;letter-spacing:.04em;}
+.workflow-note{border-left-color:var(--champagne)!important;background:linear-gradient(90deg,rgba(201,174,122,.15),rgba(255,255,255,0))!important;border-radius:0 12px 12px 0;}
+#license{border:1px solid rgba(61,19,27,.11);background:linear-gradient(110deg,#fff 0%,#fff 67%,#f7eef0 100%);box-shadow:var(--shadow-luxe);}
+#license::after{content:"KOL INTELLIGENCE";font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--champagne);}
+#results .card,#reportBox .card{transition:transform .2s ease,box-shadow .2s ease;border-radius:18px;}
+#results .card:hover,#reportBox .card:hover{transform:translateY(-2px);box-shadow:0 20px 42px rgba(40,18,24,.11);}
+#v16CampaignRoster .metric,#v16PerformanceRoster .card{border-color:rgba(201,174,122,.32);}
+#v16DecisionSelection .card{background:linear-gradient(135deg,#fff,#faf5f6);border-color:rgba(61,19,27,.20);}
+@media(max-width:700px){.wrap{width:min(100% - 26px,1240px);padding-top:28px;}header{display:block;padding-bottom:16px;}header h1{font-size:34px;}header .muted{margin-top:10px;}.card{padding:21px 18px;}.tabs{top:5px;}.tab{padding:9px 13px;}}
+</style>
+</head>
+
+
+<body>
+
+<div class="wrap">
+
+<header style="position:relative">
+  <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start">
+    <div>
+      <h1>KOL IDS™</h1>
+      <div class="muted" id="appSubtitle">KOL Investment Decision System</div>
+    </div>
+    
+  </div>
+</header>
+
+
+<!-- =====================================================
+     LOGIN
+     ===================================================== -->
+
+<section id="login" class="card">
+
+  <h2>Enter Access Code</h2>
+
+  <p>
+    Use the access code received by email after purchase approval.
+  </p>
+
+  <input
+    id="code"
+    placeholder="KOL-XXXX-XXXX"
+    autocomplete="off"
+  >
+
+  <button
+    class="btn"
+    style="margin-top:14px"
+    onclick="login()"
+  >
+    ENTER
+  </button>
+
+  <div id="msg"></div>
+
+</section>
+
+
+<!-- =====================================================
+     APPLICATION
+     ===================================================== -->
+
+<main id="app" style="display:none">
+<div id="operationStatus" class="operation-status" aria-live="polite"><span class="dot"></span><span id="operationStatusText">Ready</span></div>
+
+
+
+<!-- LICENSE -->
+
+<div id="license" class="card"></div>
+
+
+<!-- NAVIGATION -->
+
+<div class="tabs">
+
+  <span
+    class="tab on"
+    data-s="brand"
+    onclick="go('brand')"
+  >
+    1 Brand
+  </span>
+
+  <span
+    class="tab"
+    data-s="persona"
+    onclick="go('persona')"
+  >
+    2 Persona
+  </span>
+
+  <span
+    class="tab"
+    data-s="creator"
+    onclick="go('creator')"
+  >
+    3 Creator
+  </span>
+
+  <span
+    class="tab"
+    data-s="decision"
+    onclick="go('decision')"
+  >
+    4 Decision
+  </span>
+
+  <span
+    class="tab"
+    data-s="campaign"
+    onclick="go('campaign')"
+  >
+    5 Campaign
+  </span>
+
+  <span
+    class="tab"
+    data-s="performance"
+    onclick="go('performance')"
+  >
+    6 Performance
+  </span>
+
+  <span
+    class="tab"
+    data-s="report"
+    onclick="go('report')"
+  >
+    7 Report
+  </span>
+
+</div>
+
+
+<!-- =====================================================
+     1 BRAND
+     ===================================================== -->
+
+<section id="brand" class="screen on">
+
+  <div class="card">
+
+    <h2>Start From Zero / Existing Data</h2>
+
+    <p class="muted">
+      Start a new Brand or use existing data.
+      Existing data is not deleted automatically.
+    </p>
+
+    <button
+      class="btn alt"
+      onclick="startZero()"
+    >
+      START FROM ZERO
+    </button>
+
+    <button
+      class="btn alt"
+      onclick="useExisting()"
+    >
+      USE EXISTING DATA
+    </button>
+
+  </div>
+
+
+  <div class="card">
+
+    <h2>Brand</h2>
+
+    <p class="muted">
+      Define the Brand Context used as the foundation for Creator evaluation.
+    </p>
+
+
+    <div class="grid">
+
+      <div>
+        <label>Name</label>
+        <input id="brandName">
+      </div>
+
+      <div>
+        <label>Category</label>
+        <input id="brandCategory">
+      </div>
+
+      <div>
+        <label>Market</label>
+        <input id="brandMarket" value="THAILAND">
+      </div>
+
+      <div>
+        <label>Positioning</label>
+        <input id="brandPositioning">
+      </div>
+
+    </div>
+
+
+    <div class="grid">
+
+      <div>
+        <label>Brand Values</label>
+        <textarea id="brandValues"></textarea>
+      </div>
+
+      <div>
+        <label>Brand Avoid</label>
+        <textarea id="brandAvoid"></textarea>
+      </div>
+
+    </div>
+
+
+    <button
+      class="btn"
+      onclick="saveBrand()"
+    >
+      SAVE BRAND
+    </button>
+
+    <span id="brandSaveStatus"></span>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     2 PERSONA
+     ===================================================== -->
+
+<section id="persona" class="screen">
+
+  <div class="card">
+
+    <h2>Target Persona</h2>
+
+    <p class="muted">
+      Define the Target Persona using a structured audience model.
+      It is used to evaluate Creator-to-Brand fit.
+    </p>
+
+
+    <div class="grid3">
+
+      <div>
+        <label>Persona Name</label>
+        <input id="perName">
+      </div>
+
+      <div>
+        <label>Audience Age Range</label>
+        <select id="perAgeRange">
+          <option value="">Select audience age range</option>
+          <option value="13-17">13–17</option>
+          <option value="18-24">18–24</option>
+          <option value="25-34">25–34</option>
+          <option value="35-44">35–44</option>
+          <option value="45-54">45–54</option>
+          <option value="55+">55+</option>
+      </select>
+      </div>
+
+      <input id="perMin" type="hidden">
+      <input id="perMax" type="hidden">
+
+    </div>
+
+
+    <div class="grid">
+
+      <div>
+        <label>Gender</label>
+
+        <select id="perGender">
+          <option>ANY</option>
+          <option>FEMALE</option>
+          <option>MALE</option>
+          <option>OTHER</option>
+        </select>
+
+      </div>
+
+
+      <div>
+        <label>Locations</label>
+        <input
+          id="perLoc"
+          placeholder="Bangkok, Thailand"
+        >
+      </div>
+
+
+      <div>
+        <label>Interests</label>
+        <div id="interestChips" class="chips"></div>
+        <input id="perInt" placeholder="Add interest, e.g. clean beauty, music">
+        <div class="muted" style="margin-top:6px">Click a chip to select · click × to remove</div>
+      </div>
+
+      <div>
+        <label>Behaviors</label>
+        <input id="perBeh" placeholder="online shopping, review seeker">
+      </div>
+
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>Goals & Needs <span class="muted">Required</span></label>
+        <textarea id="perGoalsNeeds" placeholder="What this audience wants, needs, solves or aims to achieve"></textarea>
+      </div>
+      <div>
+        <label>Pain Points <span class="muted">Required</span></label>
+        <textarea id="perPainPoints" placeholder="What frustrates, blocks, worries or prevents this audience"></textarea>
+      </div>
+    </div>
+
+    <textarea id="perDesc" placeholder="Persona description"></textarea>
+
+
+    <button
+      class="btn"
+      onclick="savePersona()"
+    >
+      SAVE PERSONA
+    </button>
+
+    <div id="personaList"></div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     3 CREATOR
+     ===================================================== -->
+
+<section id="creator" class="screen">
+
+  <div class="card">
+
+    <h2>Creator / KOL</h2>
+
+    <p class="muted">
+      Add Creator and Audience evidence so the Decision Engine can
+      evaluate fit accurately.
+    </p>
+
+
+    <div class="grid3">
+
+      <div>
+        <label>Name</label>
+        <input id="crName">
+      </div>
+
+      <div>
+        <label>Primary Social Profile</label>
+        <input id="crUrl" placeholder="https://...">
+        <div class="muted" style="margin-top:5px">Primary Creator profile. The system does not scrape social media.</div>
+      </div>
+
+      <div>
+        <label>Additional Social Links</label>
+        <input id="crSocialLinks" placeholder="IG, TikTok, YouTube links separated by commas">
+      </div>
+
+      <div>
+        <label>Creator Photo</label>
+        <input id="crPhoto" type="file" accept="image/png,image/jpeg,image/webp">
+        <div class="photo-box"><img id="crPhotoPreview" class="photo-preview"><span id="crPhotoStatus" class="muted">Optional · Upload manually</span></div>
+      </div>
+
+      <div>
+        <label>Platform</label>
+
+        <select id="crPlatform">
+          <option>TikTok</option>
+          <option>Instagram</option>
+          <option>YouTube</option>
+          <option>Facebook</option>
+          <option>X</option>
+          <option>Other</option>
+        </select>
+
+      </div>
+
+      <div>
+        <label>Category</label>
+        <input id="crCategory">
+      </div>
+
+
+      <div>
+        <label>Followers</label>
+        <input
+          id="crFollowers"
+          type="text" inputmode="numeric" data-number-format="1"
+          min="0"
+        >
+      </div>
+
+
+
+
+
+
+
+
+
+
+      <div>
+        <label>Audience Age Range</label>
+        <select id="crAgeRange">
+          <option value="">Select audience age range</option>
+          <option value="13-18">13–18</option>
+          <option value="18-24">18–24</option>
+          <option value="25-34">25–34</option>
+          <option value="35-44">35–44</option>
+          <option value="45-54">45–54</option>
+          <option value="55-120">55+</option>
+        </select>
+      </div>
+
+      <div>
+        <label id="crERLabel">ER % <span class="muted">(Optional)</span></label>
+        <input
+          id="crER"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+          max="100"
+          step="0.01"
+        >
+      </div>
+
+      <div>
+        <label id="crRateLabel">Rate <span class="muted">(Optional)</span></label>
+        <input
+          id="crRate"
+          type="text" inputmode="numeric" data-number-format="1"
+          min="0"
+        >
+      </div>
+      <div>
+
+        <label>Audience Gender</label>
+
+        <select id="crGender">
+          <option>ANY</option>
+          <option>FEMALE</option>
+          <option>MALE</option>
+          <option>OTHER</option>
+        </select>
+
+      </div>
+
+
+      <div>
+        <label>Audience Locations</label>
+        <input id="crLoc">
+      </div>
+
+
+      <div>
+        <label>Audience Interests</label>
+        <input id="crInt">
+      </div>
+
+
+      <div>
+        <label>Content Styles</label>
+        <input id="crStyles" placeholder="review, tutorial, lifestyle">
+      </div>
+
+      <div style="grid-column:1/-1">
+        <label>Personality</label><div id="crPersonality" class="chips"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Communication</label><div id="crCommunication" class="chips"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Influence Style</label><div id="crInfluence" class="chips"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Audience Relationship</label><div id="crRelationship" class="chips"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Social Behavior</label><div id="crSocialBehavior" class="chips"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Content Personality</label><div id="crContentPersonality" class="chips"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Content Function</label><div id="crContentFunction" class="chips"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Content Behavior</label><div id="crContentBehavior" class="chips"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Audience Psychology</label><div id="crPsychology" class="chips"></div>
+      </div>
+
+      <div>
+        <label>System Evidence</label>
+        <div class="muted" id="creatorEvidenceHelp">Historical campaigns, Risk and data confidence are calculated from stored evidence. ER / Rate are optional; blank values remain estimated/proxy and are never stored as actual.</div>
+      </div>
+
+
+    </div>
+
+
+    <textarea
+      id="crNotes"
+      placeholder="Historical notes / evidence"
+    ></textarea>
+
+
+    <input id="crId" type="hidden">
+    <button class="btn" id="creatorSaveBtn" onclick="saveCreator()">SAVE CREATOR</button>
+    <span id="creatorComplete" class="complete"></span>
+
+
+    <div id="creatorList"></div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     4 DECISION
+     ===================================================== -->
+
+<section id="decision" class="screen">
+
+  <div class="card">
+
+    <h2>Creator Matching + Decision Engine</h2>
+
+    <p class="muted">
+      The engine evaluates every Creator against Brand, Persona and Campaign Goal /
+      The engine evaluates every Creator against Brand, Persona and Campaign Goal.
+    </p>
+    <div class="workflow-note"><b>Logic-first / Evidence-first</b><span class="muted">Goal → Fit → Evidence → Decision → Strategy. ER and Rate are optional on first setup.</span></div>
+
+
+    <div class="grid">
+
+      <div>
+        <label>Brand</label>
+        <input id="decBrand" list="brandOptions" placeholder="Select or type Brand">
+      </div>
+
+
+      <div>
+        <label>Target Persona</label>
+        <input id="decPersona" list="personaOptions" placeholder="Select or type Persona">
+      </div>
+
+
+      <div>
+        <label>Campaign Name</label>
+        <input id="campName">
+      </div>
+
+
+      <div>
+        <label>Campaign Goal</label>
+
+        <select id="objective">
+          <option>AWARENESS</option>
+          <option>ENGAGEMENT</option>
+          <option>CONSIDERATION</option>
+          <option>CONVERSION</option>
+          <option>LAUNCH</option>
+        </select>
+
+      </div>
+
+      <div>
+        <label>Success Metric</label>
+        <input id="campSuccessMetric" placeholder="Suggested by Goal">
+      </div>
+
+
+      <div>
+        <label>Budget</label>
+
+        <input
+          id="campBudget"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+        >
+
+      </div>
+      <div>
+        <label>Campaign Start</label><input id="campStartDate" type="date" onchange="updateCampaignDuration()">
+      </div>
+      <div>
+        <label>Campaign End</label><input id="campEndDate" type="date" onchange="updateCampaignDuration()">
+      </div>
+      <div>
+        <label>Campaign Duration</label><input id="campDurationDays" readonly placeholder="Calculated automatically">
+      </div>
+
+    </div>
+
+
+    <button
+      id="analyzeBtn"
+      class="btn burgundy"
+      onclick="analyze()"
+    >
+      ANALYZE ALL CREATORS
+    </button>
+
+  </div>
+
+
+  <div id="results"></div>
+
+</section>
+
+
+<!-- =====================================================
+     5 CAMPAIGN
+     ===================================================== -->
+
+<section id="campaign" class="screen">
+
+  <div class="card">
+
+    <h2>Selected Campaign</h2>
+
+    <p class="muted">
+      Select the Campaign and Creator to continue tracking. /
+      Select the Campaign and Creator to continue tracking.
+    </p>
+    <div class="workflow-note"><b>Campaign Plan</b><span class="muted">The original Decision is preserved; selected Creators become the basis for Performance + Learning.</span></div>
+
+
+    <div class="grid">
+
+      <div>
+        <label>Campaign</label>
+        <input id="campaignSelect" list="campaignOptions" autocomplete="off" placeholder="Type or select Campaign">
+      </div>
+
+
+      <div>
+        <label>Creator</label>
+        <input id="creatorSelect" list="creatorOptions" autocomplete="off" placeholder="Type or select Creator">
+      </div>
+
+    </div>
+
+
+    <button
+      id="campaignSaveBtn"
+      class="btn"
+      onclick="saveSelection()"
+    >
+      SAVE SELECTED CREATOR
+    </button>
+    <button
+      id="addNextCreatorBtn"
+      class="btn alt"
+      style="margin-left:8px"
+      onclick="addNextCreator()"
+    >
+      + ADD NEXT CREATOR
+    </button>
+
+
+    <div id="campaignCount" class="status-pill" style="margin-top:14px">0 creators selected</div>
+    <div id="campaignPlan" style="margin-top:14px"></div>
+
+    <p class="muted" style="margin-top:16px">
+
+      Selected Creators are stored in the Campaign
+      for Performance tracking.
+
+    </p>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     6 PERFORMANCE
+     ===================================================== -->
+
+<section id="performance" class="screen">
+
+  <div class="card">
+
+    <h2>Campaign Performance</h2>
+
+    <p class="muted">
+      After the campaign, enter actual results for the selected Creator.
+    </p>
+    <div class="workflow-note"><b>Goal-aware measurement</b><span class="muted">Actual performance is scored against the Campaign Goal, then compared with the original prediction.</span></div>
+
+
+    <div class="grid3">
+
+      <div>
+        <label>Campaign</label>
+        <input id="pfCampaign" list="campaignOptions" placeholder="Select or type Campaign" onchange="fillCreators()">
+      </div>
+
+
+      <div>
+        <label>Creator</label>
+        <input id="pfCreator" list="creatorOptions" placeholder="Select or type Creator">
+      </div>
+
+
+      <div>
+        <label>Spend</label>
+
+        <input
+          id="pfSpend"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+        >
+
+      </div>
+
+
+      <div>
+        <label>Reach</label>
+
+        <input
+          id="pfReach"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+        >
+
+      </div>
+
+
+      <div>
+        <label>Impressions</label>
+
+        <input
+          id="pfImp"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+        >
+
+      </div>
+
+
+      <div>
+        <label>Views</label>
+
+        <input
+          id="pfViews"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+        >
+
+      </div>
+
+
+      <div>
+        <label>Likes</label>
+        <input id="pfLikes" type="text" inputmode="decimal" data-number-format="1" min="0">
+      </div>
+      <div>
+        <label>Comments</label>
+        <input id="pfComments" type="text" inputmode="decimal" data-number-format="1" min="0">
+      </div>
+      <div>
+        <label>Shares</label>
+        <input id="pfShares" type="text" inputmode="decimal" data-number-format="1" min="0">
+      </div>
+      <div>
+        <label>Saves</label>
+        <input id="pfSaves" type="text" inputmode="decimal" data-number-format="1" min="0">
+      </div>
+      <div>
+        <label>Engagements <span class="muted">Calculated if blank</span></label>
+        <input id="pfEng" type="text" inputmode="decimal" data-number-format="1" min="0">
+      </div>
+
+
+      <div>
+        <label>Clicks</label>
+
+        <input
+          id="pfClicks"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+        >
+
+      </div>
+
+
+      <div>
+        <label>Conversions</label>
+
+        <input
+          id="pfConv"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+        >
+
+      </div>
+
+
+      <div>
+        <label>Revenue</label>
+
+        <input
+          id="pfRevenue"
+          type="text" inputmode="decimal" data-number-format="1"
+          min="0"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>Evidence</label>
+
+        <select id="pfEvidence">
+          <option>VERIFIED</option>
+          <option>SELF-REPORTED</option>
+          <option>LIMITED</option>
+        </select>
+
+      </div>
+
+
+      <div>
+        <label>Reported Date</label>
+        <input id="pfDate" type="date">
+      </div>
+
+    </div>
+
+
+    <textarea
+      id="pfNotes"
+      placeholder="Notes / source"
+    ></textarea>
+
+
+    <button
+      class="btn"
+      onclick="savePerformance()"
+    >
+      SAVE PERFORMANCE + LEARNING
+    </button>
+
+
+    <div id="learning"></div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     7 REPORT
+     ===================================================== -->
+
+<section id="report" class="screen">
+
+  <div class="card">
+
+    <h2>Report</h2>
+
+    <p class="muted">
+      Review Creator Analysis, Benchmark, Performance, Learning and Export Report /
+      Review Decision, Benchmark, Performance, Learning and exports.
+    </p>
+
+
+    <div class="grid">
+
+      <div>
+        <label>Campaign</label>
+        <input id="reportCampaign" list="campaignOptions" placeholder="Select or type Campaign">
+      </div>
+
+      <div style="display:flex;align-items:flex-end;gap:8px">
+
+        <button
+          class="btn"
+          onclick="loadReport()"
+        >
+          LOAD REPORT
+        </button>
+
+        <button class="btn alt" onclick="exportPdf()">EXPORT PDF</button>
+        <button class="btn alt" onclick="exportXlsx()">EXPORT EXCEL (.XLSX)</button>
+
+      </div>
+
+    </div>
+
+
+    <datalist id="brandOptions"></datalist>
+<datalist id="personaOptions"></datalist>
+<datalist id="campaignOptions"></datalist>
+<datalist id="creatorOptions"></datalist>
+
+<div class="report-switch" style="display:flex;gap:8px;margin:14px 0">
+  <button class="btn alt report-tab active" data-report="creator" onclick="selectReportTab('creator')">REPORT 01 · CREATOR ANALYSIS</button>
+  <button class="btn alt report-tab" data-report="performance" onclick="selectReportTab('performance')">REPORT 02 · CAMPAIGN PERFORMANCE</button>
+</div>
+<div id="reportBox"></div>
+
+  </div>
+
+</section>
+
+
+</main>
+
+</div>
+
+
+<script>
+
+/* NUMBER INPUT UX: display thousands separators while preserving numeric payloads */
+function formatNumberDisplayValue(value){
+  const raw=String(value ?? '').replace(/,/g,'').replace(/[^0-9.\-]/g,'');
+  if(!raw || raw==='-' || raw==='.') return raw;
+  const neg=raw.startsWith('-');
+  let s=neg?raw.slice(1):raw;
+  const parts=s.split('.');
+  let whole=(parts[0]||'').replace(/^0+(?=\d)/,'');
+  if(!whole) whole='0';
+  whole=Number(whole).toLocaleString('en-US');
+  return (neg?'-':'')+whole+(parts.length>1?'.'+parts.slice(1).join(''): '');
+}
+function numericValue(value){
+  const s=String(value ?? '').replace(/,/g,'').trim();
+  if(!s) return '';
+  const n=Number(s);
+  return Number.isFinite(n)?n:'';
+}
+function bindNumberFormatting(scope=document){
+  scope.querySelectorAll('input[data-number-format]').forEach(el=>{
+    if(el.dataset.numberBound==='1') return;
+    el.dataset.numberBound='1';
+    el.addEventListener('input',()=>{
+      const start=el.selectionStart, before=el.value;
+      el.value=formatNumberDisplayValue(before);
+      try{ const delta=el.value.length-before.length; el.setSelectionRange(Math.max(0,(start??el.value.length)+delta),Math.max(0,(start??el.value.length)+delta)); }catch(_){ }
+    });
+    el.addEventListener('blur',()=>{ if(el.value) el.value=formatNumberDisplayValue(el.value); });
+    if(el.value) el.value=formatNumberDisplayValue(el.value);
+  });
+}
+document.addEventListener('DOMContentLoaded',()=>bindNumberFormatting());
+
+
+/* =========================================================
+   ORIGINAL SYSTEM LOGIC
+   ========================================================= */
+
+let token =
+  localStorage.getItem('KOL_IDS_V5_TOKEN') || '';
+
+let state = null;
+let lastCampaign = '';
+
+
+const $ = id =>
+  document.getElementById(id);
+
+
+const esc = s =>
+  String(s ?? '').replace(
+    /[&<>"']/g,
+    m => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    }[m])
+  );
+
+
+function msg(t,bad=false){
+
+  $('msg').innerHTML =
+    '<div class="card ' +
+    (bad ? 'bad' : 'ok') +
+    '">' +
+    esc(t) +
+    '</div>';
+
+}
+
+
+function setOperationStatus(text, type='idle'){
+  const box=$('operationStatus'), label=$('operationStatusText');
+  if(!box||!label)return;
+  box.className='operation-status '+type;
+  label.textContent=text;
+}
+
+function call(fn,args,ok){
+  setOperationStatus('Working…','busy');
+  const disabledBefore=new Set(Array.from(document.querySelectorAll('button[disabled]')));
+  google.script.run
+    .withSuccessHandler(r=>{
+      setOperationStatus('Complete','success');
+      if(typeof ok==='function')ok(r);
+    })
+    .withFailureHandler(e=>{
+      setOperationStatus('Failed','error');
+      document.querySelectorAll('button[disabled]').forEach(b=>{ if(!disabledBefore.has(b)) b.disabled=false; });
+      msg(e.message || String(e),true);
+    })
+    [fn](...(args || []));
+}
+
+
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+function login(){
+
+  const code =
+    $('code').value.trim();
+
+  if(!code){
+
+    msg(
+      'Please enter the Access Code first.',
+      true
+    );
+
+    return;
+  }
+
+
+  msg('Checking Access Code...');
+
+
+  call(
+    'KOL_IDS_V5_login',
+    [code],
+    r => {
+
+      token = r.token;
+
+      localStorage.setItem(
+        'KOL_IDS_V5_TOKEN',
+        token
+      );
+
+      $('login').style.display='none';
+      $('app').style.display='block';
+
+      load();
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   LOAD
+   ========================================================= */
+
+function load(){
+
+  call(
+    'KOL_IDS_V5_getState',
+    [token],
+    r => {
+
+      state = r;
+      bindNumberFormatting();
+
+      $('license').innerHTML =
+        '<div>' +
+        '<b>License ' +
+        esc(r.licenseId) +
+        '</b>' +
+        ' · Expires ' +
+        new Date(
+          r.expiresAt
+        ).toLocaleDateString() +
+        '</div>';
+
+      renderLists();
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+function go(s){
+
+  document
+    .querySelectorAll('.screen')
+    .forEach(
+      x =>
+        x.classList.remove('on')
+    );
+
+
+  $(s).classList.add('on');
+
+
+  document
+    .querySelectorAll('.tab')
+    .forEach(
+      x =>
+        x.classList.toggle(
+          'on',
+          x.dataset.s === s
+        )
+    );
+
+
+  if(s === 'performance')
+    fillPerf();
+
+
+  if(s === 'report')
+    fillReport();
+
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+function startZero(){
+
+  $('brandName').value='';
+  $('brandCategory').value='';
+  $('brandMarket').value='THAILAND';
+  $('brandPositioning').value='';
+  $('brandValues').value='';
+  $('brandAvoid').value='';
+
+  msg(
+    'New Brand form is ready. Existing data remains preserved.'
+  );
+
+}
+
+
+function useExisting(){
+
+  load();
+
+  msg(
+    'Existing Brand / Persona / Creator data loaded.'
+  );
+
+}
+
+
+function selectedInterests(){
+  return Array.from(document.querySelectorAll('#interestChips .chip.selected'))
+    .map(x=>x.dataset.value).filter(Boolean).join(', ');
+}
+
+const INTEREST_OPTIONS=['beauty','skincare','fashion','food','travel','technology','fitness','finance','gaming','lifestyle','music','entertainment','wellness','luxury'];
+let selectedInterestSet=new Set();
+function renderInterestChips(){
+  const box=$('interestChips'); if(!box)return;
+  const options=[...new Set([...INTEREST_OPTIONS,...selectedInterestSet])];
+  box.innerHTML=options.map(v=>'<div class="chip '+(selectedInterestSet.has(v)?'selected':'')+'" data-value="'+esc(v)+'">'+esc(v)+(selectedInterestSet.has(v)?' <button type="button" class="chipRemove">×</button>':'')+'</div>').join('');
+  box.querySelectorAll('.chip').forEach(el=>el.addEventListener('click',e=>{if(e.target.classList.contains('chipRemove'))return;toggleInterest(el.dataset.value);}));
+  box.querySelectorAll('.chipRemove').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();removeInterest(el.parentElement.dataset.value);}));
+}
+function toggleInterest(v){selectedInterestSet.has(v)?selectedInterestSet.delete(v):selectedInterestSet.add(v);renderInterestChips();}
+function removeInterest(v){selectedInterestSet.delete(v);renderInterestChips();}
+function addTypedInterests(){($('perInt').value||'').split(',').map(x=>x.trim()).filter(Boolean).forEach(x=>selectedInterestSet.add(x));$('perInt').value='';renderInterestChips();}
+
+const CREATOR_PERSONA_OPTIONS={
+ personality:['Bold','Calm','Energetic','Sophisticated','Friendly','Humorous','Serious','Emotional','Charismatic','Confident','Curious','Playful','Empathetic','Ambitious','Analytical','Adventurous','Introvert','Extrovert','Balanced','Reserved','Expressive','Warm','Assertive','Thoughtful','Spontaneous','Disciplined','Provocative','Optimistic','Pragmatic','Idealistic','Candid','Witty','Composed','Passionate','Nurturing'],
+ communication:['Expert-led','Conversational','Storytelling','Direct','Soft-sell','Hard-sell','Educational','Opinion-led','Demonstrative','Debate-driven','Interview-style','Tutorial-led','Review-led','Data-led','Visual-first','Humor-led','Emotion-led','Question-led','Community-led','Case-study-led','Comparison-led','Problem-solution','Behind-the-scenes','Q&A-led','Narrative-led','Evidence-led','Reaction-led','Challenge-led','Testimonial-led','How-to-led'],
+ influence:['Authority','Trust-based','Aspirational','Relatable','Inspirational','Persuasive','Community-driven','Trend-driven','Experiential','Social-proof driven','Expert influence','Peer influence','Taste-maker','Opinion leader','Discovery driver','Purchase driver','Behavior changer','Cultural influence','Category Educator','Decision Guide','Lifestyle Model','Conversation Leader','Validation Source','Problem Solver','Status Signal','Risk Reducer','Trial Driver','Advocacy Driver'],
+ relationship:['Expert–Follower','Friend–Friend','Leader–Community','Entertainer–Fan','Mentor–Learner','Reviewer–Consumer','Creator–Community','Peer–Peer','Coach–Audience','Insider–Community','Host–Guest','Advisor–Consumer','Trusted Friend','Role Model','Community Insider','Specialist–Learner','Guide–Explorer','Advocate–Audience','Peer Advisor','Curator–Follower'],
+ socialBehavior:['Trend Setter','Trend Adopter','Trend Follower','Conversation Starter','Conversation Driver','Community Builder','High Responder','High Sharer','High Saver','High Comment Generator','High Watch Time','High Completion','High Profile Visit','High Click Intent','High Purchase Intent','High Repeat Engagement','High Community Loyalty','Fast Trend Response','Evergreen Authority','Niche Authority','High Search Intent','High DM Intent','High Story Interaction','High Live Interaction','High UGC Response','High Mention Rate','High Reply Depth','High Returning Audience','High Recommendation Behavior','High Product Curiosity'],
+ contentPersonality:['Authentic','Raw','Polished','Premium','Editorial','Casual','Experimental','Minimal','Emotional','Controversial','Playful','Luxury','Documentary','Cinematic','Unfiltered','Human','Relatable','Expert','Bold','Aspirational','High-energy','Calm','Intimate','Dramatic','Comedic','Journalistic','Inspirational','Tactical','Visual','Conversational'],
+ contentFunction:['Awareness','Education','Consideration','Trust Building','Product Discovery','Product Demonstration','Trial','Conversion','Advocacy','Retention','Community Building','Demand Generation','Problem Solving','Social Proof','Brand Storytelling','Product Launch','Lead Generation','Purchase Support','Objection Handling','Category Creation','Thought Leadership','Comparison','Decision Support','Usage Education','Feature Education','Community Activation','Reputation Building','Re-engagement','Referral','Loyalty'],
+ contentBehavior:['Save-driven','Share-driven','Comment-driven','View-driven','Completion-driven','Click-driven','Conversation-driven','Conversion-driven','Watch-time-driven','Profile-visit-driven','Search-driven','Discovery-driven','Intent-driven','Repeat-view-driven','Community-response-driven','UGC-driven','DM-driven','Mention-driven','Reaction-driven','Question-driven','Comparison-driven','Proof-driven','Trial-driven','Referral-driven','Repeat-purchase-driven','Participation-driven','Bookmark-driven','Discussion-driven'],
+ psychology:['Curious','Price-sensitive','Quality-seeking','Trend-sensitive','Research-oriented','Impulsive','Community-oriented','Status-oriented','Experience-seeking','Problem-solving','Trust-seeking','Value-seeking','Novelty-seeking','Risk-averse','Early-adopter','Social-proof-seeking','Convenience-seeking','Identity-driven','Emotion-driven','Comparison-driven','Skeptical','Deal-seeking','Premium-seeking','Safety-seeking','Speed-seeking','Detail-oriented','Outcome-oriented','Belonging-seeking','Self-improvement','Discovery-seeking','Validation-seeking','Authority-seeking','FOMO-sensitive','Habit-driven','Experiment-driven']
+};
+function renderCreatorPersonaOptions(){
+  Object.keys(CREATOR_PERSONA_OPTIONS).forEach(key=>{
+    const idMap={socialBehavior:'crSocialBehavior',contentPersonality:'crContentPersonality',contentFunction:'crContentFunction',contentBehavior:'crContentBehavior'};
+    const id=idMap[key]||'cr'+key.charAt(0).toUpperCase()+key.slice(1);
+    const box=$(id); if(!box)return;
+    box.innerHTML=CREATOR_PERSONA_OPTIONS[key].map(v=>'<span class="chip '+((box.dataset.selected||'').split('|').includes(v)?'selected':'')+'" data-value="'+esc(v)+'">'+esc(v)+'</span>').join('');
+    box.querySelectorAll('.chip').forEach(el=>el.addEventListener('click',()=>el.classList.toggle('selected')));
+  });
+}
+function creatorPersonaValues(id){return Array.from($(id)?.querySelectorAll('.chip.selected')||[]).map(x=>x.dataset.value)}
+function setCreatorPersonaValues(map){
+  Object.keys(CREATOR_PERSONA_OPTIONS).forEach(key=>{
+    const idMap={socialBehavior:'crSocialBehavior',contentPersonality:'crContentPersonality',contentFunction:'crContentFunction',contentBehavior:'crContentBehavior'};
+    const id=idMap[key]||'cr'+key.charAt(0).toUpperCase()+key.slice(1),box=$(id);if(!box)return;
+    box.dataset.selected=Array.isArray(map[key])?map[key].join('|'):'';
+  });
+  renderCreatorPersonaOptions();
+}
+
+
+
+/* =========================================================
+   SAVE BRAND
+   ========================================================= */
+
+function saveBrand(){
+  const btn=document.querySelector('#brand button[onclick="saveBrand()"]');
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+
+  const status =
+    $('brandSaveStatus');
+
+  status.className =
+    'save-status';
+
+  status.innerHTML =
+    'Saving...';
+
+
+  call(
+    'KOL_IDS_V5_saveBrand',
+    [
+      token,
+      {
+        id:
+          state.brand[0]?.id,
+
+        name:
+          $('brandName').value,
+
+        category:
+          $('brandCategory').value,
+
+        market:
+          $('brandMarket').value,
+
+        positioning:
+          $('brandPositioning').value,
+
+        values:
+          $('brandValues').value,
+
+        avoid:
+          $('brandAvoid').value
+      }
+    ],
+    () => {
+
+      status.className =
+        'save-status success';
+
+      status.innerHTML =
+        'Complete';
+      if(btn){btn.disabled=false;btn.textContent='✓ Complete';setTimeout(()=>btn.textContent='SAVE BRAND',1200);}
+      load();
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   SAVE PERSONA
+   ========================================================= */
+
+
+
+
+/* =========================================================
+   SAVE CREATOR
+   ========================================================= */
+
+function saveCreator(){
+  setOperationStatus('Working…','busy');
+  const file=$('crPhoto').files[0];
+  const range=$('crAgeRange').value;
+  const personaGroups=['crPersonality','crCommunication','crInfluence','crRelationship','crSocialBehavior','crContentPersonality','crContentFunction','crContentBehavior','crPsychology'];
+  const signalCount=personaGroups.reduce((n,id)=>n+creatorPersonaValues(id).length,0);
+  if(!$('crName').value.trim()){msg('Creator Name is required.',true);return;}
+  /* Platform is optional in sparse-creator mode; the canonical engine can analyze with unknown platform. */
+  if(!$('crCategory').value.trim()){msg('Category is required for Content and Brand Fit.',true);return;}
+  /* Followers are optional; when absent the engine lowers confidence rather than blocking analysis. */
+  /* Audience age is optional in sparse-creator mode. */
+  /* Audience location is optional in sparse-creator mode. */
+  /* Audience interests are optional in sparse-creator mode. */
+  if(!$('crStyles').value.trim()){msg('Content Styles are required for Content Fit.',true);return;}
+  if(signalCount<5){msg('Select at least 5 observable creator characteristics across the persona groups.',true);return;}
+  const payload={id:$('crId').value||'',name:$('crName').value,platform:$('crPlatform').value,category:$('crCategory').value,followers:numericValue($('crFollowers').value),er:numericValue($('crER').value),rate:numericValue($('crRate').value),ageRange:range,gender:$('crGender').value,locations:$('crLoc').value,interests:$('crInt').value,contentStyles:$('crStyles').value,historicalNotes:$('crNotes').value,platformUrl:$('crUrl').value,socialLinks:$('crSocialLinks').value,
+personality:creatorPersonaValues('crPersonality'),communication:creatorPersonaValues('crCommunication'),influence:creatorPersonaValues('crInfluence'),relationship:creatorPersonaValues('crRelationship'),socialBehavior:creatorPersonaValues('crSocialBehavior'),contentPersonality:creatorPersonaValues('crContentPersonality'),contentFunction:creatorPersonaValues('crContentFunction'),contentBehavior:creatorPersonaValues('crContentBehavior'),psychology:creatorPersonaValues('crPsychology')};
+  const finish=()=>call('KOL_IDS_V5_saveCreator',[token,payload],r=>{ $('creatorComplete').innerHTML='✓ Complete'; $('creatorComplete').className='complete'; msg('Creator saved · structured profile and decision signals updated.'); resetCreatorForm(); load(); });
+  $('creatorSaveBtn').disabled=true; $('creatorSaveBtn').textContent='Saving…';
+  if(file){const reader=new FileReader();reader.onload=()=>{payload.photoData=reader.result;finish();};reader.onerror=()=>{setOperationStatus('Failed','error');msg('Unable to read image.',true);$('creatorSaveBtn').disabled=false;$('creatorSaveBtn').textContent='SAVE CREATOR';};reader.readAsDataURL(file);}else finish();
+}
+
+function resetCreatorForm(){['crId','crName','crCategory','crFollowers','crER','crRate','crLoc','crInt','crStyles','crNotes','crUrl','crSocialLinks'].forEach(id=>{if($(id))$(id).value='';});setCreatorPersonaValues({});$('crPlatform').value='TikTok';$('crAgeRange').value='';$('crGender').value='ANY';$('crPhoto').value='';$('crPhotoPreview').style.display='none';$('crPhotoStatus').textContent='Optional · Upload manually';$('creatorSaveBtn').disabled=false;$('creatorSaveBtn').textContent='SAVE CREATOR';}
+function editCreator(id){const c=state.creators.find(x=>String(x.id)===String(id));if(!c)return;$('crId').value=c.id;$('crName').value=c.name||'';$('crPlatform').value=c.platform||'TikTok';$('crCategory').value=c.category||'';$('crFollowers').value=c.followers||'';$('crER').value=c.er||'';$('crRate').value=c.rate||'';$('crAgeRange').value=c.ageRange||'';$('crGender').value=c.gender||'ANY';$('crLoc').value=c.locations||'';$('crInt').value=c.interests||'';$('crStyles').value=c.contentStyles||'';$('crNotes').value=c.historicalNotes||'';$('crUrl').value=c.platformUrl||'';$('crSocialLinks').value=c.socialLinks||'';setCreatorPersonaValues({personality:c.personality,communication:c.communication,influence:c.influence,relationship:c.relationship,socialBehavior:c.socialBehavior,contentPersonality:c.contentPersonality,contentFunction:c.contentFunction,contentBehavior:c.contentBehavior,psychology:c.psychology});if(c.photoUrl){$('crPhotoPreview').src=c.photoUrl;$('crPhotoPreview').style.display='block';$('crPhotoStatus').textContent='Current photo';}go('creator');$('creatorSaveBtn').textContent='UPDATE CREATOR';}
+
+$('crPhoto')?.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('crPhotoPreview').src=r.result;$('crPhotoPreview').style.display='block';$('crPhotoStatus').textContent='New photo ready';};r.readAsDataURL(f);});
+
+
+
+/* =========================================================
+   RENDER LISTS
+   ========================================================= */
+
+
+
+
+/* =========================================================
+   ANALYZE
+   ========================================================= */
+
+function resolveIdByInput(value, items){
+  const v=String(value||'').trim();
+  const exact=items.find(x=>String(x.name||x[1]||'').trim().toLowerCase()===v.toLowerCase());
+  return exact ? String(exact.id||exact[0]) : v;
+}
+
+function campaignDurationDays(){const a=$('campStartDate')?.value,b=$('campEndDate')?.value;if(!a||!b)return 0;const d=(new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000+1;return Number.isFinite(d)?Math.round(d):-1}
+function updateCampaignDuration(){const d=campaignDurationDays();const el=$('campDurationDays');if(el)el.value=d>0?d+' days':'';}
+function analyze(){
+  const btn=$('analyzeBtn');
+  if(btn&&btn.disabled)return;
+  const brandId=resolveIdByInput($('decBrand').value,state.brand||[]);
+  const personaId=resolveIdByInput($('decPersona').value,state.personas||[]);
+  const campaignName=$('campName').value.trim();
+  const objective=$('objective').value.trim().toUpperCase();
+  const successMetric=($('campSuccessMetric')&&$('campSuccessMetric').value.trim())||'';
+  const budget=numericValue($('campBudget').value);
+  const currency=$('campCurrency').value.trim()||'THB';
+  const startDate=$('campStartDate')?.value||'',endDate=$('campEndDate')?.value||'',durationDays=campaignDurationDays();
+  if((startDate&&!endDate)||(!startDate&&endDate)||durationDays<0){msg('Campaign dates are invalid. Select both dates and ensure End Date is not before Start Date.',true);return;}
+  if(!brandId||!personaId||!campaignName||!objective){msg(langText('Please provide Brand, Target Persona, Campaign Name and Campaign Goal.','Please complete Brand, Target Persona, Campaign Name and Campaign Goal.'),true);return;}
+  if(btn){btn.disabled=true;btn.textContent=langText('ANALYZING LOGIC…','Analyzing Logic…');}
+  call('KOL_IDS_V25_analyze',[token,{brandId,personaId,campaignName,objective,goal:objective,successMetric,budget,currency,startDate,endDate,durationDays}],r=>{
+    lastCampaign=r.campaignId;
+    renderResults(r.rows||[]);
+    msg(langText('Analysis complete · '+(r.rows||[]).length+' creators · Goal '+r.campaignGoal+' · Campaign '+r.campaignId,'Analysis complete · '+(r.rows||[]).length+' Creators · Goal '+r.campaignGoal+' · Campaign '+r.campaignId));
+    load();
+    if(btn){btn.disabled=false;btn.textContent=langText('ANALYZE ALL CREATORS','วิเคราะห์ Creator ทั้งหมด');}
+  });
+}
+
+function renderResults(rows){
+  const goal=(rows[0]&&rows[0].campaignGoal)||'';
+  $('results').innerHTML='<div class="card" style="border-left:4px solid var(--burgundy)"><h3>'+esc(langText('Decision Intelligence','Decision Intelligence'))+'</h3><p class="muted">'+esc(langText('Goal-aware, evidence-based ranking. Scores remain objective even when a preferred KOL is requested.','Ranking is based on Goal and Evidence; the original score is not changed by preference.'))+'</p><div class="status-pill actual">Goal: '+esc(goal)+'</div></div>'+rows.map((r,i)=>{
+    const tier=r.decisionTier||r.decision, cls=tier==='FIT'||r.decision==='RECOMMEND'?'ok':tier==='LOW FIT'||r.decision==='DO NOT SELECT'?'bad':'warn';
+    const age=r.ageRange||((r.ageMin!=null&&r.ageMax!=null)?r.ageMin+'–'+r.ageMax:'—');
+    return '<div class="card '+cls+'">'+
+      '<div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start"><div><div class="muted">#'+String(i+1).padStart(2,'0')+'</div><h3>'+esc(r.name)+'</h3><div class="muted">'+esc(tier)+' · '+esc(r.campaignGoal||'')+' · '+esc(r.goalProfile||'')+'</div></div><div class="score">'+esc(r.score)+'%</div></div>'+
+      '<div class="metrics"><div class="metric">Persona<b>'+r.personaFit+'</b></div><div class="metric">Audience<b>'+r.audienceFit+'</b></div><div class="metric">Behavior<b>'+esc(r.behaviorFit||'—')+'</b></div><div class="metric">Content<b>'+r.contentFit+'</b></div><div class="metric">Objective<b>'+r.objectiveFit+'</b></div><div class="metric">Brand<b>'+r.brandFit+'</b></div><div class="metric">Efficiency<b>'+r.efficiencyScore+'</b></div></div>'+
+      '<div class="metrics"><div class="metric">Followers<b>'+esc(r.followers!=null&&r.followers!==''?Number(r.followers).toLocaleString():'—')+'</b></div><div class="metric">Category<b>'+esc(r.category||'—')+'</b></div><div class="metric">Audience Age<b>'+esc(age)+'</b></div><div class="metric">Data Quality<b>'+esc(r.dataQualityScore||r.evidenceScore||0)+'</b></div><div class="metric">History<b>'+esc(r.historicalCampaigns||0)+'</b><span class="sub">Goal signal '+esc(r.historicalGoalSignal||50)+'</span></div><div class="metric">Confidence<b>'+esc(r.confidence)+'</b><span class="sub">'+esc(r.confidenceScore)+'</span></div></div>'+
+      '<p><b>'+esc(langText('Decision rationale','Decision rationale'))+':</b> '+esc(r.decisionRationale||r.why)+'</p>'+
+      '<p><b>Recommended Content:</b> '+((r.contentRecommendation||[]).map(x=>'<span class="status-pill actual" style="display:inline-block;margin:3px">'+esc(x.format)+' · '+esc(x.fit)+'</span>').join(' ')||'—')+'</p>'+
+      '<p><b>'+esc(langText('Evidence','Evidence'))+':</b> '+esc(r.evidence||'—')+'</p>'+
+      '<p class="muted"><b>'+esc(langText('Limitations','Limitations'))+':</b> '+esc(r.dataLimitation||'—')+'</p>'+
+      (tier!=='FIT'?'<div class="card" style="margin-top:12px"><b>❤️ '+esc(langText('Prefer this KOL?','Prefer this KOL?'))+'</b><p class="muted">'+esc(langText('The system keeps the original score and calculates a recovery strategy instead.','The original score is preserved; a recovery strategy is calculated instead.'))+'</p><button class="btn alt preferredStrategyBtn" data-campaign="'+esc(r.campaignId)+'" data-creator="'+esc(r.creatorId)+'">'+esc(langText('HOW CAN I MAKE THIS KOL WORK?','HOW CAN I MAKE THIS KOL WORK?'))+'</button></div>':'')+
+      '<div class="decision-actions"><button class="btn decisionSelectBtn" data-campaign="'+esc(r.campaignId)+'" data-creator="'+esc(r.creatorId)+'">'+esc(langText('SELECT THIS CREATOR','SELECT THIS CREATOR'))+'</button></div>'+
+      '</div>';
+  }).join('');
+  document.querySelectorAll('.decisionSelectBtn').forEach(b=>b.addEventListener('click',()=>selectFromDecision(b)));
+  document.querySelectorAll('.preferredStrategyBtn').forEach(b=>b.addEventListener('click',()=>preferredStrategy(b)));
+}
+
+function preferredStrategy(btn){
+  const camp=String(btn.dataset.campaign||''),cr=String(btn.dataset.creator||'');
+  if(!camp||!cr){msg('Campaign or Creator ID is missing. Please run the analysis again.',true);return;}
+  btn.disabled=true;btn.textContent='CALCULATING…';
+  call('KOL_IDS_V5_getPreferredStrategy',[token,{campaignId:camp,creatorId:cr}],r=>{
+    const s=r.strategy||{};
+    const alternatives=(s.compensatingCreators||r.compensatingCreators||[]).map(x=>'<li><b>'+esc(x.name)+'</b> · Score '+esc(x.score)+'% · Brand Fit '+esc(x.brandFit)+'%</li>').join('');
+    const html='<div class="card ok preferred-result" style="margin-top:12px">'+
+      '<h3>Preferred Creator Recovery Strategy</h3>'+      '<p><b>'+esc(r.creatorName)+'</b> · Goal '+esc(r.goal)+' · Original Score <b>'+esc(r.originalScore)+'%</b></p>'+      '<div class="metrics"><div class="metric">Brand Fit<b>'+esc(r.brandFit)+'%</b></div><div class="metric">Audience Fit<b>'+esc(s.audienceFit||0)+'%</b></div><div class="metric">Behavior Fit<b>'+esc(s.behaviorFit||0)+'%</b></div><div class="metric">Content Fit<b>'+esc(r.contentFit)+'%</b></div><div class="metric">Recommended Role<b>'+esc(s.role||'Supporting Creator')+'</b></div></div>'+      '<p><b>How to make this creator work</b></p><ul>'+((s.strategies||[]).map(x=>'<li>'+esc(x)+'</li>').join(''))+'</ul>'+      '<p><b>Recommended Content</b></p><ul>'+((s.contentRecommendation||[]).map(x=>'<li>'+esc(x.format||x)+' · Fit '+esc(x.fit||'—')+'</li>').join('')||'<li>Use the creator-native format with the strongest observed behavioral fit.</li>')+'</ul>'+      (alternatives?'<p><b>Recommended compensating creators</b></p><ul>'+alternatives+'</ul>':'')+      '<p class="muted">'+esc(s.note||'')+'</p>'+      '<button class="btn burgundy select-anyway-btn" data-campaign="'+esc(camp)+'" data-creator="'+esc(cr)+'">SELECT THIS CREATOR ANYWAY</button>'+      '</div>';
+    const card=btn.closest('.card');if(card){card.querySelector('.preferred-result')?.remove();card.insertAdjacentHTML('beforeend',html);}
+    btn.textContent='✓ STRATEGY CALCULATED';
+    const next=card?.querySelector('.select-anyway-btn');if(next)next.addEventListener('click',()=>selectFromDecision(next));
+  });
+}
+
+function selectFromDecision(btn){
+  const camp=String(btn.dataset.campaign||''),cr=String(btn.dataset.creator||'');
+  if(!camp||!cr){msg('Campaign or Creator ID is missing. Please run the analysis again.',true);return;}
+  btn.disabled=true;btn.textContent='SAVING…';
+  call('KOL_IDS_V5_selectCreator',[token,camp,cr],r=>{
+    btn.textContent='✓ SELECTED';
+    msg('Creator selected for this Campaign. Performance tracking has been initialized.');
+    const cs=$('campaignSelect');if(cs){const cc=(state.campaigns||[]).find(x=>String(x[0])===camp);cs.value=cc?(cc[1]||camp):camp;}
+    const crs=$('creatorSelect');if(crs){fillCreators();const cc=(state.creators||[]).find(x=>String(x.id)===cr);crs.value=cc?(cc.name||cr):cr;}
+    updateCampaignCount();
+    go('campaign');
+    load();
+    call('KOL_IDS_V5_getCampaignPlan',[token,camp],plan=>renderCampaignPlan(plan));
+  });
+}
+
+
+
+
+
+/* =========================================================
+   CAMPAIGNS
+   ========================================================= */
+
+function resolveCampaignId(value){
+  const v=String(value||'').trim();
+  const c=(state.campaigns||[]).find(x=>String(x[0])===v||String(x[1]).trim().toLowerCase()===v.toLowerCase());
+  return c?String(c[0]):v;
+}
+function resolveCreatorId(value){
+  const v=String(value||'').trim();
+  const c=(state.creators||[]).find(x=>String(x.id)===v||String(x.name).trim().toLowerCase()===v.toLowerCase());
+  return c?String(c.id):v;
+}
+function fillCampaigns(){
+  const campaigns=state.campaigns||[];
+  const select=$('campaignSelect');
+  if($('campaignOptions'))$('campaignOptions').innerHTML=campaigns.map(c=>'<option value="'+esc(c[1]||c[0])+'"></option>').join('');
+  if(select){
+    const current=select.value||'';
+    const active=(lastCampaign&&campaigns.some(c=>String(c[0])===String(lastCampaign)))?lastCampaign:current;
+    if(active){
+      const c=campaigns.find(x=>String(x[0])===String(active));
+      if(c)select.value=c[1]||c[0];
+    }
+  }
+  fillCreators();updateCampaignCount();
+}
+function fillCreators(){
+  const all=state.creators||[];
+  const selected=KOL_IDSSelectedLocal(resolveCampaignId($('pfCampaign')?.value));
+  const eligible=selected.length?all.filter(c=>selected.includes(String(c.id))):all;
+  if($('creatorOptions'))$('creatorOptions').innerHTML=eligible.map(c=>'<option value="'+esc(c.name)+'"></option>').join('');
+  if($('pfCreator') && eligible.length && !eligible.some(c=>String(c.id)===resolveCreatorId($('pfCreator').value))) $('pfCreator').value=eligible[0]?.name||'';
+  const cs=$('creatorSelect');
+  if(cs){
+    const current=cs.value||'';
+    if(!current && all.length) cs.value=all[0].name||'';
+    else if(current && !all.some(c=>String(c.id)===resolveCreatorId(current))) cs.value='';
+  }
+}
+function KOL_IDSSelectedLocal(campaignId){const c=(state.campaigns||[]).find(x=>String(x[0])===String(campaignId)||String(x[1]).trim().toLowerCase()===String(campaignId).trim().toLowerCase());if(!c)return [];const idx=(state.campaignHeaders&&state.campaignHeaders.campaigns&&state.campaignHeaders.campaigns['Selected Creator IDs']);return String(idx!=null?c[idx]:c[9]||'').split(',').map(x=>x.trim()).filter(Boolean);}
+function updateCampaignCount(){const id=resolveCampaignId($('campaignSelect')?.value);if(!id||!$('campaignCount'))return;const n=KOL_IDSSelectedLocal(id).length;$('campaignCount').textContent=n+' creator'+(n===1?'':'s')+' selected';$('campaignCount').className='status-pill '+(n?'actual':'');}
+
+$('campaignSelect')?.addEventListener('change',()=>{updateCampaignCount();fillCreators();});
+$('pfCampaign')?.addEventListener('change',()=>{fillCreators();const camp=resolveCampaignId($('pfCampaign').value);const selected=KOL_IDSSelectedLocal(camp);if(selected.length){const cr=(state.creators||[]).find(x=>String(x.id)===String(selected[0]));if(cr)$('pfCreator').value=cr.name;}});
+
+
+
+/* =========================================================
+   SAVE SELECTION
+   ========================================================= */
+
+function saveSelection(){
+  const camp=resolveCampaignId($('campaignSelect').value);
+  const cr=resolveCreatorId($('creatorSelect').value);
+  const btn=$('campaignSaveBtn');
+  if(!camp || !cr){ msg('Select or type Campaign and Creator first.',true); return; }
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  call('KOL_IDS_V5_selectCreator',[token,camp,cr],r=>{
+    if(btn){btn.disabled=false;btn.textContent='✓ Complete';}
+    msg(langText('✓ SELECTED · '+r.count+' creator(s) in campaign','✓ Selected · '+r.count+' Creator ใน Campaign'));
+    updateCampaignCount();fillCreators();load();
+    call('KOL_IDS_V5_getCampaignPlan',[token,camp],plan=>renderCampaignPlan(plan));
+    setTimeout(()=>{if(btn){btn.textContent='SAVE SELECTED CREATOR';}},1200);
+  });
+}
+
+function addNextCreator(){
+  resetCreatorForm();
+  go('creator');
+  setTimeout(()=>{$('crName')?.focus();},50);
+}
+
+
+/* =========================================================
+   PERFORMANCE
+   ========================================================= */
+
+
+
+
+function savePerformance(){
+  const btn=document.querySelector('#performance button[onclick="savePerformance()"]');
+  const campaign=resolveCampaignId($('pfCampaign').value),creator=resolveCreatorId($('pfCreator').value);
+  const metricIds=['pfSpend','pfReach','pfImp','pfViews','pfLikes','pfComments','pfShares','pfSaves','pfEng','pfClicks','pfConv','pfRevenue'];
+  if(!campaign||!creator){msg(langText('Select Campaign and Creator first.','Please select Campaign and Creator first.'),true);return;}
+  if(!metricIds.some(id=>String($(id)?.value||'').replace(/,/g,'').trim()!=='')){msg(langText('Enter at least one actual performance metric.','Please enter at least one actual performance metric.'),true);return;}
+  if(btn){btn.disabled=true;btn.textContent=langText('SAVING + LEARNING…','Saving + Learning…');}
+  const payload={campaignId:campaign,creatorId:creator,spend:numericValue($('pfSpend').value),reach:numericValue($('pfReach').value),impressions:numericValue($('pfImp').value),views:numericValue($('pfViews').value),likes:numericValue($('pfLikes').value),comments:numericValue($('pfComments').value),shares:numericValue($('pfShares').value),saves:numericValue($('pfSaves').value),engagements:numericValue($('pfEng').value),clicks:numericValue($('pfClicks').value),conversions:numericValue($('pfConv').value),revenue:numericValue($('pfRevenue').value),currency:$('campCurrency').value||'THB',evidence:$('pfEvidence').value,reportedDate:$('pfDate').value,notes:$('pfNotes').value};
+  call('KOL_IDS_V5_savePerformance',[token,payload],r=>{
+    $('learning').innerHTML=r.learning?'<div class="card ok"><h3>'+esc(langText('Campaign Learning','Campaign Learning'))+'</h3><div class="metrics"><div class="metric">Predicted<b>'+r.learning.predicted+'</b></div><div class="metric">Actual<b>'+r.learning.actual+'</b></div><div class="metric">Variance<b>'+r.learning.variance+'</b></div><div class="metric">Actual Goal Score<b>'+r.actualGoalScore+'</b></div><div class="metric">Confidence<b>'+r.performanceConfidence+'</b></div></div><p>'+esc(r.learning.summary)+'</p><p><b>What worked:</b> '+esc(r.learning.worked)+'</p><p><b>What did not:</b> '+esc(r.learning.notWorked)+'</p><p><b>Next:</b> '+esc(r.learning.next)+'</p></div>':'<div class="card ok">'+esc(langText('Performance saved.','Performance saved.'))+'</div>';
+    if(btn){btn.disabled=false;btn.textContent=langText('✓ COMPLETE','✓ Complete');setTimeout(()=>btn.textContent=langText('SAVE PERFORMANCE + LEARNING','บันทึก Performance + Learning'),1200);}
+    load();
+  });
+}
+
+
+/* =========================================================
+   REPORT
+   ========================================================= */
+
+
+function fillReport(){
+
+  fillCampaigns();
+
+}
+
+
+let lastCampaignReport=null,selectedReportTab='creator';
+function selectReportTab(type){selectedReportTab=type;document.querySelectorAll('.report-tab').forEach(b=>b.classList.toggle('active',b.dataset.report===type));renderSelectedReport()}
+function loadReport(){
+  const id=resolveCampaignId($('reportCampaign').value);if(!id){msg('Select a Campaign first.',true);return;}
+  const btn=document.querySelector('#report button[onclick="loadReport()"]');if(btn){btn.disabled=true;btn.textContent='LOADING…';}
+  call('KOL_IDS_V5_getCampaignReport',[token,id],r=>{lastCampaignReport=r;renderSelectedReport();if(btn){btn.disabled=false;btn.textContent='LOAD REPORT';}});
+}
+function renderSelectedReport(){
+  const r=lastCampaignReport;if(!r){$('reportBox').innerHTML='<div class="card muted">Load a campaign report first.</div>';return;}
+  if(selectedReportTab==='creator'){
+    $('reportBox').innerHTML='<div class="card"><h3>Report 01 · Creator Analysis</h3><p class="muted">Creator selection intelligence: Fit, Impact, Confidence, Risk, Decision, Value and reasoning.</p></div>'+
+      (r.decisions||[]).map(x=>'<div class="card"><div style="display:flex;justify-content:space-between"><div><b>'+esc(x.name)+'</b> · '+esc(x.decision)+'</div><b>'+esc(x.score)+'%</b></div><div class="metrics"><div class="metric">Brand<b>'+esc(x.brandFit)+'</b></div><div class="metric">Audience<b>'+esc(x.audienceFit)+'</b></div><div class="metric">Objective<b>'+esc(x.objectiveFit)+'</b></div><div class="metric">Data Quality<b>'+esc(x.dataQualityScore||0)+'</b></div><div class="metric">Confidence<b>'+esc(x.confidence)+'</b></div></div><p><b>Why:</b> '+esc(x.why)+'</p><p class="muted">'+esc(x.dataLimitation||'')+'</p></div>').join('')||'<div class="card muted">No creator analysis rows.</div>';
+  }else{
+    $('reportBox').innerHTML='<div class="card"><h3>Report 02 · Campaign Performance</h3><p class="muted">Actual post-campaign results, kept separate from selection analysis.</p></div>'+
+      (r.performance||[]).map(x=>'<div class="card"><b>'+esc(x.creatorName)+'</b> · Goal Score '+esc(x.actualGoalScore)+' · Efficiency '+esc(x.efficiencyScore)+' · CPE '+esc(x.cpe||'—')+' · ROAS '+esc(x.roas||'—')+'<div class="muted">Likes '+esc(x.likes||0)+' · Comments '+esc(x.comments||0)+' · Shares '+esc(x.shares||0)+' · Saves '+esc(x.saves||0)+' · Engagements '+esc(x.engagements||0)+'</div><div class="muted">'+esc(x.evidence||'')+'</div></div>').join('')||'<div class="card muted">No completed performance rows.</div>';
+  }
+}
+function exportXlsx(){const id=resolveCampaignId($('reportCampaign').value);if(!id){msg(langText('Select a Campaign first.','Please เลือก Campaign ก่อน'),true);return;}call('KOL_IDS_V5_exportXlsx',[token,id],r=>{const a=document.createElement('a');a.href='data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'+r.base64;a.download=r.filename;a.click();msg(langText('✓ Excel exported','✓ Excel exported'));});}
+
+
+
+/* =========================================================
+   PDF
+   ========================================================= */
+
+function exportPdf(){
+  const id=resolveCampaignId($('reportCampaign').value);
+  if(!id){msg('Please select or type Campaign first.',true);return;}
+  call(
+    'KOL_IDS_V5_exportPdf',
+    [
+      token,
+      id
+    ],
+    r => {
+
+      const a =
+        document.createElement('a');
+
+      a.href =
+        'data:application/pdf;base64,' +
+        r.base64;
+
+      a.download =
+        r.filename;
+
+      a.click();
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   UI LANGUAGE
+   ========================================================= */
+const KOL_IDS_LANG={th:{},en:{}};
+function currentLang(){return 'en';}
+function langText(en,th){return en;}
+function applyLanguage(){ return; }
+/* =========================================================
+   V5.7.0 — RICH LIST / WORKFLOW DISPLAY
+   ========================================================= */
+function renderLists(){
+  renderInterestChips();
+  renderCreatorPersonaOptions();
+  const b=state.brand||[];
+  if(b.length){const x=b[b.length-1];$('brandName').value=x.name||'';$('brandCategory').value=x.category||'';$('brandMarket').value=x.market||'THAILAND';$('brandPositioning').value=x.positioning||'';$('brandValues').value=x.values||'';$('brandAvoid').value=x.avoid||'';}
+  const latestPersona=(state.personas||[]).slice(-1)[0];
+  if(latestPersona){$('perName').value=latestPersona.name||'';$('perAgeRange').value=(latestPersona.ageMin!=null&&latestPersona.ageMax!=null)?String(latestPersona.ageMin)+'-'+String(latestPersona.ageMax):'';$('perGender').value=latestPersona.gender||'ANY';$('perLoc').value=latestPersona.locations||'';$('perBeh').value=latestPersona.behaviors||'';$('perDesc').value=latestPersona.description||'';$('perGoalsNeeds').value=latestPersona.goalsNeeds||'';$('perPainPoints').value=latestPersona.painPoints||'';}
+  $('personaList').innerHTML=(state.personas||[]).map(p=>'<div class="card"><b>'+esc(p.name)+'</b> · Audience Age '+esc(p.ageMin)+'–'+esc(p.ageMax)+' · '+esc(p.gender)+'<div class="muted">'+esc(p.locations||'—')+' · '+esc(p.interests||'—')+'</div><div class="muted"><b>Goals & Needs:</b> '+esc(p.goalsNeeds||'—')+'<br><b>Pain Points:</b> '+esc(p.painPoints||'—')+'</div></div>').join('');
+  $('creatorList').innerHTML=(state.creators||[]).map((c,i)=>{
+    const age=c.ageRange||((c.ageMin!==''&&c.ageMax!=='')?c.ageMin+'–'+c.ageMax:'—');
+    return '<div class="card"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div style="display:flex;gap:12px;align-items:center">'+(c.photoUrl?'<img src="'+esc(c.photoUrl)+'" style="width:46px;height:46px;border-radius:12px;object-fit:cover">':'')+'<div><div class="muted">Creator '+String(i+1).padStart(2,'0')+'</div><b>'+esc(c.name)+'</b> · '+esc(c.platform)+' · '+esc(c.category)+'</div></div><button class="btn alt" onclick="editCreator(\''+esc(c.id)+'\')">EDIT</button></div><div class="metrics" style="margin-top:12px"><div class="metric">Followers<b>'+esc(c.followers!=null&&c.followers!==''?Number(c.followers).toLocaleString():'—')+'</b></div><div class="metric">Category<b>'+esc(c.category||'—')+'</b></div><div class="metric">Audience Age<b>'+esc(age)+'</b></div><div class="metric">History<b>'+esc(c.historicalCampaigns||0)+'</b></div><div class="metric">Risk<b>'+esc(c.risk||'—')+'</b></div></div></div>';
+  }).join('');
+  $('brandOptions').innerHTML=(state.brand||[]).map(b=>'<option value="'+esc(b.name)+'"></option>').join('');
+  $('personaOptions').innerHTML=(state.personas||[]).map(p=>'<option value="'+esc(p.name)+'"></option>').join('');
+  $('campaignOptions').innerHTML=(state.campaigns||[]).map(c=>'<option value="'+esc(c[1])+'"></option>').join('');
+  fillCampaigns();applyLanguage();
+}
+
+function fillPerf(){
+  fillCampaigns();
+  const pf=$('pfCampaign');
+  if(pf && !String(pf.value||'').trim() && lastCampaign){
+    const c=(state.campaigns||[]).find(x=>String(x[0])===String(lastCampaign));
+    if(c)pf.value=c[1]||c[0];
+  }
+  const camp=resolveCampaignId(pf?.value||'');
+  if(camp)fillCreators();
+  const selected=KOL_IDSSelectedLocal(camp);
+  if(selected.length && $('pfCreator') && !selected.includes(resolveCreatorId($('pfCreator').value))){
+    const cr=(state.creators||[]).find(x=>String(x.id)===selected[0]);
+    if(cr)$('pfCreator').value=cr.name;
+  }
+}
+
+/* =========================================================
+   AUTO LOGIN
+   ========================================================= */
+
+applyLanguage();
+
+if(token){
+
+  $('login').style.display='none';
+
+  $('app').style.display='block';
+
+  load();
+
+}
+
+</script>
+<script>
+/* =========================================================
+ * V20.1 WORKFLOW INTEGRATION
+ * One campaign context, multi-creator state, durable history, and reports.
+ * This intentionally replaces the disconnected legacy hand-offs.
+ * ========================================================= */
+(function(){
+  const ACTIVE_KEY='KOL_IDS_V20_ACTIVE_CAMPAIGN';
+  let active=null, workflow=null;
+  const requestId=()=>('v20-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+  const readActive=()=>{try{return JSON.parse(localStorage.getItem(ACTIVE_KEY)||'null')}catch(_){return null}};
+  const writeActive=(id,name)=>{active={id:String(id),name:String(name||id)};localStorage.setItem(ACTIVE_KEY,JSON.stringify(active));return active;};
+  function nameFor(id){const campaign=(state&&state.campaigns||[]).find(x=>String(x[0])===String(id));return campaign?(campaign[1]||campaign[0]):id;}
+  function applyCampaign(id,name){const x=writeActive(id,name||nameFor(id));lastCampaign=x.id;['campaignSelect','pfCampaign','reportCampaign'].forEach(key=>{if($(key))$(key).value=x.name;});return x;}
+  function loadWorkflow(id,done){
+    if(!id)return;call('KOL_IDS_V21_getWorkflow',[token,id],r=>{workflow=r;applyCampaign(r.campaignId,r.campaignName);renderCampaign();renderPerformance();if(done)done(r);});
+  }
+  function setSelection(id,ids){
+    ids=[...new Set((ids||[]).map(String).filter(Boolean))];
+    if(!ids.length){msg('Select at least one Creator.',true);return;}
+    call('KOL_IDS_V21_setSelection',[token,{campaignId:id,creatorIds:ids,idempotencyKey:requestId()}],r=>{applyCampaign(r.campaignId,r.campaignName);msg('✓ Saved '+r.count+' Creator(s) · reconciliation complete. Step 5–7 are refreshed.');load();loadWorkflow(r.campaignId);});
+  }
+  function ensureHosts(){
+    if(!$('v20CampaignRoster'))$('campaignPlan').insertAdjacentHTML('afterend','<div id="v20CampaignRoster" style="margin-top:14px"></div>');
+    if(!$('v20PerformanceRoster'))$('learning').insertAdjacentHTML('beforebegin','<div id="v20PerformanceRoster" style="margin-top:14px"></div>');
+    if(!$('v20CampaignHistory'))$('brand').insertAdjacentHTML('beforeend','<div id="v20CampaignHistory"></div>');
+  }
+  function renderCampaign(){
+    const host=$('v20CampaignRoster');if(!host)return;if(!workflow){host.innerHTML='<div class="card muted">Choose a saved Campaign to see its full Creator roster.</div>';return;}
+    host.innerHTML='<div class="card ok"><h3>'+esc(workflow.campaignName)+' · '+esc(workflow.selectedCreators.length)+' Creator(s)</h3><p class="muted">Selection version '+esc(workflow.selectionVersion)+' · every selected Creator is carried into Performance and Report.</p><div class="metrics">'+workflow.selectedCreators.map(c=>'<div class="metric" style="text-align:left;min-width:210px"><b>'+esc(c.name)+'</b><span class="sub">'+esc(c.platform)+' · '+esc(c.category)+'</span><span class="sub">'+esc(c.performanceStatus)+'</span><button class="btn alt v20-remove" data-id="'+esc(c.id)+'" style="margin-top:8px">REMOVE</button></div>').join('')+'</div><div style="margin-top:14px"><button class="btn alt" id="v20EditStep4">EDIT CREATOR SELECTION</button><button class="btn" id="v20ToStep6" style="margin-left:8px">NEXT · STEP 6</button></div></div>';
+    host.querySelectorAll('.v20-remove').forEach(b=>b.addEventListener('click',()=>setSelection(workflow.campaignId,workflow.selectedCreatorIds.filter(id=>String(id)!==String(b.dataset.id)))));
+    $('v20EditStep4').addEventListener('click',()=>{call('KOL_IDS_V5_getReport',[token,workflow.campaignId],r=>{renderResults(r.rows||[]);go('decision');});});
+    $('v20ToStep6').addEventListener('click',()=>go('performance'));
+  }
+  function renderPerformance(){
+    const host=$('v20PerformanceRoster');if(!host||!workflow)return;
+    host.innerHTML='<div class="card"><h3>Step 6 · Business Impact by Creator</h3><p class="muted">Save actual observed values for every selected Creator. Existing values remain editable and are written back to the same campaign record.</p>'+workflow.selectedCreators.map(c=>{const p=c.performance||{};const fields=[['spend','Spend'],['reach','Reach'],['impressions','Impressions'],['views','Views'],['likes','Likes'],['comments','Comments'],['shares','Shares'],['saves','Saves'],['engagements','Engagements'],['clicks','Clicks'],['conversions','Conversions'],['revenue','Revenue']];return '<div class="card" data-v20-creator="'+esc(c.id)+'"><h3>'+esc(c.name)+'</h3><div class="grid3">'+fields.map(x=>'<div><label>'+x[1]+'</label><input data-v20-k="'+x[0]+'" value="'+esc(p[x[0]]||'')+'" type="text" inputmode="decimal" data-number-format="1"></div>').join('')+'<div><label>Evidence</label><select data-v20-k="evidence"><option '+(p.evidence==='VERIFIED'?'selected':'')+'>VERIFIED</option><option '+(p.evidence==='SELF-REPORTED'?'selected':'')+'>SELF-REPORTED</option><option '+(p.evidence!=='VERIFIED'&&p.evidence!=='SELF-REPORTED'?'selected':'')+'>LIMITED</option></select></div></div><textarea data-v20-k="notes" placeholder="Source / notes">'+esc(p.notes||'')+'</textarea></div>';}).join('')+'<button class="btn" id="v20SaveImpact">SAVE ALL BUSINESS IMPACT + LEARNING</button></div>';
+    bindNumberFormatting(host);$('v20SaveImpact').addEventListener('click',saveImpact);
+  }
+  function saveImpact(){
+    if(!workflow)return;const records=[];$('v20PerformanceRoster').querySelectorAll('[data-v20-creator]').forEach(card=>{const r={creatorId:card.dataset.v20Creator,reportedDate:new Date().toISOString().slice(0,10)};let used=false;card.querySelectorAll('[data-v20-k]').forEach(el=>{const k=el.dataset.v20K;if(k==='notes'||k==='evidence')r[k]=el.value;else{r[k]=numericValue(el.value);if(r[k]!==''&&r[k]!=null)used=true;}});if(used)records.push(r);});
+    if(!records.length){msg('Enter at least one actual metric before saving.',true);return;}const btn=$('v20SaveImpact');btn.disabled=true;btn.textContent='SAVING '+records.length+' CREATOR RECORD(S)…';call('KOL_IDS_V21_savePerformanceBatch',[token,{campaignId:workflow.campaignId,records:records,idempotencyKey:requestId()}],r=>{btn.disabled=false;btn.textContent='✓ SAVED + LEARNING UPDATED';msg('✓ Saved '+r.processed+' Creator record(s). Business impact and learning updated.');load();loadWorkflow(workflow.campaignId);});
+  }
+  const previousResults=window.renderResults;
+  window.renderResults=function(rows){previousResults(rows);if(!rows||!rows.length)return;const id=rows[0].campaignId,host=document.createElement('div');host.id='v20Selection';$('results').prepend(host);call('KOL_IDS_V21_getWorkflow',[token,id],w=>{workflow=w;const picked=new Set(w.selectedCreatorIds.map(String));host.innerHTML='<div class="card ok"><h3>Step 4 · Select multiple Creators</h3><p class="muted">You can edit this set at any time. Saving recalculates the Step 5–7 dependency chain.</p><div class="metrics">'+rows.map(r=>'<label class="metric" style="text-align:left;min-width:210px"><input class="v20-choice" type="checkbox" value="'+esc(r.creatorId)+'" '+(picked.has(String(r.creatorId))?'checked':'')+'> <b>'+esc(r.name)+'</b><span class="sub">Score '+esc(r.score)+' · '+esc(r.decisionTier||r.decision)+'</span></label>').join('')+'</div><button class="btn burgundy" id="v20SaveSelection">SAVE SELECTION + REPROCESS</button><button class="btn alt" id="v20NextStep5" style="margin-left:8px">NEXT · STEP 5</button></div>';$('v20SaveSelection').addEventListener('click',()=>setSelection(id,Array.from(host.querySelectorAll('.v20-choice:checked')).map(x=>x.value)));$('v20NextStep5').addEventListener('click',()=>{applyCampaign(id,w.campaignName);go('campaign');});});};
+  window.saveSelection=function(){const id=resolveCampaignId($('campaignSelect').value),creator=resolveCreatorId($('creatorSelect').value);if(!id||!creator){msg('Select Campaign and Creator first.',true);return;}call('KOL_IDS_V16_getWorkflow',[token,id],w=>setSelection(id,w.selectedCreatorIds.concat([creator])));};
+  function renderHistory(){const host=$('v20CampaignHistory');if(!host)return;call('KOL_IDS_V20_LIST_CAMPAIGNS',[token,1,{pageSize:100}],r=>{host.innerHTML='<div class="card"><h3>Campaign History</h3><p class="muted">Open any saved campaign to edit selection, update performance, or load its report.</p><div class="metrics">'+((r.campaigns||[]).map(c=>'<div class="metric" style="text-align:left;min-width:230px"><b>'+esc(c.name||c.id)+'</b><span class="sub">'+esc(c.goal)+' · '+esc(c.status)+' · '+esc(c.selectedCount)+' selected</span><button class="btn alt v20-open" data-id="'+esc(c.id)+'" data-name="'+esc(c.name)+'" style="margin-top:8px">OPEN</button></div>').join('')||'<p class="muted">No saved campaign yet.</p>')+'</div></div>';host.querySelectorAll('.v20-open').forEach(b=>b.addEventListener('click',()=>{applyCampaign(b.dataset.id,b.dataset.name);loadWorkflow(b.dataset.id);go('campaign');}));});}
+  const baseExisting=window.useExisting;window.useExisting=function(){baseExisting();ensureHosts();renderHistory();};
+  const baseGo=window.go;window.go=function(step){ensureHosts();const a=readActive();if(a)applyCampaign(a.id,a.name);baseGo(step);if(['campaign','performance'].includes(step)&&active)loadWorkflow(active.id);};
+  const baseReport=window.loadReport;window.loadReport=function(){const a=readActive();if(a)applyCampaign(a.id,a.name);baseReport();};
+  const baseLoad=window.load;window.load=function(){baseLoad();setTimeout(()=>{ensureHosts();const a=readActive();if(a){applyCampaign(a.id,a.name);loadWorkflow(a.id);}},0);};
+  window.KOL_IDS_V20_UI_={applyCampaign:applyCampaign,loadWorkflow:loadWorkflow,setSelection:setSelection,renderCampaign:renderCampaign,renderPerformance:renderPerformance,renderHistory:renderHistory,ensureHosts:ensureHosts,readActive:readActive};
+  ensureHosts();
+})();
+</script>
+<script>
+/* V21 canonical workflow binding.  This is deliberately last: earlier V5/V16
+   compatibility scripts remain available, but user actions use one server
+   state pipeline rather than browser-local selections. */
+(function(){
+  function v21Payload(){
+    const d=campaignDurationDays();
+    return {brandId:resolveIdByInput($('decBrand').value,state.brand||[]),personaId:resolveIdByInput($('decPersona').value,state.personas||[]),campaignName:$('campName').value.trim(),objective:$('objective').value.trim().toUpperCase(),goal:$('objective').value.trim().toUpperCase(),successMetric:($('campSuccessMetric').value||'').trim(),budget:numericValue($('campBudget').value),currency:$('campCurrency').value||'THB',startDate:$('campStartDate').value||'',endDate:$('campEndDate').value||'',durationDays:d};
+  }
+  function v21Active(){return window.KOL_IDS_V20_UI_&&window.KOL_IDS_V20_UI_.readActive?window.KOL_IDS_V20_UI_.readActive():null;}
+  window.analyze=function(){
+    const p=v21Payload(),btn=$('analyzeBtn'),active=v21Active();
+    if((p.startDate&&!p.endDate)||(!p.startDate&&p.endDate)||p.durationDays<0||!p.brandId||!p.personaId||!p.campaignName||!p.goal){msg('Provide Brand, Persona, Campaign Name, Goal, and valid campaign dates.',true);return;}
+    if(btn){btn.disabled=true;btn.textContent=active?'RECALCULATING CAMPAIGN…':'ANALYZING LOGIC…';}
+    const done=r=>{lastCampaign=r.campaignId;window.KOL_IDS_V20_UI_&&window.KOL_IDS_V20_UI_.applyCampaign(r.campaignId,p.campaignName);renderResults(r.rows||[]);load();if(btn){btn.disabled=false;btn.textContent='ANALYZE ALL CREATORS';}msg((active?'Campaign recalculated':'Analysis complete')+' · '+(r.rows||[]).length+' creators · '+r.campaignId);};
+    if(active){p.campaignId=active.id;call('KOL_IDS_V25_reanalyzeCampaign',[token,p],done);}else{call('KOL_IDS_V25_analyze',[token,p],done);}
+  };
+  window.loadReport=function(){
+    const active=v21Active(),id=active?active.id:resolveCampaignId($('reportCampaign').value);if(!id){msg('Select a Campaign first.',true);return;}
+    call('KOL_IDS_V22_getCampaignReport',[token,id],r=>{lastCampaignReport=r;renderSelectedReport();const x=r.businessImpact||{},box=$('reportBox');box.querySelectorAll('.v21-health').forEach(n=>n.remove());box.insertAdjacentHTML('afterbegin','<div class="card ok v21-health"><h3>Canonical workflow state</h3><div class="metrics"><div class="metric">Selected<b>'+esc((r.workflow.selectedCreators||[]).length)+'</b></div><div class="metric">Selection version<b>'+esc(r.workflow.selectionVersion)+'</b></div><div class="metric">State version<b>'+esc(r.workflow.stateVersion)+'</b></div><div class="metric">Reported creators<b>'+esc(x.creatorRecords||0)+'</b></div></div></div>');});
+  };
+  const panel=$('decision');if(panel&&!$('v21NewCampaign'))panel.querySelector('.card').insertAdjacentHTML('beforeend','<button class="btn alt" id="v21NewCampaign" type="button" style="margin-top:12px">START NEW CAMPAIGN</button>');
+  $('v21NewCampaign')?.addEventListener('click',()=>{try{localStorage.removeItem('KOL_IDS_V20_ACTIVE_CAMPAIGN');}catch(_){} lastCampaign='';msg('New campaign mode. Analyze to create a separate campaign.');});
+})();
+</script>
+
+</body>
+</html>
+<script>
+document.addEventListener('input',e=>{
+  if(e.target && e.target.id==='campaignSelect') updateCampaignCount();
+});
+</script>
+
+
+<script>
+/* =========================================================
+ * V5.8.0 UI OVERRIDES
+ * ========================================================= */
+function v58AgeRangeToMinMax(v){
+  const s=String(v||'').trim();
+  if(s==='55+')return {min:55,max:120};
+  const m=s.match(/^(\d+)-(\d+)$/);return m?{min:Number(m[1]),max:Number(m[2])}:{min:'',max:''};
+}
+function v58SyncPersonaAge(){
+  const a=v58AgeRangeToMinMax($('perAgeRange')&&$('perAgeRange').value);
+  if($('perMin'))$('perMin').value=a.min;
+  if($('perMax'))$('perMax').value=a.max;
+}
+function savePersona(){
+  const btn=document.querySelector('#persona button[onclick="savePersona()"]');v58SyncPersonaAge();
+  if(btn){btn.disabled=true;btn.textContent=langText('SAVING…','Saving…');}
+  const ageRange=$('perAgeRange')?$('perAgeRange').value:'';
+  if(!ageRange){if(btn)btn.disabled=false;msg(langText('Please select an Audience Age Range.','Please เลือก Audience Age Range'),true);return;}
+  call('KOL_IDS_V5_savePersona',[token,{id:$('perId')?.value||'',name:$('perName').value,ageRange,ageMin:$('perMin').value,ageMax:$('perMax').value,gender:$('perGender').value,locations:$('perLoc').value,interests:(addTypedInterests(),selectedInterests()),behaviors:$('perBeh').value,goalsNeeds:$('perGoalsNeeds').value,painPoints:$('perPainPoints').value,description:$('perDesc').value}],r=>{
+    msg(langText('Persona saved · Audience Age Range '+r.ageRange,'Persona saved · Audience Age Range '+r.ageRange));
+    if(btn){btn.disabled=false;btn.textContent=langText('✓ Complete','✓ Complete');setTimeout(()=>btn.textContent=langText('SAVE PERSONA','บันทึก Persona'),1200);}load();
+  });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{$('perAgeRange')?.addEventListener('change',v58SyncPersonaAge);});else $('perAgeRange')?.addEventListener('change',v58SyncPersonaAge);
+
+/* Rich bilingual campaign plan rendering. */
+function renderCampaignPlan(plan){
+  if(!$('campaignPlan')||!plan||!plan.success)return;
+  const title=langText('Campaign Plan — Logic + Recovery','Campaign Plan — Logic + Recovery');
+  const cards=(plan.allocations||[]).map(x=>{
+    const low=x.tier==='LOW FIT',cond=x.tier==='CONDITIONAL FIT';
+    return '<div class="metric" style="text-align:left;min-width:240px">'+
+      '<b>'+esc(x.name)+'</b><span class="sub">'+esc(x.tier)+' · '+esc(x.role)+'</span>'+
+      '<span class="sub">Score '+esc(x.score)+' · Budget '+esc(x.budgetShare)+'%'+(x.budget!==''?' · '+esc(x.budget):'')+'</span>'+
+      (low?'<span class="sub">⚠ '+esc(langText('Recovery strategy required; not a primary recommendation.','Recovery strategy required; not a primary recommendation.'))+'</span>':'')+
+      (cond?'<span class="sub">△ '+esc(langText('Use only after conditions are addressed.','Use only after conditions are addressed.'))+'</span>':'')+
+      ((x.adjustments||[]).length?'<span class="sub">'+esc(langText('Adjustments','Adjustments'))+': '+esc(x.adjustments.join(' • '))+'</span>':'')+
+      '</div>';
+  }).join('');
+  $('campaignPlan').innerHTML='<div class="card ok"><h3>'+esc(title)+'</h3><p class="muted">'+esc(plan.logic)+'</p><div class="metrics">'+cards+'</div><p class="muted" style="margin-top:12px">'+esc(plan.planningRule||'')+'</p></div>';
+}
+</script>
+<script>
+/* =========================================================
+ * V16 ENTERPRISE WORKFLOW UI
+ * A versioned, editable selection and dynamic multi-creator flow.
+ * ========================================================= */
+(function(){
+  const V16_DRAFT_KEY='KOL_IDS_V16_WORKFLOW_DRAFT';
+  const V16_baseGo=window.go;
+  const V16_baseLoadReport=window.loadReport;
+  const V16_baseExportPdf=window.exportPdf;
+  const V16_baseExportXlsx=window.exportXlsx;
+  let V16_workflow=null;
+  const v16Id=()=>('ui-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+  const v16Call=(fn,args,ok)=>call(fn,args,ok);
+  function v16SaveDraft(){
+    const ids=['decBrand','decPersona','campName','objective','campSuccessMetric','campBudget','campCurrency','campStartDate','campEndDate','campaignSelect','pfCampaign','reportCampaign'];
+    const data={};ids.forEach(id=>{if($(id))data[id]=$(id).value;});localStorage.setItem(V16_DRAFT_KEY,JSON.stringify(data));
+  }
+  function v16RestoreDraft(){try{const data=JSON.parse(localStorage.getItem(V16_DRAFT_KEY)||'{}');Object.keys(data).forEach(id=>{if($(id)&&!$(id).value)$(id).value=data[id];});}catch(_){}}
+  function v16Selected(campaignId){return (V16_workflow&&String(V16_workflow.campaignId)===String(campaignId)?V16_workflow.selectedCreatorIds:KOL_IDSSelectedLocal(campaignId))||[];}
+  function v16LoadWorkflow(campaignId,done){
+    if(!campaignId){V16_workflow=null;v16RenderCampaignRoster();v16RenderPerformanceRoster();return;}
+    v16Call('KOL_IDS_V16_getWorkflow',[token,campaignId],r=>{V16_workflow=r;v16RenderCampaignRoster();v16RenderPerformanceRoster();if(done)done(r);});
+  }
+  function v16RenderCampaignRoster(){
+    const host=$('v16CampaignRoster');if(!host)return;
+    const w=V16_workflow;if(!w){host.innerHTML='<p class="muted">Select a Campaign to edit its Creator roster.</p>';return;}
+    host.innerHTML='<div class="card"><h3>Selected Creator Roster · '+esc(w.selectedCreators.length)+'</h3><p class="muted">Selection version '+esc(w.selectionVersion)+' · Removing a creator preserves their historical records and refreshes downstream tracking.</p>'+
+      w.selectedCreators.map(c=>'<div class="metric" style="text-align:left;min-width:220px"><b>'+esc(c.name)+'</b><span class="sub">'+esc(c.platform)+' · '+esc(c.category)+'</span><span class="sub">'+esc(c.performanceStatus)+'</span><button class="btn alt v16-remove" data-id="'+esc(c.id)+'" style="margin-top:8px">REMOVE / EDIT</button></div>').join('')+
+      '<div style="margin-top:12px"><button class="btn alt" onclick="v16EditSelection()">EDIT SELECTION IN STEP 4</button><button class="btn" onclick="v16ProcessRoster()" style="margin-left:8px">REPROCESS DOWNSTREAM</button></div></div>';
+    host.querySelectorAll('.v16-remove').forEach(b=>b.addEventListener('click',()=>v16SetSelection(w.campaignId,w.selectedCreatorIds.filter(id=>String(id)!==String(b.dataset.id)))));
+  }
+  function v16SetSelection(campaignId,ids){
+    if(!ids.length){msg('At least one Creator must remain selected. Edit the selection in Step 4 to add a replacement.',true);return;}
+    v16Call('KOL_IDS_V16_setSelection',[token,{campaignId:campaignId,creatorIds:ids,idempotencyKey:v16Id()}],r=>{lastCampaign=campaignId;msg('Selection saved · '+r.count+' creators · downstream records refreshed.');load();v16LoadWorkflow(campaignId);});
+  }
+  window.v16ProcessRoster=function(){if(V16_workflow)v16SetSelection(V16_workflow.campaignId,V16_workflow.selectedCreatorIds);};
+  window.v16EditSelection=function(){if(!V16_workflow)return;v16Call('KOL_IDS_V5_getReport',[token,V16_workflow.campaignId],r=>{renderResults(r.rows||[]);go('decision');});};
+  function v16RenderDecisionSelection(campaignId,rows){
+    const host=$('v16DecisionSelection');if(!host)return;
+    v16Call('KOL_IDS_V16_getWorkflow',[token,campaignId],w=>{
+      V16_workflow=w;const selected=new Set(w.selectedCreatorIds.map(String));
+      host.innerHTML='<div class="card ok"><h3>Step 4 · Editable Creator Selection</h3><p class="muted">Select one or more creators, save once, and the campaign, performance roster, learning and report dependencies are recalculated safely.</p><div class="metrics">'+rows.map(r=>'<label class="metric" style="text-align:left;min-width:210px"><input class="v16-selection" type="checkbox" value="'+esc(r.creatorId)+'" '+(selected.has(String(r.creatorId))?'checked':'')+'> <b>'+esc(r.name)+'</b><span class="sub">Score '+esc(r.score)+' · '+esc(r.decisionTier||r.decision)+'</span></label>').join('')+'</div><button class="btn burgundy" id="v16SaveSelection" style="margin-top:14px">SAVE SELECTION + REPROCESS</button><button class="btn alt" onclick="go(\'campaign\')" style="margin-left:8px">BACK TO STEP 5</button></div>';
+      $('v16SaveSelection').addEventListener('click',()=>{const ids=Array.from(host.querySelectorAll('.v16-selection:checked')).map(x=>x.value);v16SetSelection(campaignId,ids);});
+    });
+  }
+  const V16_baseRenderResults=window.renderResults;
+  window.renderResults=function(rows){V16_baseRenderResults(rows);if(!rows||!rows.length)return;const host=document.createElement('div');host.id='v16DecisionSelection';$('results').prepend(host);v16RenderDecisionSelection(rows[0].campaignId,rows);};
+  function v16RenderPerformanceRoster(){
+    const host=$('v16PerformanceRoster');if(!host)return;const w=V16_workflow;if(!w){host.innerHTML='';return;}
+    host.innerHTML='<div class="card"><h3>Performance roster · '+esc(w.selectedCreators.length)+' creators</h3><p class="muted">Each selected creator has an independent, editable actual-performance record. Existing values are loaded; untouched records are preserved.</p>'+w.selectedCreators.map(c=>{const p=c.performance||{};return '<div class="card" data-creator="'+esc(c.id)+'"><h3>'+esc(c.name)+'</h3><div class="grid3">'+[['spend','Spend'],['reach','Reach'],['impressions','Impressions'],['views','Views'],['likes','Likes'],['comments','Comments'],['shares','Shares'],['saves','Saves'],['engagements','Engagements'],['clicks','Clicks'],['conversions','Conversions'],['revenue','Revenue']].map(x=>'<div><label>'+x[1]+'</label><input data-k="'+x[0]+'" value="'+esc(p[x[0]]||'')+'" type="text" inputmode="decimal" data-number-format="1"></div>').join('')+'<div><label>Evidence</label><select data-k="evidence"><option '+(p.evidence==='VERIFIED'?'selected':'')+'>VERIFIED</option><option '+(p.evidence==='SELF-REPORTED'?'selected':'')+'>SELF-REPORTED</option><option '+(p.evidence!=='VERIFIED'&&p.evidence!=='SELF-REPORTED'?'selected':'')+'>LIMITED</option></select></div></div><textarea data-k="notes" placeholder="Source / notes">'+esc(p.notes||'')+'</textarea></div>';}).join('')+'<button class="btn" id="v16SavePerformance">SAVE ALL ENTERED PERFORMANCE + LEARNING</button></div>';
+    bindNumberFormatting(host);$('v16SavePerformance').addEventListener('click',v16SavePerformanceBatch);
+  }
+  function v16SavePerformanceBatch(){
+    const w=V16_workflow;if(!w)return;const records=[];
+    $('v16PerformanceRoster').querySelectorAll('[data-creator]').forEach(card=>{const record={creatorId:card.dataset.creator,reportedDate:new Date().toISOString().slice(0,10)};let hasMetric=false;card.querySelectorAll('[data-k]').forEach(el=>{const key=el.dataset.k;if(['evidence','notes'].includes(key))record[key]=el.value;else {const value=numericValue(el.value);record[key]=value;if(value!==''&&value!=null)hasMetric=true;}});if(hasMetric)records.push(record);});
+    if(!records.length){msg('Enter at least one metric for one selected Creator.',true);return;}
+    const btn=$('v16SavePerformance');btn.disabled=true;btn.textContent='SAVING '+records.length+' CREATOR RECORD(S)…';
+    v16Call('KOL_IDS_V16_savePerformanceBatch',[token,{campaignId:w.campaignId,records:records,idempotencyKey:v16Id()}],r=>{btn.disabled=false;btn.textContent='✓ SAVED + LEARNING UPDATED';msg('Saved '+r.processed+' creator performance record(s) and recalculated learning.');load();v16LoadWorkflow(w.campaignId);});
+  }
+  function v16AttachContainers(){
+    if(!$('perId'))$('persona').insertAdjacentHTML('afterbegin','<input id="perId" type="hidden">');
+    if(!$('v16CampaignRoster'))$('campaignPlan').insertAdjacentHTML('afterend','<div id="v16CampaignRoster" style="margin-top:14px"></div>');
+    if(!$('v16PerformanceRoster'))$('learning').insertAdjacentHTML('beforebegin','<div id="v16PerformanceRoster" style="margin-top:14px"></div>');
+  }
+  window.v16EditPersona=function(id){const p=(state.personas||[]).find(x=>String(x.id)===String(id));if(!p)return;v16AttachContainers();$('perId').value=p.id;$('perName').value=p.name||'';$('perAgeRange').value=(p.ageMin!=null&&p.ageMax!=null)?String(p.ageMin)+'-'+String(p.ageMax):'';v58SyncPersonaAge();$('perGender').value=p.gender||'ANY';$('perLoc').value=p.locations||'';$('perBeh').value=p.behaviors||'';$('perGoalsNeeds').value=p.goalsNeeds||'';$('perPainPoints').value=p.painPoints||'';$('perDesc').value=p.description||'';selectedInterestSet=new Set(String(p.interests||'').split(',').map(x=>x.trim()).filter(Boolean));renderInterestChips();go('persona');msg('Editing saved Persona. Changes will update the same record.');};
+  function v16RenderEditablePersonas(){if(!$('personaList'))return;$('personaList').innerHTML=(state.personas||[]).map(p=>'<div class="card"><b>'+esc(p.name)+'</b> · '+esc(p.ageMin)+'–'+esc(p.ageMax)+' · '+esc(p.gender)+'<div class="muted">'+esc(p.locations||'—')+' · '+esc(p.interests||'—')+'</div><button class="btn alt" style="margin-top:8px" onclick="v16EditPersona(\''+esc(p.id)+'\')">EDIT PERSONA</button></div>').join('');}
+  window.go=function(screen){v16SaveDraft();V16_baseGo(screen);v16AttachContainers();if(screen==='campaign'){const id=resolveCampaignId($('campaignSelect')?.value||lastCampaign);if(id)v16LoadWorkflow(id);}if(screen==='performance'){const id=resolveCampaignId($('pfCampaign')?.value||lastCampaign);if(id)v16LoadWorkflow(id);}};
+  window.saveSelection=function(){const campaignId=resolveCampaignId($('campaignSelect').value),creatorId=resolveCreatorId($('creatorSelect').value);if(!campaignId||!creatorId){msg('Select a Campaign and an analyzed Creator first.',true);return;}v16Call('KOL_IDS_V16_getWorkflow',[token,campaignId],w=>{v16SetSelection(campaignId,w.selectedCreatorIds.concat([creatorId]));});};
+  window.loadReport=function(){const id=resolveCampaignId($('reportCampaign').value);if(!id){msg('Select a Campaign first.',true);return;}v16Call('KOL_IDS_V16_getCampaignReport',[token,id],r=>{lastCampaignReport=r;V16_workflow=r.workflow;renderSelectedReport();const box=$('reportBox');box.insertAdjacentHTML('afterbegin','<div class="card ok"><b>Enterprise workflow health</b><div class="metrics"><div class="metric">Selected creators<b>'+esc(r.workflow.selectedCreators.length)+'</b></div><div class="metric">Selection version<b>'+esc(r.workflow.selectionVersion)+'</b></div><div class="metric">Workflow version<b>'+esc(r.workflow.workflowVersion)+'</b></div><div class="metric">Status<b>'+esc(r.workflow.status)+'</b></div></div></div>');});};
+  window.exportPdf=function(){const id=resolveCampaignId($('reportCampaign').value);if(!id){msg('Select a Campaign first.',true);return;}v16Call('KOL_IDS_V5_exportPdf',[token,id],r=>v16Download('application/pdf',r));};
+  window.exportXlsx=function(){const id=resolveCampaignId($('reportCampaign').value);if(!id){msg('Select a Campaign first.',true);return;}v16Call('KOL_IDS_V5_exportXlsx',[token,id],r=>v16Download('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',r));};
+  function v16Download(type,r){const a=document.createElement('a');a.href='data:'+type+';base64,'+r.base64;a.download=r.filename;a.click();msg('Report exported: '+r.filename);}
+  document.addEventListener('input',v16SaveDraft);document.addEventListener('change',v16SaveDraft);
+  document.addEventListener('change',e=>{if(e.target&&e.target.id==='campaignSelect'){const id=resolveCampaignId(e.target.value);if(id)v16LoadWorkflow(id);}if(e.target&&e.target.id==='pfCampaign'){const id=resolveCampaignId(e.target.value);if(id)v16LoadWorkflow(id);}});
+  const V16_baseRenderLists=window.renderLists;window.renderLists=function(){V16_baseRenderLists();v16RestoreDraft();v16AttachContainers();v16RenderEditablePersonas();};
+})();
+</script>
+<script>
+/* V20 binding must load after legacy/V16 overrides. */
+(function(){
+  const ui=window.KOL_IDS_V20_UI_;if(!ui)return;
+  const legacyGo=window.go,legacyResults=window.renderResults,legacySave=window.saveSelection,legacyExisting=window.useExisting,legacyReport=window.loadReport,legacyLoad=window.load;
+  window.go=function(step){ui.ensureHosts();const a=ui.readActive();if(a)ui.applyCampaign(a.id,a.name);legacyGo(step);if((step==='campaign'||step==='performance')&&a)ui.loadWorkflow(a.id);};
+  window.renderResults=function(rows){legacyResults(rows);setTimeout(()=>{const v16=$('v16DecisionSelection');if(v16)v16.remove();},0);};
+  window.saveSelection=function(){legacySave();};
+  window.useExisting=function(){legacyExisting();ui.ensureHosts();ui.renderHistory();};
+  window.loadReport=function(){const a=ui.readActive();if(a)ui.applyCampaign(a.id,a.name);const id=resolveCampaignId($('reportCampaign').value);if(!id){msg('Select a Campaign first.',true);return;}call('KOL_IDS_V16_getCampaignReport',[token,id],r=>{lastCampaignReport=r;renderSelectedReport();const x=r.businessImpact||{},box=$('reportBox');box.insertAdjacentHTML('afterbegin','<div class="card ok"><h3>Observed Business Impact</h3><p class="muted">Actual reported data only; unreported financial values remain blank.</p><div class="metrics"><div class="metric">Spend<b>'+esc(x.spend||0)+'</b></div><div class="metric">Revenue<b>'+esc(x.revenue||0)+'</b></div><div class="metric">ROAS<b>'+esc(x.roas==null?'—':x.roas)+'</b></div><div class="metric">CPA<b>'+esc(x.cpa==null?'—':x.cpa)+'</b></div><div class="metric">Conversions<b>'+esc(x.conversions||0)+'</b></div><div class="metric">Data quality<b>'+esc(x.dataCompleteness||0)+'%</b></div></div><p class="muted">'+esc(x.disclaimer||'')+'</p></div>');});};
+  window.load=function(){legacyLoad();setTimeout(()=>{ui.ensureHosts();const a=ui.readActive();if(a)ui.loadWorkflow(a.id);},0);};
+})();
+</script>
+<script>
+/* Final report binding: this must be after all legacy compatibility overrides. */
+(function(){
+  window.loadReport=function(){
+    const active=window.KOL_IDS_V20_UI_&&window.KOL_IDS_V20_UI_.readActive?window.KOL_IDS_V20_UI_.readActive():null;
+    const entered=resolveCampaignId($('reportCampaign').value),id=entered||(active&&active.id);if(!id){msg('Select a Campaign first.',true);return;}
+    call('KOL_IDS_V22_getCampaignReport',[token,id],r=>{lastCampaignReport=r;renderSelectedReport();const x=r.businessImpact||{},box=$('reportBox');box.querySelectorAll('.v21-health').forEach(n=>n.remove());box.insertAdjacentHTML('afterbegin','<div class="card ok v21-health"><h3>Canonical workflow state</h3><div class="metrics"><div class="metric">Selected<b>'+esc((r.workflow.selectedCreators||[]).length)+'</b></div><div class="metric">Selection version<b>'+esc(r.workflow.selectionVersion)+'</b></div><div class="metric">State version<b>'+esc(r.workflow.stateVersion)+'</b></div><div class="metric">Reported creators<b>'+esc(x.creatorRecords||0)+'</b></div></div></div>');});
+  };
+  const baseExisting=window.useExisting;
+  window.useExisting=function(){baseExisting();setTimeout(()=>{call('KOL_IDS_V22_getCapacity',[token],r=>{const host=$('v20CampaignHistory');if(!host)return;host.querySelectorAll('.v22-capacity').forEach(n=>n.remove());host.insertAdjacentHTML('afterbegin','<div class="card v22-capacity '+(r.health==='HEALTHY'?'ok':'warn')+'"><b>Storage health · '+esc(r.health)+'</b><p class="muted">Active allocation '+esc(r.allocatedCells.toLocaleString())+' cells · '+esc(r.archivedCampaigns)+' archived campaigns. Completed campaigns can be safely copied to archive before the workbook grows further.</p></div>');});call('KOL_IDS_V22_listArchives',[token,2,{pageSize:100}],r=>{const host=$('v20CampaignHistory');if(!host)return;host.querySelectorAll('.v22-archives').forEach(n=>n.remove());const rows=r.archives||[];host.insertAdjacentHTML('beforeend','<div class="card v22-archives"><h3>Archived campaigns</h3>'+ (rows.length?rows.map(a=>'<div class="metric" style="text-align:left;min-width:230px"><b>'+esc(a.campaignName||a.campaignId)+'</b><span class="sub">'+esc(a.campaignId)+' · '+esc(a.prunedAt?'Archived + pruned':'Archived copy')+'</span><button class="btn alt v22-report" data-id="'+esc(a.campaignId)+'" style="margin-top:8px">OPEN REPORT</button></div>').join(''):'<p class="muted">No archived campaigns yet.</p>')+'</div>');host.querySelectorAll('.v22-report').forEach(b=>b.addEventListener('click',()=>{$('reportCampaign').value=b.dataset.id;go('report');loadReport();}));});},0);};
+})();
+</script>

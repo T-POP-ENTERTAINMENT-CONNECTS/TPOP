@@ -1,0 +1,105 @@
+<script id="KOL_IDS_ENGLISH_LOCALE_BOOT">
+(function(){
+  try {
+    document.documentElement.lang='en-US';
+    document.documentElement.dir='ltr';
+    document.addEventListener('DOMContentLoaded',function(){
+      var dates=['startDate','endDate','gcCustomDate','gcStartDate','gcEndDate'];
+      dates.forEach(function(id){
+        var el=document.getElementById(id);
+        if(el){el.lang='en-GB';el.dir='ltr';el.setAttribute('inputmode','numeric');}
+      });
+    });
+  } catch(e) {}
+})();
+</script>
+
+<script>
+(function(){
+  try{
+    var boot=document.getElementById('boot');
+    var gate=document.getElementById('accessGate');
+    if(boot) boot.style.display='none';
+    if(gate) gate.style.display='grid';
+  }catch(e){}
+})();
+</script>
+
+<script id="KOL_IDS_BOOT_SHELL_GUARD">
+(function(){
+  function openShell(){
+    try{
+      var boot=document.getElementById('boot'), app=document.getElementById('app');
+      if(!boot || !app) return;
+      /* Access is decided by the authenticated server bootstrap. Do not bypass it. */
+      return;
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',openShell,{once:true});
+  else openShell();
+  setTimeout(openShell,1200);
+})();
+</script>
+
+<script id="KOL_IDS_LOGIN_COMPAT_SHIM">
+(function(){
+  /* Emergency login path: deliberately ES5-compatible so a parser failure in the
+     large application script cannot disable customer authentication. */
+  window.__KOL_IDS_LOGIN_COMPAT__=true;
+  if(typeof window.$!=='function') window.$=function(id){return document.getElementById(id)};
+  if(typeof window.state==='undefined') window.state={step:1,kols:[],selected:[],objectives:[],objectiveOther:'',analysis:null,report:null,history:null,boot:null,genCodes:[],genCodePlan:null,decision:{brand:25,audience:25,campaign:20,confidence:10,value:10,risk:10,threshold:70,ceiling:60}};
+  function setStatusCompat(id,msg,kind){var el=window.$(id);if(!el)return;el.textContent=msg||'';el.className='status '+(kind||'');}
+  function runCompat(name,args){return new Promise(function(resolve,reject){try{
+    if(typeof google==='undefined'||!google.script||!google.script.run){reject(new Error('Google Apps Script bridge is unavailable. Please open the deployed Web App URL.'));return;}
+    var runner=google.script.run.withSuccessHandler(function(r){resolve(r)}).withFailureHandler(function(e){reject(e)});
+    if(args===undefined)runner[name]();else runner[name](args);
+  }catch(e){reject(e)}})}
+  window.__KOL_IDS_LOGIN_COMPAT_SIGNIN__=function(){
+    if(window.__KOL_IDS_SIGNIN_IN_FLIGHT__)return false;
+    var cid=window.$('customerClientId'),key=window.$('customerAccessKey');
+    var clientId=cid?String(cid.value||'').trim():'';
+    var accessKey=key?String(key.value||'').trim():'';
+    if(!registeredEmail || !/^\S+@\S+\.\S+$/.test(registeredEmail)){setStatusCompat('accessStatus','Registered email is required.','bad');if(email)email.focus();return false;}
+     if(!clientId){setStatusCompat('accessStatus','Client ID is required.','bad');if(cid)cid.focus();return false;}
+    if(accessKey.length!==9){setStatusCompat('accessStatus','Access Key must be exactly 9 characters.','bad');if(key)key.focus();return false;}
+    window.__KOL_IDS_SIGNIN_IN_FLIGHT__=true;
+    var btn=window.$('customerSignInBtn');if(btn){btn.disabled=true;btn.textContent='Verifying…';}
+    setStatusCompat('accessStatus','Verifying Client ID and Access Key…','busy');
+    runCompat('KOL_IDS_SYSTEM_SAAS_SIGN_IN',{registeredEmail:registeredEmail,email:registeredEmail,clientId:clientId,accessKey:accessKey}).then(function(r){
+      if(!r||r.success!==true||r.authenticated!==true)throw new Error((r&&r.message)||'Customer authentication failed.');
+      window.state.boot={success:true,workspaceId:String(r.workspaceId||''),workspaceName:String(r.clientName||''),ready:false,deferredInitialization:true};
+      var gate=window.$('accessGate'),boot=window.$('boot'),app=window.$('app');
+      if(gate)gate.classList.add('hidden');if(boot)boot.classList.add('hidden');if(app)app.classList.remove('hidden');
+      var pill=window.$('workspacePill'),health=window.$('health'),msg=window.$('accessMessage');
+      if(pill)pill.textContent=r.clientName||r.clientId||'Workspace';if(health)health.textContent='Connected';
+      if(msg)msg.textContent='Workspace opened. Saved data is loading in the background.';
+      setStatusCompat('accessStatus','Signed in successfully · Opening workspace…','good');
+      window.__KOL_IDS_SIGNIN_IN_FLIGHT__=false;if(btn){btn.disabled=false;btn.textContent='Sign in';}
+    }).catch(function(e){
+      var msg=e&&e.message?e.message:String(e);setStatusCompat('accessStatus','Sign-in failed: '+msg,'bad');
+      window.__KOL_IDS_SIGNIN_IN_FLIGHT__=false;if(btn){btn.disabled=false;btn.textContent='Try again';}
+    });
+    return true;
+  };
+  function bindCompat(){
+    var btn=window.$('customerSignInBtn'),key=window.$('customerAccessKey'),view=window.$('customerSessionBtn'),trial=window.$('trialFormLink');
+    if(view&&!view.getAttribute('data-access-key-view-bound')){
+      view.setAttribute('data-access-key-view-bound','1');
+      view.addEventListener('click',function(ev){
+        ev.preventDefault();ev.stopPropagation();
+        if(typeof window.toggleAccessKeyView==='function'){window.toggleAccessKeyView();return;}
+        var show=key&&key.type==='password';
+        if(key)key.type=show?'text':'password';
+        view.textContent=show?'Hide Access Key':'View Access Key';
+        view.setAttribute('aria-pressed',show?'true':'false');
+        if(key)key.focus();
+      });
+    }
+    if(trial&&!trial.getAttribute('data-compat-trial-bound')){trial.setAttribute('data-compat-trial-bound','1');runCompat('KOL_IDS_COMMERCIAL_TRIAL_INFO').then(function(info){if(info&&info.url)trial.href=info.url;else trial.href='#';}).catch(function(){trial.href='#';});trial.addEventListener('click',function(ev){if(!trial.href||trial.href==='#'||trial.href.endsWith('#')){ev.preventDefault();setStatusCompat('accessStatus','Trial / subscription form is not configured yet. Run the commercial sales setup first.','warn');}});}
+    if(btn&&!btn.getAttribute('data-compat-bound')){btn.setAttribute('data-compat-bound','1');btn.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();if(typeof window.customerSignIn==='function'&&window.customerSignIn!==window.__KOL_IDS_LOGIN_COMPAT_SIGNIN__)window.customerSignIn();else window.__KOL_IDS_LOGIN_COMPAT_SIGNIN__();});}
+    if(key&&!key.getAttribute('data-compat-bound')){key.setAttribute('data-compat-bound','1');key.addEventListener('input',function(){if(key.value.length>9)key.value=key.value.slice(0,9);});key.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();if(typeof window.customerSignIn==='function'&&window.customerSignIn!==window.__KOL_IDS_LOGIN_COMPAT_SIGNIN__)window.customerSignIn();else window.__KOL_IDS_LOGIN_COMPAT_SIGNIN__();}});}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindCompat);else bindCompat();
+  setTimeout(bindCompat,500);setTimeout(bindCompat,1500);
+})();
+</script>
