@@ -84,7 +84,7 @@
       <a href="#products">Products</a>
       <a href="#contact">Contact</a>
     </div>
-    <a class="nav-cta" href="https://script.google.com/macros/s/AKfycby0ScBhEOtkCJZv5vPC9IiEp78h17JtrG16fab6scqiaRadjGRhLKkCa_-IbUEBRRMK/exec" target="_blank" rel="noopener">KOL IDS ↗</a>
+    <a class="nav-cta" href="#kolids" target="_blank" rel="noopener">KOL IDS ↗</a>
   </div>
 </nav>
 
@@ -99,7 +99,7 @@
       </p>
       <div class="hero-actions">
         <a class="btn primary" href="#divisions">Explore T POP ↘</a>
-        <a class="btn" href="https://script.google.com/macros/s/AKfycby0ScBhEOtkCJZv5vPC9IiEp78h17JtrG16fab6scqiaRadjGRhLKkCa_-IbUEBRRMK/exec" target="_blank" rel="noopener">Open KOL IDS ↗</a>
+        <a class="btn" href="#kolids" target="_blank" rel="noopener">Open KOL IDS ↗</a>
       </div>
     </div>
   </section>
@@ -155,7 +155,7 @@
             creator selection and commercial efficiency.
           </p>
           <div class="hero-actions">
-            <a class="btn primary" href="https://script.google.com/macros/s/AKfycby0ScBhEOtkCJZv5vPC9IiEp78h17JtrG16fab6scqiaRadjGRhLKkCa_-IbUEBRRMK/exec" target="_blank" rel="noopener">Launch KOL IDS ↗</a>
+            <a class="btn primary" href="#kolids" target="_blank" rel="noopener">Launch KOL IDS ↗</a>
           </div>
         </div>
         <div class="product-card">
@@ -193,7 +193,7 @@
       <p>For partnerships, entertainment projects, creative collaborations, business opportunities and technology products.</p>
       <div class="hero-actions">
         <a class="btn primary" href="mailto:hello@tpopentertainmentconnects.com">Start a conversation ↗</a>
-        <a class="btn" href="https://script.google.com/macros/s/AKfycby0ScBhEOtkCJZv5vPC9IiEp78h17JtrG16fab6scqiaRadjGRhLKkCa_-IbUEBRRMK/exec" target="_blank" rel="noopener">KOL IDS ↗</a>
+        <a class="btn" href="#kolids" target="_blank" rel="noopener">KOL IDS ↗</a>
       </div>
     </div>
   </section>
@@ -203,5 +203,18 @@
   <div>© 2026 T POP ENTERTAINMENT CONNECTS CO., LTD.</div>
   <div>Entertainment × Business × Culture</div>
 </footer>
+
+<script>
+(function () {
+  function routeKOLIDS() {
+    if (window.location.hash.toLowerCase() === '#kolids') {
+      window.location.href = 'workspace.html';
+    }
+  }
+  window.addEventListener('DOMContentLoaded', routeKOLIDS);
+  window.addEventListener('hashchange', routeKOLIDS);
+})();
+</script>
+
 </body>
 </html>
