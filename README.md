@@ -1,41 +1,37 @@
-# KOL IDS™ Cloud App — Deploy Ready Core
+# KOL IDS™ — GitHub + Supabase Cloud
 
-This package starts the migration of KOL IDS from Google Apps Script/Google Sheets to a customer-facing cloud application. The customer entry point no longer depends on the Google account currently open in the browser.
+This package is the GitHub/static-host version of the KOL IDS workspace. The application entry flow uses Supabase Auth + Supabase Database directly; `legacy/kids/` is retained only as migration/reference source.
 
-## What is included
+## Working cloud flow
 
-- `index.html`, `app.js`, `styles.css`: working cloud workspace UI
-- Supabase Auth: email/password sign-up, sign-in, persistent sessions, sign-out
-- Workspace bootstrap: first authenticated user receives an organization/workspace
-- Real Supabase CRUD for Brands, Campaigns and KOL records
-- KOL Intelligence view based on the structured creator fields
-- `supabase/schema.sql`: PostgreSQL schema + RLS
-- `config.example.js`: deployment configuration template
-- `migration/KOL_IDS_CLOUD_MIGRATION_EXPORT.gs`: safe export helper for the legacy Google Sheets system
-- `legacy/kids/`: source Apps Script project retained for migration/parity work
+`Sign up / Sign in → Workspace → Brand → Campaign → KOL Database → KOL Intelligence → Decision → Performance → Outcome → Learning → Executive Report`
 
-## Important
+Implemented in the cloud workspace:
+- Supabase email/password authentication and persistent sessions
+- First-login workspace bootstrap + 14-day trial
+- Organization-scoped RLS
+- Brands and campaigns CRUD
+- KOL creation with Platform URL and required evidence fields
+- 100-KOL application limit
+- KOL Intelligence analysis that writes `brand_fit`, `brand_impact` and `kol_decisions` to Supabase
+- Decision, Performance and Outcome recording
+- Executive Report with Print/Save PDF and JSON export
+- Responsive workspace UI
+- No `google.script.run` dependency in the cloud app
 
-This is the deployable cloud foundation/core workspace, not a claim that every one of the 259 legacy Apps Script files has already been ported to cloud APIs. The legacy code is preserved so the remaining intelligence/QA logic can be migrated module-by-module without losing the existing system.
-
-## Deploy order
+## Deploy
 
 1. Create a Supabase project.
-2. Supabase SQL Editor → run `supabase/schema.sql`.
-3. Supabase Authentication → enable Email provider.
-4. Copy `config.example.js` to `config.js` and fill in the Supabase project URL and anon/publishable key.
-5. Deploy the folder as a static site to Vercel, Netlify, Cloudflare Pages, or another static host.
-6. Open the deployed URL. Sign up with the customer's KOL IDS email; the first user gets a workspace automatically.
-7. Add Brands, Campaigns and KOLs to verify the database/RLS path.
-8. Only after this smoke test, migrate production data from Google Sheets.
+2. Run `supabase/schema.sql` in Supabase SQL Editor.
+3. Enable Email/Password in Supabase Authentication.
+4. Put your public Supabase URL and anon/publishable key in `config.js`.
+5. Deploy the folder to GitHub Pages, Cloudflare Pages, Netlify, Vercel, or another static host.
+6. Open `index.html`, create an account, confirm email if required, and sign in.
 
-## Security
+### Important
 
-The browser uses the Supabase anon/publishable key. This is expected. Security depends on Row Level Security in `schema.sql`; never put a Supabase service-role key in `config.js` or browser code.
+`config.js` must contain only the public Supabase URL and anon/publishable key. Never commit a service-role key, database password, Stripe secret, or webhook secret.
 
-## Custom domain
+Paid-license activation is intentionally not faked in the browser. The database license row controls access. Payment/renewal automation can be connected separately through a secure server/webhook.
 
-After the cloud app is deployed, connect a subdomain such as `app.tpopconnects.com` at the hosting provider. Keep `tpopconnects.com/kol-ids` on Squarespace as the commercial landing page and point its Login/Launch buttons to the cloud app.
-
-## Sales / payment flow
-Pricing buttons use the T POP CONNECTS Apps Script order endpoint as a **sales/order intake page only**. Customer authentication, workspace data, and KOL IDS application state remain in Supabase/Cloudflare. The legacy Apps Script endpoint is not used as the KOL IDS application backend.
+`legacy/kids/` is not loaded by `workspace.html` or `app.js`; it is kept so the original Apps Script implementation remains available for parity/reference while migrating deeper intelligence modules.
