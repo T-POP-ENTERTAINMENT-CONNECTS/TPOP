@@ -1,0 +1,29 @@
+{
+  "release": "1.1.0",
+  "staticIntegration": "PASS",
+  "liveCertification": "PENDING",
+  "gates": {
+    "gsSyntax": "PASS",
+    "clientJsSyntax": "PASS",
+    "uiIncludeChain": "PASS",
+    "entrypointUniqueness": "PASS",
+    "topLevelFunctionCollisions": "PASS",
+    "crossModuleCalls": "PASS",
+    "productAuthority": "PASS",
+    "canonicalCustomerChain": "PASS",
+    "pricingCohesion": "PASS",
+    "releaseIdentity": "FIXED",
+    "duplicateHtmlIds": "PASS"
+  },
+  "liveGatesPending": [
+    "OAuth/session",
+    "Spreadsheet permissions",
+    "PropertiesService persistence",
+    "ScriptLock concurrency",
+    "quota behavior",
+    "multi-account isolation",
+    "trial conversion",
+    "real /exec E2E",
+    "retry/recovery"
+  ]
+}
