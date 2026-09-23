@@ -72,6 +72,12 @@
       .product{gap:25px}
       footer{flex-direction:column}
     }
+  
+    #app{display:none}
+    body.kolids-mode > nav, body.kolids-mode > main, body.kolids-mode > footer{display:none}
+    body.kolids-mode{background:#070707;overflow-x:hidden}
+    body.kolids-mode #app{display:block}
+    @media(max-width:850px){body.kolids-mode{min-height:100vh}}
   </style>
 </head>
 <body>
@@ -84,7 +90,7 @@
       <a href="#products">Products</a>
       <a href="#contact">Contact</a>
     </div>
-    <a class="nav-cta" href="https://script.google.com/macros/s/AKfycby0ScBhEOtkCJZv5vPC9IiEp78h17JtrG16fab6scqiaRadjGRhLKkCa_-IbUEBRRMK/exec" target="_blank" rel="noopener">KOL IDS ↗</a>
+    <a class="nav-cta" href="https://tpopconnects.com/#kolids">KOL IDS ↗</a>
   </div>
 </nav>
 
@@ -99,7 +105,7 @@
       </p>
       <div class="hero-actions">
         <a class="btn primary" href="#divisions">Explore T POP ↘</a>
-        <a class="btn" href="https://script.google.com/macros/s/AKfycby0ScBhEOtkCJZv5vPC9IiEp78h17JtrG16fab6scqiaRadjGRhLKkCa_-IbUEBRRMK/exec" target="_blank" rel="noopener">Open KOL IDS ↗</a>
+        <a class="btn" href="https://tpopconnects.com/#kolids">Open KOL IDS ↗</a>
       </div>
     </div>
   </section>
@@ -155,7 +161,7 @@
             creator selection and commercial efficiency.
           </p>
           <div class="hero-actions">
-            <a class="btn primary" href="https://script.google.com/macros/s/AKfycby0ScBhEOtkCJZv5vPC9IiEp78h17JtrG16fab6scqiaRadjGRhLKkCa_-IbUEBRRMK/exec" target="_blank" rel="noopener">Launch KOL IDS ↗</a>
+            <a class="btn primary" href="https://tpopconnects.com/#kolids">Launch KOL IDS ↗</a>
           </div>
         </div>
         <div class="product-card">
@@ -193,7 +199,7 @@
       <p>For partnerships, entertainment projects, creative collaborations, business opportunities and technology products.</p>
       <div class="hero-actions">
         <a class="btn primary" href="mailto:hello@tpopentertainmentconnects.com">Start a conversation ↗</a>
-        <a class="btn" href="https://script.google.com/macros/s/AKfycby0ScBhEOtkCJZv5vPC9IiEp78h17JtrG16fab6scqiaRadjGRhLKkCa_-IbUEBRRMK/exec" target="_blank" rel="noopener">KOL IDS ↗</a>
+        <a class="btn" href="https://tpopconnects.com/#kolids">KOL IDS ↗</a>
       </div>
     </div>
   </section>
@@ -203,5 +209,23 @@
   <div>© 2026 T POP ENTERTAINMENT CONNECTS CO., LTD.</div>
   <div>Entertainment × Business × Culture</div>
 </footer>
+
+  <div id="app" aria-label="KOL IDS™ application"></div>
+  <script>
+    (function(){
+      function syncRoute(){
+        var isK = location.hash.toLowerCase() === '#kolids';
+        document.body.classList.toggle('kolids-mode', isK);
+        var robots = document.querySelector('meta[name=robots]');
+        if (robots) robots.setAttribute('content', isK ? 'noindex,nofollow' : 'index,follow');
+        document.title = isK ? 'KOL IDS™ — Intelligence Workspace' : 'T POP ENTERTAINMENT CONNECTS';
+      }
+      window.addEventListener('hashchange', syncRoute);
+      syncRoute();
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
