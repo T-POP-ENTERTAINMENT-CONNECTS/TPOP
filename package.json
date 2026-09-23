@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "kol-ids-cloud",
+  "version": "1.0.0",
+  "scripts": {
+    "deploy": "wrangler pages deploy . --project-name kol-ids-cloud"
+  },
+  "devDependencies": {
+    "wrangler": "^4.35.0"
+  }
+}
