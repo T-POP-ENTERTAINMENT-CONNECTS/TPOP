@@ -1,51 +1,38 @@
-# KOL IDS™ — Production Cloud Build
+# KOL IDS™ Cloud App — Deploy Ready Core
 
-Production architecture:
+This package starts the migration of KOL IDS from Google Apps Script/Google Sheets to a customer-facing cloud application. The customer entry point no longer depends on the Google account currently open in the browser.
 
-`GitHub (source) → Cloudflare Pages + Pages Functions → Supabase Auth / Postgres / Storage`
+## What is included
 
-The runtime no longer depends on Google Apps Script or the Google account currently active in the browser.
-
-## Hardened
-- Supabase email/password authentication with persistent sessions.
-- Organization/workspace isolation using Postgres Row Level Security.
-- Workspace creation through a SECURITY DEFINER RPC.
-- Cross-tenant relationship guards.
-- Supabase Storage for persistent KOL profile images.
-- Creator Intelligence: all 8 categories required.
-- Example chips remain visible and custom signals can be added.
-- Primary + secondary channel model.
-- Persistent data after refresh/re-login.
-- Scoped button busy state.
-- No fake intelligence scores when evidence is absent.
-- Cloudflare runtime config; no credentials committed to Git.
-- Security headers/CSP.
-- GitHub Actions deployment path.
-- `/health` production smoke endpoint.
+- `index.html`, `app.js`, `styles.css`: working cloud workspace UI
+- Supabase Auth: email/password sign-up, sign-in, persistent sessions, sign-out
+- Workspace bootstrap: first authenticated user receives an organization/workspace
+- Real Supabase CRUD for Brands, Campaigns and KOL records
+- KOL Intelligence view based on the structured creator fields
+- `supabase/schema.sql`: PostgreSQL schema + RLS
+- `config.example.js`: deployment configuration template
+- `migration/KOL_IDS_CLOUD_MIGRATION_EXPORT.gs`: safe export helper for the legacy Google Sheets system
+- `legacy/kids/`: source Apps Script project retained for migration/parity work
 
 ## Important
-The browser anon/publishable key is designed to be public. The service-role key must never be placed in this repository or browser code.
 
-This package is the production application foundation. The live infrastructure is still required; this repository contains no customer secrets and cannot deploy into your Cloudflare/Supabase accounts without your credentials. A commercial launch still requires the live Supabase project, domain, production email delivery, legal pages, billing/plan enforcement, backups and final acceptance tests.
+This is the deployable cloud foundation/core workspace, not a claim that every one of the 259 legacy Apps Script files has already been ported to cloud APIs. The legacy code is preserved so the remaining intelligence/QA logic can be migrated module-by-module without losing the existing system.
 
-## Files
-- `index.html` — app shell
-- `app.js` — application runtime
-- `styles.css` — production UI
-- `functions/config.js` — Cloudflare runtime configuration
-- `supabase/schema.sql` — schema + RLS + Storage policies
-- `migration/KOL_IDS_CLOUD_MIGRATION_EXPORT.gs` — legacy migration helper
-- `.github/workflows/deploy.yml` — GitHub → Cloudflare deployment
-- `wrangler.toml` — Cloudflare Pages configuration
-- `_headers` — security headers
-- `DEPLOY.md` — deployment sequence
+## Deploy order
 
-After cutover, Supabase is the production source of truth. Keep the legacy Apps Script/Sheets system only until parity and migration checks pass.
+1. Create a Supabase project.
+2. Supabase SQL Editor → run `supabase/schema.sql`.
+3. Supabase Authentication → enable Email provider.
+4. Copy `config.example.js` to `config.js` and fill in the Supabase project URL and anon/publishable key.
+5. Deploy the folder as a static site to Vercel, Netlify, Cloudflare Pages, or another static host.
+6. Open the deployed URL. Sign up with the customer's KOL IDS email; the first user gets a workspace automatically.
+7. Add Brands, Campaigns and KOLs to verify the database/RLS path.
+8. Only after this smoke test, migrate production data from Google Sheets.
 
+## Security
 
-## Customer URL
-The production customer entry point is `https://tpopconnects.com/#kolids`. The corporate T POP landing page and KOL IDS cloud app are packaged together; selecting the KOL IDS fragment mounts the production app without Google Apps Script.
+The browser uses the Supabase anon/publishable key. This is expected. Security depends on Row Level Security in `schema.sql`; never put a Supabase service-role key in `config.js` or browser code.
 
+## Custom domain
 
-## Customer access login
-The production login screen accepts **Registered Email + Client ID + Access Key**. The current Supabase implementation uses the Access Key as the Supabase account password and validates the Client ID against `public.licenses.license_code` (and `owner_email` when populated). Provision each customer in Supabase Auth and assign a matching license record before testing customer login.
+After the cloud app is deployed, connect a subdomain such as `app.tpopconnects.com` at the hosting provider. Keep `tpopconnects.com/kol-ids` on Squarespace as the commercial landing page and point its Login/Launch buttons to the cloud app.

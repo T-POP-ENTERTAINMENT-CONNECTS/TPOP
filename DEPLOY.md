@@ -1,67 +1,58 @@
-# KOL IDS™ Production Deployment — GitHub → Supabase → Cloudflare
+# KOL IDS Cloud App — exact deployment steps
 
-## 1. Supabase
-1. Create a production Supabase project.
-2. Open SQL Editor and run the complete `supabase/schema.sql`.
-3. In Authentication → Providers, enable Email.
-4. Configure production Site URL and Redirect URLs.
-5. Configure SMTP/custom email delivery for production auth emails.
-6. Copy the Project URL and browser-safe anon/publishable key.
+## A. Supabase
 
-## 2. GitHub
-Push this package to a private repository. Never commit service-role keys, database passwords or access tokens.
+1. Create a Supabase project.
+2. Open **SQL Editor**.
+3. Open `supabase/schema.sql` from this package.
+4. Paste all SQL and Run.
+5. Open **Authentication → Providers** and ensure Email is enabled.
+6. For the first test, keep email confirmation enabled if you want normal production verification. If enabled, sign-up will show a confirmation message before the first login.
+7. Copy the Project URL and the browser-safe anon/publishable key from Supabase API settings.
 
-## 3. Cloudflare Pages
-Create a Pages project named `kol-ids-cloud` and connect the GitHub repository. The repository root is the Pages output directory; no framework build step is required. Pages Functions are discovered from the root `functions/` directory. Cloudflare documents this routing model for Pages Functions.
+## B. Configure the app
 
-Verify after the first deployment:
-- `/health` returns JSON with `ok: true`.
-- `/config.js` returns runtime configuration JavaScript and does not cache it.
+1. Copy `config.example.js` to `config.js`.
+2. Put the Project URL in `SUPABASE_URL`.
+3. Put the anon/publishable key in `SUPABASE_ANON_KEY`.
+4. Do **not** use the service-role key in this file.
 
-## 4. Cloudflare environment variables
-Production variables:
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+## C. Deploy
 
-`functions/config.js` exposes only these browser-safe values at runtime.
+### Easiest route: Netlify
 
-## 5. GitHub Actions deployment
-Set GitHub variable `CLOUDFLARE_PAGES_PROJECT=kol-ids-cloud` and secrets `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`. The workflow is `.github/workflows/deploy.yml`. It installs a pinned Wrangler version and deploys the Pages root.
+1. Create a Netlify account.
+2. Add a new site using the project folder.
+3. Deploy the folder containing `index.html`, `app.js`, `styles.css`, and `config.js`.
+4. Open the generated site URL.
 
-For a Pages project using Git integration, you can instead let Cloudflare build/deploy from `main`; keep the workflow only if you want GitHub Actions to own deployment.
+### Vercel / Cloudflare Pages
 
-## 6. Custom domain + customer entry point
-Connect this Cloudflare Pages project to `tpopconnects.com`.
+Upload the same static folder. No build command is required.
 
-Customer entry point:
-- `https://tpopconnects.com/` → T POP corporate website
-- `https://tpopconnects.com/#kolids` → KOL IDS™ Cloud application
+## D. Custom domain
 
-The `#kolids` fragment is handled by the browser, so Cloudflare does not need a special route for it. The unified production `index.html` hides the corporate shell and mounts the KOL IDS application when the fragment is present.
+Recommended:
 
-All KOL IDS CTAs in the corporate page point to `https://tpopconnects.com/#kolids`; there is no Google Apps Script `/exec` dependency in the customer-facing entry path.
+`app.tpopconnects.com` → cloud app
 
-## 7. Production acceptance
-Test two separate accounts.
+`tpopconnects.com` → Squarespace landing/marketing site
 
-Auth: sign up, email confirmation, sign in, refresh, reopen browser, sign out/in, password reset.
+Then the Squarespace KOL IDS CTA points to `https://app.tpopconnects.com/`.
 
-Tenant isolation: Account A creates data; Account B must see an empty workspace and must not be able to query Account A.
+## E. Smoke test
 
-Core workflow: create/edit brand, create/edit campaign, create/edit KOL, fill all 8 Creator Intelligence categories, add custom chips, upload KOL image, refresh and verify persistence, open KOL Intelligence.
+1. Sign up with a test email.
+2. Confirm email if required.
+3. Sign in.
+4. Confirm a workspace is created.
+5. Add one brand.
+6. Add one campaign tied to that brand.
+7. Add one KOL.
+8. Refresh the browser. Data must remain.
+9. Sign out and sign in again.
+10. Test a second account/organization and verify it cannot see the first organization's records.
 
-Failure/recovery: save button scoped busy state, double-submit, failed network request, reload, invalid image, duplicate KOL code, cross-tenant relationship attempt.
+## F. Production cutover
 
-Security gate: run the SQL policy tests against the actual Supabase project before launch. The application package cannot execute those tests without your live project credentials.
-
-## 8. Commercial cutover gate
-`schema → RLS isolation → auth → CRUD → image persistence → intelligence contract → migration/parity → domain/SSL → backups → billing/license enforcement → customer acceptance`
-
-Only then point the public sales CTA to the cloud app.
-
-## 9. Billing/licensing
-The schema includes `licenses` and organization `plan_code`. This build does not fake payment success or grant paid entitlements. Connect the real payment provider and enforce entitlements server-side before treating a paid plan as active.
-
-
-## Customer access login
-The production login screen accepts **Registered Email + Client ID + Access Key**. The current Supabase implementation uses the Access Key as the Supabase account password and validates the Client ID against `public.licenses.license_code` (and `owner_email` when populated). Provision each customer in Supabase Auth and assign a matching license record before testing customer login.
+Do not turn off the existing Apps Script system yet. Migrate data, run parity tests, and only then switch the Squarespace CTA to the cloud app for customers.
