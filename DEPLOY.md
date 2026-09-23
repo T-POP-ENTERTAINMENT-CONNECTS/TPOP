@@ -61,3 +61,7 @@ Only then point the public sales CTA to the cloud app.
 
 ## 9. Billing/licensing
 The schema includes `licenses` and organization `plan_code`. This build does not fake payment success or grant paid entitlements. Connect the real payment provider and enforce entitlements server-side before treating a paid plan as active.
+
+
+## Customer access login
+The production login screen accepts **Registered Email + Client ID + Access Key**. The current Supabase implementation uses the Access Key as the Supabase account password and validates the Client ID against `public.licenses.license_code` (and `owner_email` when populated). Provision each customer in Supabase Auth and assign a matching license record before testing customer login.

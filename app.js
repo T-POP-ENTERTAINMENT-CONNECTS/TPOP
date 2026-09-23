@@ -48,22 +48,24 @@
     root.innerHTML=`<div class="auth-wrap">
       <div class="auth-card">
         <div class="brandmark large"><div class="brand-dot"></div><div><strong>KOL IDS™</strong><span>Culture & KOL Intelligence</span></div></div>
-        <div class="auth-copy"><span class="eyebrow">SECURE CLOUD WORKSPACE</span>
-          <h1>${mode==='login'?'Welcome back':'Create your KOL IDS account'}</h1>
-          <p>${mode==='login'?'Sign in to your workspace.':'Create an independent KOL IDS identity — no Google account switching required.'}</p>
+        <div class="auth-copy"><span class="eyebrow">KOL IDS™ · SECURE CUSTOMER ACCESS</span>
+          <h1>${mode==='login'?'Sign in to your intelligence workspace':'Create your KOL IDS account'}</h1>
+          <p>${mode==='login'?'Enter the registered email, Client ID and Access Key provided for your KOL IDS™ workspace. Your Google account can be different.':'Create an independent KOL IDS identity — no Google account switching required.'}</p>
         </div>
         ${mode==='recovery'?`<form id="authForm" novalidate>
           <label>New password<input name="password" type="password" minlength="8" required autocomplete="new-password" placeholder="8+ characters"></label>
           <label>Confirm password<input name="confirm" type="password" minlength="8" required autocomplete="new-password" placeholder="Repeat password"></label>
           <button class="primary full" type="submit">Update password</button>
         </form><button class="link-btn" id="backLogin">Back to sign in</button>`:`<form id="authForm" novalidate>
-          <label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
-          <label>Password<input name="password" type="password" minlength="8" required autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="8+ characters"></label>
+          <label>Registered Email<input name="email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
+          ${mode==='login'?`<label>Client ID<input name="clientId" required autocomplete="off" placeholder="Enter your Client ID"></label>
+          <label>Access Key<input name="accessKey" type="password" minlength="8" required autocomplete="current-password" placeholder="Enter your Access Key"></label>`:`<label>Password<input name="password" type="password" minlength="8" required autocomplete="new-password" placeholder="8+ characters"></label>`}
           <button class="primary full" type="submit">${mode==='login'?'Sign in':'Create account'}</button>
         </form>
         ${mode==='login'?'<button class="link-btn" id="forgotBtn">Forgot password?</button>':''}
         <button class="link-btn" id="toggleAuth">${mode==='login'?'Create a new account':'I already have an account'}</button>`}
-        <div class="auth-note">Your customer session is owned by KOL IDS + Supabase, not the Google account currently open in your browser.</div>
+        ${mode==='login'?`<div class="access-demo"><strong>Decision Demo</strong><p>Explore how KOL IDS explains creator decisions before using your own campaign data.</p><button type="button" id="demoBtn">Show how KOL IDS decides</button><small>No customer data is used in this demo.</small></div>`:''}
+        <div class="auth-note">Enter the registered email, Client ID and Access Key provided for your KOL IDS™ workspace. Your Google account can be different.</div>
       </div>
       <div class="auth-side"><span class="eyebrow">KOL IDS™ CLOUD</span><h2>People + Culture + Market + Outcome Intelligence</h2><p>A production decision workspace for brands, creators, campaigns and measurable outcomes.</p><div class="auth-proof"><span>AUTH</span><span>RLS</span><span>CLOUD</span></div></div>
     </div>`;
@@ -71,20 +73,32 @@
     $('#toggleAuth')?.addEventListener('click',()=>loginView(mode==='login'?'signup':'login'));
     $('#backLogin')?.addEventListener('click',()=>loginView('login'));
     $('#forgotBtn')?.addEventListener('click', forgotPassword);
+    $('#demoBtn')?.addEventListener('click',()=>toast('Illustrative demo: KOL IDS compares campaign fit, evidence quality, risk and confidence.','info'));
     $('#authForm').onsubmit=async e=>{
       e.preventDefault(); const btn=$('button[type=submit]',e.currentTarget); const fd=new FormData(e.currentTarget);
       busy(btn,true); try {
-        if(mode==='login') await signIn(fd.get('email'),fd.get('password'));
+        if(mode==='login') await signIn(fd.get('email'),fd.get('clientId'),fd.get('accessKey'));
         else if(mode==='signup') await signUp(fd.get('email'),fd.get('password'));
         else { const password=String(fd.get('password')||''); const confirm=String(fd.get('confirm')||''); if(password!==confirm) throw new Error('Passwords do not match.'); const {error}=await db.auth.updateUser({password}); if(error)throw error; toast('Password updated. Please sign in again.','success'); await db.auth.signOut(); loginView('login'); }
       } catch(err){toast(cleanError(err),'error');} finally{busy(btn,false);}
     };
   }
 
-  async function signIn(email,password){
+  async function signIn(email,clientId,accessKey){
     requireDb();
-    const {error}=await db.auth.signInWithPassword({email:String(email).trim(),password:String(password)});
+    const normalizedEmail=String(email||'').trim();
+    const normalizedClient=String(clientId||'').trim();
+    const {error}=await db.auth.signInWithPassword({email:normalizedEmail,password:String(accessKey||'')});
     if(error)throw error;
+    const {data:licenses,error:licenseError}=await db.from('licenses').select('id,organization_id,license_code,status,owner_email').eq('license_code',normalizedClient).limit(1);
+    if(licenseError || !licenses?.length || !['ACTIVE','PENDING'].includes(licenses[0].status)){
+      await db.auth.signOut();
+      throw new Error('Client ID is invalid, inactive, or not assigned to this account.');
+    }
+    if(licenses[0].owner_email && licenses[0].owner_email.toLowerCase()!==normalizedEmail.toLowerCase()){
+      await db.auth.signOut();
+      throw new Error('This Client ID is not assigned to the registered email.');
+    }
     await boot();
   }
   async function signUp(email,password){
