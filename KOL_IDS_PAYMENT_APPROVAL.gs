@@ -17,7 +17,8 @@
  * Required Script Properties:
  *   KOL_IDS_SUPABASE_URL
  *   KOL_IDS_PAYMENT_APPROVAL_SECRET
- *   KOL_IDS_PAYMENT_ADMIN_EMAIL
+ *   KOL_IDS_PAYMENT_ADMIN_EMAILS
+ *   (comma-separated; both addresses receive approval notifications)
  *
  * First run:
  *   KOL_IDS_PAYMENT_SETUP()
@@ -33,7 +34,8 @@
 const KOL_IDS_PAYMENT_CFG = Object.freeze({
   SUPABASE_URL: 'KOL_IDS_SUPABASE_URL',
   SECRET: 'KOL_IDS_PAYMENT_APPROVAL_SECRET',
-  ADMIN_EMAIL: 'KOL_IDS_PAYMENT_ADMIN_EMAIL',
+  ADMIN_EMAILS: 'KOL_IDS_PAYMENT_ADMIN_EMAILS',
+  ADMIN_EMAIL_LEGACY: 'KOL_IDS_PAYMENT_ADMIN_EMAIL',
   FORM_ID: 'KOL_IDS_PAYMENT_FORM_ID',
   FORM_URL: 'KOL_IDS_PAYMENT_FORM_URL',
   WEB_APP_URL: 'KOL_IDS_PAYMENT_WEB_APP_URL',
@@ -42,9 +44,13 @@ const KOL_IDS_PAYMENT_CFG = Object.freeze({
 
 function KOL_IDS_PAYMENT_SETUP() {
   const props = PropertiesService.getScriptProperties();
-  const admin = String(props.getProperty(KOL_IDS_PAYMENT_CFG.ADMIN_EMAIL) || Session.getEffectiveUser().getEmail() || '').trim().toLowerCase();
-  if (!admin) throw new Error('Set KOL_IDS_PAYMENT_ADMIN_EMAIL first.');
-  props.setProperty(KOL_IDS_PAYMENT_CFG.ADMIN_EMAIL, admin);
+  const fallback = String(Session.getEffectiveUser().getEmail() || '').trim().toLowerCase();
+  let admins = KOL_IDS_PAYMENT_adminEmails_();
+  if (!admins.length && fallback) {
+    admins = [fallback];
+    props.setProperty(KOL_IDS_PAYMENT_CFG.ADMIN_EMAILS, fallback);
+  }
+  if (!admins.length) throw new Error('Set KOL_IDS_PAYMENT_ADMIN_EMAILS first.');
 
   const supabaseUrl = String(props.getProperty(KOL_IDS_PAYMENT_CFG.SUPABASE_URL) || '').trim();
   if (!supabaseUrl) throw new Error('Set KOL_IDS_SUPABASE_URL first.');
@@ -86,7 +92,7 @@ function KOL_IDS_PAYMENT_SETUP() {
 
   return {
     ok: true,
-    admin_email: admin,
+    admin_emails: admins,
     payment_form_url: form.getPublishedUrl(),
     web_app_url: web,
     next: 'Deploy this Apps Script as a Web App, then run KOL_IDS_PAYMENT_SETUP() again so the Web App URL is stored.'
@@ -110,7 +116,8 @@ function KOL_IDS_PAYMENT_onFormSubmit(e) {
 
   const approveUrl = KOL_IDS_PAYMENT_actionUrl_(orderNumber, 'approve');
   const rejectUrl = KOL_IDS_PAYMENT_actionUrl_(orderNumber, 'reject');
-  const admin = KOL_IDS_PAYMENT_requireProp_(KOL_IDS_PAYMENT_CFG.ADMIN_EMAIL);
+  const admins = KOL_IDS_PAYMENT_adminEmails_();
+  if (!admins.length) throw new Error('Set KOL_IDS_PAYMENT_ADMIN_EMAILS first.');
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:720px;margin:auto;color:#24181d">
@@ -132,7 +139,7 @@ function KOL_IDS_PAYMENT_onFormSubmit(e) {
     </div>`;
 
   MailApp.sendEmail({
-    to: admin,
+    to: admins.join(','),
     subject: 'KOL IDS — Payment approval required: ' + orderNumber,
     htmlBody: html,
     body: 'Payment approval required for ' + orderNumber + '. Open the HTML email to approve or reject.'
@@ -194,6 +201,12 @@ function KOL_IDS_PAYMENT_doGet_(e) {
         });
       }
     }
+    MailApp.sendEmail({
+      to: admins.join(','),
+      subject: 'KOL IDS — Payment ' + (action === 'approve' ? 'approved' : 'rejected') + ': ' + order,
+      htmlBody: '<div style=\"font-family:Arial,sans-serif\"><h3>KOL IDS™ — Payment action completed</h3><p><b>Order:</b> ' + KOL_IDS_PAYMENT_esc_(order) + '</p><p><b>Action:</b> ' + KOL_IDS_PAYMENT_esc_(action.toUpperCase()) + '</p><p><b>Customer:</b> ' + KOL_IDS_PAYMENT_esc_(customerEmail) + '</p><p>This notification was sent to all configured system admin emails. No second approval is required.</p></div>',
+      body: 'KOL IDS payment ' + action + ' for ' + order + '. No second admin approval is required.'
+    });
     return KOL_IDS_PAYMENT_page_(action === 'approve' ? 'Payment approved. Customer access is now active.' : 'Payment rejected. The customer remains locked until a valid payment is approved.', true);
   } catch (err) {
     return KOL_IDS_PAYMENT_page_(String(err && err.message || err), false);
@@ -218,6 +231,15 @@ function KOL_IDS_PAYMENT_equal_(a,b) {
   if(a.length!==b.length) return false;
   let x=0; for(let i=0;i<a.length;i++) x |= a.charCodeAt(i)^b.charCodeAt(i);
   return x===0;
+}
+
+function KOL_IDS_PAYMENT_adminEmails_() {
+  const props = PropertiesService.getScriptProperties();
+  const raw = String(props.getProperty(KOL_IDS_PAYMENT_CFG.ADMIN_EMAILS) || props.getProperty(KOL_IDS_PAYMENT_CFG.ADMIN_EMAIL_LEGACY) || '').trim();
+  const configured = raw.split(',').map(v => String(v || '').trim().toLowerCase()).filter(Boolean);
+  const defaults = ['tpopentconex@gmail.com', 'tpopconnectsbiz@gmail.com'];
+  const merged = configured.length ? configured : defaults;
+  return [...new Set(merged)];
 }
 
 function KOL_IDS_PAYMENT_requireProp_(key) {
