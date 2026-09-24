@@ -2,7 +2,7 @@
 
 ## Routing
 - T POP homepage `index.html` now sends every KOL IDS CTA to `./KOLIDS.html` on the same origin.
-- `KOLIDS.html` is the same-origin entry point and opens `KOLIDS.html`.
+- `KOLIDS` is the same-origin public KOL IDS entry point; successful Sign in opens `/KOLIDSworkspace`.
 - No external KOL IDS domain is used.
 
 ## Workspace

@@ -8,7 +8,7 @@
   <meta name="description" content="KOL IDS™ — private creator decision intelligence workspace by T POP CONNECTS." />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <meta name="googlebot" content="noindex,nofollow,noarchive" />
-  <link rel="canonical" href="https://tpopconnects.com/" />
+  <link rel="canonical" href="https://tpopconnects.com/KOLIDS" />
   <meta property="og:title" content="KOL IDS™ — Creator Decision Intelligence" />
   <meta property="og:description" content="Private KOL IDS™ workspace by T POP CONNECTS." />
   <meta property="og:url" content="https://tpopconnects.com/" />
@@ -816,13 +816,11 @@ async function boot(){
   if(!sb){auth('Supabase is not configured.');return}
   const {data:{session}}=await sb.auth.getSession();
   S.session=session;
-  if(!session){auth();return}
-  // /KOLIDS is the public product / pricing / trial / sign-in page.
-  // An already-authenticated user belongs in the private workspace.
-  if(window.location.pathname==='/KOLIDS' || window.location.pathname==='/KOLIDS.html'){
-    window.location.assign('/KOLIDSworkspace');
-    return;
-  }
+  // /KOLIDS is ALWAYS the public product / pricing / trial / sign-in page.
+  // Never redirect to the workspace just because a session already exists.
+  // The workspace opens only after the user explicitly completes Sign in.
+  auth();
+  return;
   try{
     const r=await sb.rpc('bootstrap_workspace',{p_name:null});
     if(r.error)throw r.error;

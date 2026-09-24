@@ -2,7 +2,7 @@
 
 ## Current production specification
 - T POP website → `https://tpopconnects.com/`
-- KOL IDS entry + workspace → `https://tpopconnects.com/KOLIDS.html`
+- KOL IDS entry + workspace → `https://tpopconnects.com/KOLIDS`
 - Customer login → Supabase Auth Email + Password
 - Google Account → not a KOL IDS credential
 - Client ID / Access Key → removed from customer login
@@ -29,7 +29,7 @@
 6. Admin approval provisions the cloud subscription/license.
 
 ## URL routing
-`KOLIDS.html` is the single KOL IDS entry + workspace page. After authentication and active entitlement, the same page loads the private workspace; there is no separate `workspace.html`.
+`KOLIDS.html is the public KOL IDS product, pricing, trial and sign-in page. After successful sign-in, the user is routed to the private 7-Step workspace at `/KOLIDSworkspace`.
 
 ## Legacy code
 `legacy-appscript/` is retained as migration source material only. It is not loaded by the customer runtime. Do not delete it until the remaining business/intelligence modules have been ported and verified in the cloud runtime.
