@@ -1,0 +1,18 @@
+KOL IDS V22 UI / ROUTING PATCH
+
+1. After successful customer sign-in, the intermediate workspace processing screen is removed.
+2. The second fast popup / transient workspace-loading page is removed from the sign-in route.
+3. Sign-in now verifies access and opens the workspace directly.
+4. Workspace navigation is now a 7-step flow aligned to the provided reference:
+   Campaign / Audience / KOL Persona / Decision / Review & Run / Business Impact / Reports & Evidence.
+5. The first workspace page is redesigned to match the supplied Campaign form structure:
+   Campaign Basics / Objectives / Budget & Timeline / Brand Profile / Brand Intelligence.
+6. New Campaign form data is persisted to the existing campaigns table payload while retaining compatibility fields used by the decision engine.
+7. Save as draft supports partial campaign information; Continue validates required fields and advances to Audience.
+8. Sidebar and top bar were restyled toward the supplied light enterprise UI reference.
+9. New Analysis clears the current working selection and returns to a blank Campaign intake state.
+10. Existing audience, creator, decision, review, impact and report logic remains routed into the new 7-step workflow.
+
+Primary changed files:
+- KOLIDS.html
+- app.js

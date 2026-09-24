@@ -733,7 +733,7 @@ function auth(mode='login', notice=''){
         if(login.error) throw login.error;
         if(isTrial){
           set('Account created. Trial activated. Opening your workspace…','good');
-          launchWorkspace();
+          await boot();
         }else{
           const orderNo=String(data.order?.order_number||'created');
           set(`Account created. Order ${orderNo} is pending payment approval. Submit your payment proof, then we will approve access.`,'good');
@@ -800,7 +800,6 @@ function auth(mode='login', notice=''){
       const result=await sb.auth.signInWithPassword({email:userEmail,password:userPassword});
       if(result.error)throw result.error;
       S.session=result.data.session;
-      setStatus('Verified. Loading your organization workspace…','good');
       await boot();
     }catch(x){
       setStatus(x.message||'Authentication failed. Check your Email and Password.','bad');
@@ -812,31 +811,23 @@ function auth(mode='login', notice=''){
 function renderEntryDemo(){const host=document.getElementById('demo-result');if(!host)return;const data=[['Creator A',92,88,94,'STRONG CONSIDER','High campaign fit + strong commercial efficiency + high evidence confidence.'],['Creator B',87,73,82,'CONSIDER','Strong audience/content alignment, but efficiency evidence is less certain.'],['Creator C',76,91,68,'REVIEW','Commercially attractive, but fit evidence needs additional validation.'],['Creator D',61,59,74,'NOT PRIORITY','Lower campaign fit and weaker efficiency signal.']];host.innerHTML=`<div class="demo-logic"><div><span>DECISION SIGNAL</span><b>Fit + Efficiency</b></div><div><span>EVIDENCE</span><b>Weighted</b></div><div><span>CONFIDENCE</span><b>Separate</b></div><div><span>OUTPUT</span><b>Action</b></div></div><p class="demo-explain">The score is not the recommendation by itself. KOL IDS combines decision signals, evidence quality, confidence and risk to explain what should happen next.</p>${data.map(x=>`<div class="demo-row"><strong>${x[0]}</strong><span>${x[1]} Fit</span><span>${x[2]} Eff.</span><span>${x[3]} Conf.</span><b>${x[4]}</b></div><div class="demo-why">${x[5]}</div>`).join('')}<div class="demo-point"><b>The point:</b>&nbsp; KOL IDS does not only rank creators. It explains the decision.</div>`;}
 
 async function boot(){
-  if(!sb){root.innerHTML='<div class="setup"><h1>KOL IDS</h1><p>Configure Supabase before deployment.</p></div>';return}
-  let {data:{session}}=await sb.auth.getSession();
+  if(!sb){auth('Supabase is not configured.');return}
+  const {data:{session}}=await sb.auth.getSession();
   S.session=session;
   if(!session){auth();return}
-  showWorkspaceProcessing();
   try{
-    setWorkspaceProgress(1,'Secure access','Verified account session');
     const r=await sb.rpc('bootstrap_workspace',{p_name:null});
     if(r.error)throw r.error;
     const ctx=r.data||{};
-    setWorkspaceProgress(2,'Entitlement','Checking plan, subscription and seats');
     if(!ctx.access_granted){
-      if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
       const reason=String(ctx.access_reason||'NO_ACTIVE_SUBSCRIPTION');
       root.innerHTML=`<div class="entry-page"><div class="entry-shell"><div class="entry-heading"><span class="entry-eyebrow">KOL IDS™ · ACCESS CONTROL</span><h1>Account verified — workspace access is not active yet</h1><p>${esc(reason==='PAYMENT_PENDING'?'Your account is ready. Complete payment and wait for payment approval; your same account and organization will then open the workspace.':reason==='SUBSCRIPTION_EXPIRED'?'Your subscription has expired. Renew the organization plan to continue analysis.':'Your account does not currently have an active KOL IDS subscription.')}</p><div class="access-actions"><button class="entry-primary" id="go-login" type="button">Back to Login</button><button class="entry-ghost" id="go-home" type="button">T POP Connects</button></div></div></div></div>`;
       document.getElementById('go-login')?.addEventListener('click',()=>{sb.auth.signOut();auth()});
       document.getElementById('go-home')?.addEventListener('click',()=>window.location.href='https://tpopconnects.com/');
       return;
     }
-    setWorkspaceProgress(3,'Workspace','Opening your private Creator Intelligence workspace');
-    await new Promise(resolve=>setTimeout(resolve,180));
-    if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
     launchWorkspace();
   }catch(e){
-    if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
     root.innerHTML='';
     auth('login',e.message||'We could not verify workspace access. Please sign in again.');
   }
@@ -846,7 +837,6 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_WORKSPACE_LOADING__) return;
   window.__KOL_IDS_WORKSPACE_LOADING__=true;
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
-  root.innerHTML='<div class="processing-page"><div class="processing-box"><div class="entry-eyebrow">KOL IDS™ · SECURE WORKSPACE</div><h1>Opening your intelligence workspace</h1><p>Access verified. Loading your private workspace in this page…</p><div class="processing-live"><span class="processing-spinner"></span><div><b>LOADING WORKSPACE…</b><small>Your account, organization and plan are being loaded</small></div></div></div></div>';
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
     script.src='./app.js';
@@ -856,8 +846,6 @@ async function launchWorkspace(){
   }
 }
 
-function showWorkspaceProcessing(){root.innerHTML=`<div class="processing-page"><div class="processing-box"><div class="entry-eyebrow">KOL IDS™ · SECURE WORKSPACE</div><h1>Preparing your intelligence workspace</h1><p id="processing-message">Connecting to your private workspace…</p><div class="processing-live"><span class="processing-spinner"></span><div><b id="processing-title">PROCESSING…</b><small id="processing-detail">Verifying secure access</small></div><strong id="processing-elapsed">0s</strong></div><div class="processing-track"><div id="processing-bar"></div></div><div class="processing-hint"><span class="status-dot"></span><b>System is working</b><span>Please wait — do not close this page</span></div><div class="processing-steps"><div class="processing-step active" id="processing-step-1"><i>1</i><div><b>Secure access</b><small>Verifying secure access…</small></div><span>Processing</span></div><div class="processing-step" id="processing-step-2"><i>2</i><div><b>Workspace</b><small>Waiting for workspace…</small></div><span>Waiting</span></div><div class="processing-step" id="processing-step-3"><i>3</i><div><b>Context</b><small>Waiting for saved context…</small></div><span>Waiting</span></div></div></div></div>`;let started=Date.now();window.__KOL_IDS_PROCESS_TIMER__=setInterval(()=>{const e=document.getElementById('processing-elapsed');if(e)e.textContent=Math.max(0,Math.floor((Date.now()-started)/1000))+'s'},250)}
-function setWorkspaceProgress(n,title,detail){for(let i=1;i<=3;i++){const el=document.getElementById('processing-step-'+i);if(!el)continue;el.classList.toggle('active',i===n);el.classList.toggle('done',i<n);const st=el.querySelector('span');if(st)st.textContent=i<n?'Complete':i===n?'Processing':'Waiting';const sm=el.querySelector('small');if(sm)sm.textContent=i<n?'Complete':i===n?detail:'Waiting for '+(i===2?'workspace':'saved context')+'…'}const t=document.getElementById('processing-title');const d=document.getElementById('processing-detail');const m=document.getElementById('processing-message');const bar=document.getElementById('processing-bar');if(t)t.textContent=title.toUpperCase();if(d)d.textContent=detail;if(m)m.textContent=detail+'…';if(bar)bar.style.width=((n/3)*100)+'%';}
 if(sb) sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_OUT'){S.session=null;auth()}});
 boot();
 
