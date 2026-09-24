@@ -63,7 +63,7 @@ The function creates the payment-proof Google Form and its form-submit trigger a
 Copy the generated Google Form published URL into:
 
 - `config.js` → `PAYMENT_FORM_URL`
-- `KOL IDS.html` → `window.KOL_IDS_CONFIG.PAYMENT_FORM_URL`
+- `KOLIDS.html` → `window.KOL_IDS_CONFIG.PAYMENT_FORM_URL`
 
 Then redeploy the site.
 

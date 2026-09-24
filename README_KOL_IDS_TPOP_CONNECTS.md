@@ -1,8 +1,8 @@
 # KOL IDS — T POP Connects GitHub build
 
 ## Routing
-- T POP homepage `index.html` now sends every KOL IDS CTA to `./KOL IDS.html` on the same origin.
-- `KOL IDS.html` is the same-origin entry point and opens `KOL IDS.html`.
+- T POP homepage `index.html` now sends every KOL IDS CTA to `./KOLIDS.html` on the same origin.
+- `KOLIDS.html` is the same-origin entry point and opens `KOLIDS.html`.
 - No external KOL IDS domain is used.
 
 ## Workspace
