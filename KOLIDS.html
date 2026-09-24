@@ -843,6 +843,131 @@ boot();
 
   </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"749c9acf4fb64669aab9748edccbdafa","r":1,"spa":2}' crossorigin="anonymous"></script>
+
+
+<style id="KOL_IDS_TRIAL_CARD_RESPONSIVE_FINAL">
+/* Final trial-card fix: keep the 7-day trial structurally identical to paid plans,
+   while preserving the requested black card + #aeefff trial typography. */
+#kolIdsCommercialModal .commercial-modal-card{
+  width:min(1120px,calc(100vw - 32px)) !important;
+  max-height:92vh !important;
+  overflow:auto !important;
+}
+
+#kolIdsCommercialModal .commercial-plan-grid-four{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:12px !important;
+  align-items:stretch !important;
+  background:transparent !important;
+  border:0 !important;
+}
+
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan,
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary{
+  width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+  min-height:300px !important;
+  box-sizing:border-box !important;
+  padding:22px 20px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  overflow:visible !important;
+}
+
+/* Trial keeps the same card geometry as the paid plans, but remains black. */
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary{
+  background:#111 !important;
+  color:#fff !important;
+  border:1px solid #111 !important;
+  box-shadow:none !important;
+}
+
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary h3,
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary > strong{
+  color:#aeefff !important;
+}
+
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary > span{
+  color:#a7a7a0 !important;
+}
+
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary p,
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary small{
+  color:#bdbdb6 !important;
+}
+
+/* Every package gets a real, visible CTA at the bottom of its card. */
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan .modal-cta{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  min-height:46px !important;
+  height:46px !important;
+  margin-top:auto !important;
+  flex:0 0 auto !important;
+  box-sizing:border-box !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+#kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary .modal-cta{
+  background:#fff !important;
+  border-color:#fff !important;
+  color:#111 !important;
+}
+
+@media (max-width:1050px){
+  #kolIdsCommercialModal .commercial-plan-grid-four{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media (max-width:760px){
+  #kolIdsCommercialModal .commercial-modal{
+    padding:10px !important;
+  }
+  #kolIdsCommercialModal .commercial-modal-card{
+    width:100% !important;
+    max-height:94vh !important;
+    padding:20px 16px !important;
+  }
+  #kolIdsCommercialModal .commercial-modal-head{
+    gap:12px !important;
+    margin-bottom:18px !important;
+  }
+  #kolIdsCommercialModal .commercial-modal-head h2{
+    font-size:28px !important;
+  }
+  #kolIdsCommercialModal .commercial-modal-head p{
+    font-size:12px !important;
+  }
+  #kolIdsCommercialModal .commercial-plan-grid-four{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+  #kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan,
+  #kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan.trial-primary{
+    min-height:245px !important;
+    height:auto !important;
+    padding:20px 18px !important;
+  }
+  #kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan h3{
+    font-size:22px !important;
+  }
+  #kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan > strong{
+    font-size:26px !important;
+  }
+  #kolIdsCommercialModal .commercial-plan-grid-four .commercial-plan .modal-cta{
+    min-height:48px !important;
+    height:48px !important;
+  }
+}
+</style>
+
 </body>
 
 <style id="KOL_IDS_REFERENCE_SIZE_ONLY_V2">
