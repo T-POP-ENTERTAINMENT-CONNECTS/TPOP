@@ -95,6 +95,21 @@ function styles(){if(document.getElementById('kol-app-style'))return;const s=doc
 .kol-top p{font-size:12px!important}
 .top-email,.top-chip{font-size:10px!important}
 .mobile-menu{font-size:11px!important}.campaign-reference-page .remove-message-btn{width:auto;min-width:54px;border:1px solid #e0e5e8;background:#fff;border-radius:7px;color:#9a6368;font-weight:800;font-size:9px;padding:0 8px}.campaign-reference-page .icon-btn{display:none!important}
+
+/* Final campaign workspace typography */
+.campaign-reference-page .section-title{font-size:14px!important;letter-spacing:.06em!important}
+.campaign-reference-page .field label{font-size:13px!important}
+.campaign-reference-page .field input,.campaign-reference-page .field textarea,.campaign-reference-page .field select{font-size:13px!important;min-height:44px!important;padding:10px 12px!important}
+.campaign-reference-page .field textarea{min-height:92px!important}
+.campaign-reference-page .hint{font-size:11px!important}
+.campaign-reference-page .required-star{color:#d71920!important;font-size:16px!important;font-weight:900!important}
+.campaign-reference-page .objective{font-size:13px!important;min-height:44px!important}
+.campaign-reference-page .selected-strip,.campaign-reference-page .workflow-side-note{font-size:12px!important}
+.campaign-reference-page .bottom-actions .btn{font-size:13px!important}
+.campaign-reference-page .brand-intelligence-grid .field label{font-size:13px!important}
+.kol-nav button{font-size:13px!important}
+.nav-copy strong{font-size:13px!important}
+.nav-copy small{font-size:10px!important}
 ` ;document.head.appendChild(s)}
 function initials(){const s=S.session?.user?.email||S.org?.name||'KOL';return s.split(/[^A-Za-z0-9]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'K'}
 async function loadContext(){const {data,error}=await sb.rpc('bootstrap_workspace');if(error)throw error;S.org=data.organization;S.membership=data.membership;S.plan=data.plan;S.subscription=data.subscription;S.access=Boolean(data.access_granted);S.accessReason=data.access_reason||null;return data}
@@ -138,9 +153,9 @@ function campaignIntake(c){
  const personalityOptions=['Premium','Friendly','Innovative','Bold','Sophisticated','Playful','Trustworthy','Expert-led'];
  const campaignTypes=['Product Launch','Brand Campaign','Always-on','Promotion','Awareness','Conversion','Community','Other'];
  const checked=(arr,x)=>arr.includes(x)?'checked':'';
- const objectiveIcons=['◌','⌁','✧','◉','↗','▣','◍','▤','▥','◇','♧','◈','◉','◍','◆','↻','♢'];
- const objectiveCards=objectiveOptions.map((x,i)=>`<label class="objective ${selectedObjectives.includes(x)?'selected':''}"><input type="checkbox" name="campaign-objective" value="${esc(x)}" ${checked(selectedObjectives,x)}><span class="objective-icon" aria-hidden="true">${objectiveIcons[i]||'○'}</span><span>${esc(x)}</span></label>`).join('')+
-   `<label class="objective other-objective ${selectedObjectives.includes('Other')?'selected':''}"><input type="checkbox" name="campaign-objective" value="Other" ${checked(selectedObjectives,'Other')}><span class="objective-icon" aria-hidden="true">○</span><span>Other</span><input class="inline-objective-other" id="ci-objective-other" value="${esc(p.objectiveOther||'')}" placeholder="Specify other objective"></label>`;
+
+ const objectiveCards=objectiveOptions.map((x,i)=>`<label class="objective ${selectedObjectives.includes(x)?'selected':''}"><input type="checkbox" name="campaign-objective" value="${esc(x)}" ${checked(selectedObjectives,x)}><span>${esc(x)}</span></label>`).join('')+
+   `<label class="objective other-objective ${selectedObjectives.includes('Other')?'selected':''}"><input type="checkbox" name="campaign-objective" value="Other" ${checked(selectedObjectives,'Other')}><span>Other</span><input class="inline-objective-other" id="ci-objective-other" value="${esc(p.objectiveOther||'')}" placeholder="Specify other objective"></label>`;
  const brandValuesText=String(p.brandValuesText||values.join(', ')||'');
  const brandAvoidText=String(p.brandAvoidText||avoids.join(', ')||'');
  c.innerHTML=`<div class="workflow-page campaign-reference-page">
@@ -158,7 +173,7 @@ function campaignIntake(c){
     </section>
 
     <section class="intake-section">
-      <div class="section-title-row"><div class="section-title">Objectives</div><span class="section-required">Select one or more</span></div>
+      <div class="section-title-row"><div class="section-title">Objectives</div></div>
       <div class="objective-grid">${objectiveCards}</div>
       <div class="selected-strip" id="ci-selected-objectives">Selected (${selectedObjectives.length}): ${selectedObjectives.map(x=>`<span class="selected-chip">${esc(x)} <button type="button" data-remove-objective="${esc(x)}">×</button></span>`).join('')||'<span>No objective selected yet.</span>'}</div>
     </section>

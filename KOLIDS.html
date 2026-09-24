@@ -835,6 +835,7 @@ async function boot(){
 
 async function launchWorkspace(){
   if(window.__KOL_IDS_WORKSPACE_LOADING__) return;
+  if(window.location.pathname!=='/KOLIDSworkspace') window.history.replaceState({},'', '/KOLIDSworkspace');
   window.__KOL_IDS_WORKSPACE_LOADING__=true;
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
