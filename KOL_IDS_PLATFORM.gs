@@ -1370,6 +1370,14 @@ function doPost(e){
     if(rawBody.length>KOL_IDS.MAX_API_BODY_BYTES)throw KOL_IDS_PLATFORM_error_('INVALID_REQUEST','Request body too large.');
     var body=JSON.parse(rawBody||'{}');
     if(!body||typeof body!=='object'||Array.isArray(body))throw KOL_IDS_PLATFORM_error_('INVALID_REQUEST','Request body must be a JSON object.');
+    // Public website contact form: intentionally handled before the authenticated API gate.
+    // This endpoint accepts only a tightly-scoped PUBLIC_CONTACT action and sends the request
+    // to the configured administrator email; it does not expose workspace/API data.
+    if(String(body.action||'').toUpperCase()==='PUBLIC_CONTACT'){
+      var publicContact=KOL_IDS_PUBLIC_CONTACT_submit_(body);
+      publicContact.requestId=requestId;
+      return ContentService.createTextOutput(JSON.stringify(publicContact)).setMimeType(ContentService.MimeType.JSON);
+    }
     var result=KOL_IDS_HARDENING_RUNTIME_apiGate_(e,body,requestId);
     result.requestId=requestId;
     return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);

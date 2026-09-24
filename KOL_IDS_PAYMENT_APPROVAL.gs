@@ -182,8 +182,8 @@ function KOL_IDS_PAYMENT_doGet_(e) {
         MailApp.sendEmail({
           to: customerEmail,
           subject: 'KOL IDS — Payment approved / workspace access activated',
-          htmlBody: `<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto"><h2>Payment approved</h2><p>Your KOL IDS account is now active.</p><p><b>Plan:</b> ${KOL_IDS_PAYMENT_esc_(plan)}<br><b>Access expires:</b> ${KOL_IDS_PAYMENT_esc_(expires)}</p><p>You can sign in with the same email and password you used when creating the account.</p><p><a href="https://tpopconnects.com/KOL%20IDS.html">Open KOL IDS</a></p></div>`,
-          body: 'Your KOL IDS payment was approved and your workspace is active. Sign in at https://tpopconnects.com/KOL%20IDS.html'
+          htmlBody: `<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto"><h2>Payment approved</h2><p>Your KOL IDS account is now active.</p><p><b>Plan:</b> ${KOL_IDS_PAYMENT_esc_(plan)}<br><b>Access expires:</b> ${KOL_IDS_PAYMENT_esc_(expires)}</p><p>You can sign in with the same email and password you used when creating the account.</p><p><a href="https://tpopconnects.com/KOLIDS.html">Open KOL IDS</a></p></div>`,
+          body: 'Your KOL IDS payment was approved and your workspace is active. Sign in at https://tpopconnects.com/KOLIDS.html'
         });
       } else {
         MailApp.sendEmail({
