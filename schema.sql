@@ -46,6 +46,11 @@ create table if not exists public.organizations (
   updated_at timestamptz not null default now()
 );
 
+-- Existing databases may already have organizations without slug.
+-- Keep this migration idempotent so rerunning schema.sql upgrades them safely.
+alter table public.organizations
+  add column if not exists slug text;
+
 create unique index if not exists organizations_slug_uq
   on public.organizations(slug) where slug is not null;
 
@@ -236,14 +241,14 @@ create table if not exists public.reports_evidence (
 -- ============================================================
 -- 5. HARDENED AUTHORIZATION HELPERS
 -- ============================================================
-create or replace function public.is_org_member(p_org uuid)
+create or replace function public.is_org_member(target_org uuid)
 returns boolean
 language sql stable security definer
 set search_path = ''
 as $$
   select exists(
     select 1 from public.organization_memberships m
-    where m.organization_id=p_org
+    where m.organization_id=target_org
       and m.user_id=(select auth.uid())
       and m.status='active'
   );
