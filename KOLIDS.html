@@ -839,7 +839,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='./app.js?v=kolids-v24-campaign-reference';
+    script.src='/app.js?v=kolids-v25-workspace';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);
