@@ -5,8 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f5fbfd" />
-  <meta name="description" content="KOL IDS™ — Decision Intelligence Workspace" />
-  <title>KOL IDS™ — Intelligence Workspace</title>
+  <meta name="description" content="KOL IDS™ — private creator decision intelligence workspace by T POP CONNECTS." />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <meta name="googlebot" content="noindex,nofollow,noarchive" />
+  <link rel="canonical" href="https://tpopconnects.com/" />
+  <meta property="og:title" content="KOL IDS™ — Creator Decision Intelligence" />
+  <meta property="og:description" content="Private KOL IDS™ workspace by T POP CONNECTS." />
+  <meta property="og:url" content="https://tpopconnects.com/" />
+  <title>KOL IDS™ — Creator Decision Intelligence | T POP CONNECTS</title>
 
   <!--
     KOL IDS GitHub Workspace
@@ -567,7 +573,10 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
       PAYMENT_URL_3M: '',
       PAYMENT_URL_6M: '',
       PAYMENT_URL_12M: '',
-      TRIAL_URL: 'https://docs.google.com/forms/d/e/1FAIpQLScv-WC7h4CiyZ0EPm-_uTf-fhTSjUR5nXC9mC9cvWt0XknoNA/viewform'
+      TRIAL_URL: '',
+      PAYMENT_FORM_URL: '',
+      CLIENT_SIGNUP_URL: 'https://xdmtuoyeyhkiwiozaut.supabase.co/functions/v1/client-sign-up',
+      WORKSPACE_URL: ''
     };
   </script>
   <script>
@@ -660,10 +669,70 @@ function auth(mode='login', notice=''){
   document.getElementById('entry-trial')?.addEventListener('click',()=>openCommercialModal('trial'));
   document.querySelectorAll('.plan-card').forEach(btn=>btn.addEventListener('click',()=>openOrderForm(btn.dataset.plan||'')));
 
-  function openOrderForm(plan){
-    const u=String(C.ORDER_FORM_URL||'').trim();
-    if(!u){toast('Order form is not configured yet.','error');return;}
-    window.open(u,'_blank','noopener,noreferrer');
+  function openOrderForm(plan){ openSignupModal(plan || 'PLAN_3M'); }
+  function planCode(plan){ return plan==='3 Months'?'PLAN_3M':plan==='6 Months'?'PLAN_6M':plan==='12 Months'?'PLAN_12M':'TRIAL_7'; }
+  function planLabel(code){ return ({TRIAL_7:'7-Day Trial',PLAN_3M:'3 Months',PLAN_6M:'6 Months',PLAN_12M:'12 Months'})[code]||code; }
+  function openSignupModal(plan){
+    closeCommercialModal();
+    const code=planCode(plan), label=planLabel(code), isTrial=code==='TRIAL_7';
+    const m=document.createElement('div');m.id='kolIdsSignupModal';m.className='commercial-modal';
+    m.innerHTML=`<div class="commercial-modal-card" role="dialog" aria-modal="true" aria-labelledby="signup-title">
+      <div class="commercial-modal-head"><div><span class="modal-kicker">KOL IDS · CREATE ACCOUNT</span><h2 id="signup-title">Create your ${esc(label)} account</h2><p>${isTrial?'Your 7-day trial is activated immediately after account creation.':'Your account and organization are created now. Paid workspace access is activated after payment confirmation.'}</p></div><button type="button" class="modal-close" aria-label="Close">×</button></div>
+      <form id="kolIdsSignupForm" class="kol-signup-form">
+        <label>Work email<input id="signup-email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
+        <label>Full name<input id="signup-name" type="text" required autocomplete="name" placeholder="Your name"></label>
+        <label>Organization / company<input id="signup-company" type="text" autocomplete="organization" placeholder="Company name"></label>
+        <label>Password<input id="signup-password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"></label>
+        <div class="signup-plan"><span>SELECTED PLAN</span><b>${esc(label)}</b><small>${isTrial?'7 days · 1 seat · FREE':'Organization workspace · payment required before activation'}</small></div>
+        <div id="signup-status" class="entry-status" aria-live="polite"></div>
+        <div class="access-actions"><button class="entry-primary" id="signup-submit" type="submit">Create Account →</button><button class="entry-ghost" type="button" id="signup-back">Back</button></div>
+      </form>
+    </div>`;
+    document.body.appendChild(m);requestAnimationFrame(()=>m.classList.add('show'));
+    const close=()=>m.remove();
+    m.querySelector('.modal-close')?.addEventListener('click',close);
+    m.querySelector('#signup-back')?.addEventListener('click',()=>{m.remove();openCommercialModal(isTrial?'trial':'plans')});
+    m.addEventListener('click',e=>{if(e.target===m)close()});
+    m.querySelector('#kolIdsSignupForm')?.addEventListener('submit',async e=>{
+      e.preventDefault();
+      const status=m.querySelector('#signup-status'), submit=m.querySelector('#signup-submit');
+      const email=String(m.querySelector('#signup-email')?.value||'').trim().toLowerCase();
+      const name=String(m.querySelector('#signup-name')?.value||'').trim();
+      const company=String(m.querySelector('#signup-company')?.value||'').trim();
+      const password=String(m.querySelector('#signup-password')?.value||'');
+      const set=(msg,type='busy')=>{if(status){status.className='entry-status '+type;status.textContent=msg}};
+      if(!email||!name||password.length<8){set('Please complete email, name and an 8+ character password.','bad');return}
+      submit.disabled=true;set('Creating secure KOL IDS account and organization…','busy');
+      try{
+        const r=await fetch(String(C.CLIENT_SIGNUP_URL||'').trim(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name,organization_name:company,plan:code})});
+        const data=await r.json().catch(()=>({}));
+        if(!r.ok||!data.ok) throw new Error(data.error||'Account provisioning failed');
+        const login=await sb.auth.signInWithPassword({email,password});
+        if(login.error) throw login.error;
+        if(isTrial){
+          set('Account created. Trial activated. Opening your workspace…','good');
+          launchWorkspace();
+        }else{
+          const orderNo=String(data.order?.order_number||'created');
+          set(`Account created. Order ${orderNo} is pending payment approval. Submit your payment proof, then we will approve access.`,'good');
+          submit.textContent='Account Created';
+          submit.disabled=true;
+          const actions=m.querySelector('.access-actions');
+          if(actions){
+            const pay=document.createElement('button');
+            pay.type='button'; pay.className='entry-primary'; pay.textContent='Submit Payment Proof →';
+            pay.onclick=()=>{
+              const u=String(C.PAYMENT_FORM_URL||'').trim();
+              if(!u){set('Payment proof form is not configured yet. Please contact support.','bad');return;}
+              window.open(u,'_blank','noopener,noreferrer');
+            };
+            actions.appendChild(pay);
+            const back=document.createElement('button');back.type='button';back.className='entry-ghost';back.textContent='Go to Login';back.onclick=()=>{m.remove();auth('login',`Order ${orderNo} is pending payment approval.`)};
+            actions.appendChild(back);
+          }
+        }
+      }catch(err){set(err.message||'Could not create the account.','bad');submit.disabled=false}
+    });
   }
   function closeCommercialModal(){let m=document.getElementById('kolIdsCommercialModal');if(m)m.remove();}
   function openCommercialModal(mode='trial'){
@@ -686,11 +755,7 @@ function auth(mode='login', notice=''){
     document.body.appendChild(m);requestAnimationFrame(()=>m.classList.add('show'));
     m.querySelector('.modal-close')?.addEventListener('click',closeCommercialModal);
     m.addEventListener('click',e=>{if(e.target===m)closeCommercialModal()});
-    m.querySelector('[data-trial]')?.addEventListener('click',()=>{
-      const u=String(C.TRIAL_URL||C.ORDER_FORM_URL||'').trim();
-      if(!u){toast('Trial form is not configured yet.','error');return;}
-      window.open(u,'_blank','noopener,noreferrer');
-    });
+    m.querySelector('[data-trial]')?.addEventListener('click',()=>openSignupModal('TRIAL_7'));
     m.querySelectorAll('[data-order]').forEach(b=>b.addEventListener('click',()=>openOrderForm(b.dataset.order||'')));
   }
 
@@ -725,26 +790,50 @@ function auth(mode='login', notice=''){
 function renderEntryDemo(){const host=document.getElementById('demo-result');if(!host)return;const data=[['Creator A',92,88,94,'STRONG CONSIDER','High campaign fit + strong commercial efficiency + high evidence confidence.'],['Creator B',87,73,82,'CONSIDER','Strong audience/content alignment, but efficiency evidence is less certain.'],['Creator C',76,91,68,'REVIEW','Commercially attractive, but fit evidence needs additional validation.'],['Creator D',61,59,74,'NOT PRIORITY','Lower campaign fit and weaker efficiency signal.']];host.innerHTML=`<div class="demo-logic"><div><span>DECISION SIGNAL</span><b>Fit + Efficiency</b></div><div><span>EVIDENCE</span><b>Weighted</b></div><div><span>CONFIDENCE</span><b>Separate</b></div><div><span>OUTPUT</span><b>Action</b></div></div><p class="demo-explain">The score is not the recommendation by itself. KOL IDS combines decision signals, evidence quality, confidence and risk to explain what should happen next.</p>${data.map(x=>`<div class="demo-row"><strong>${x[0]}</strong><span>${x[1]} Fit</span><span>${x[2]} Eff.</span><span>${x[3]} Conf.</span><b>${x[4]}</b></div><div class="demo-why">${x[5]}</div>`).join('')}<div class="demo-point"><b>The point:</b>&nbsp; KOL IDS does not only rank creators. It explains the decision.</div>`;}
 
 async function boot(){
-  if(!sb){root.innerHTML='<div class="setup"><h1>KOL IDS</h1><p>Configure config.js before deployment.</p></div>';return}
+  if(!sb){root.innerHTML='<div class="setup"><h1>KOL IDS</h1><p>Configure Supabase before deployment.</p></div>';return}
   let {data:{session}}=await sb.auth.getSession();
   S.session=session;
   if(!session){auth();return}
   showWorkspaceProcessing();
   try{
     setWorkspaceProgress(1,'Secure access','Verified account session');
-    let r=await sb.rpc('bootstrap_workspace',{p_name:null});
+    const r=await sb.rpc('bootstrap_workspace',{p_name:null});
     if(r.error)throw r.error;
-    setWorkspaceProgress(2,'Workspace','Loading private workspace');
-    await load();
-    setWorkspaceProgress(3,'Context','Loading saved campaign and intelligence context');
-    await new Promise(resolve=>setTimeout(resolve,220));
+    const ctx=r.data||{};
+    setWorkspaceProgress(2,'Entitlement','Checking plan, subscription and seats');
+    if(!ctx.access_granted){
+      if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
+      const reason=String(ctx.access_reason||'NO_ACTIVE_SUBSCRIPTION');
+      root.innerHTML=`<div class="entry-page"><div class="entry-shell"><div class="entry-heading"><span class="entry-eyebrow">KOL IDS™ · ACCESS CONTROL</span><h1>Account verified — workspace access is not active yet</h1><p>${esc(reason==='PAYMENT_PENDING'?'Your account is ready. Complete payment and wait for payment approval; your same account and organization will then open the workspace.':reason==='SUBSCRIPTION_EXPIRED'?'Your subscription has expired. Renew the organization plan to continue analysis.':'Your account does not currently have an active KOL IDS subscription.')}</p><div class="access-actions"><button class="entry-primary" id="go-login" type="button">Back to Login</button><button class="entry-ghost" id="go-home" type="button">T POP Connects</button></div></div></div></div>`;
+      document.getElementById('go-login')?.addEventListener('click',()=>{sb.auth.signOut();auth()});
+      document.getElementById('go-home')?.addEventListener('click',()=>window.location.href='https://tpopconnects.com/');
+      return;
+    }
+    setWorkspaceProgress(3,'Workspace','Opening your private Creator Intelligence workspace');
+    await new Promise(resolve=>setTimeout(resolve,180));
     if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
-    render();
+    launchWorkspace();
   }catch(e){
+    if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
     root.innerHTML='';
-    auth('login',e.message||'We could not open the workspace. Please sign in again.');
+    auth('login',e.message||'We could not verify workspace access. Please sign in again.');
   }
 }
+
+async function launchWorkspace(){
+  if(window.__KOL_IDS_WORKSPACE_LOADING__) return;
+  window.__KOL_IDS_WORKSPACE_LOADING__=true;
+  if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
+  root.innerHTML='<div class="processing-page"><div class="processing-box"><div class="entry-eyebrow">KOL IDS™ · SECURE WORKSPACE</div><h1>Opening your intelligence workspace</h1><p>Access verified. Loading your private workspace in this page…</p><div class="processing-live"><span class="processing-spinner"></span><div><b>LOADING WORKSPACE…</b><small>Your account, organization and plan are being loaded</small></div></div></div></div>';
+  if(!document.querySelector('script[data-kol-ids-app]')){
+    const script=document.createElement('script');
+    script.src='./app.js';
+    script.async=false;
+    script.dataset.kolIdsApp='1';
+    document.body.appendChild(script);
+  }
+}
+
 function showWorkspaceProcessing(){root.innerHTML=`<div class="processing-page"><div class="processing-box"><div class="entry-eyebrow">KOL IDS™ · SECURE WORKSPACE</div><h1>Preparing your intelligence workspace</h1><p id="processing-message">Connecting to your private workspace…</p><div class="processing-live"><span class="processing-spinner"></span><div><b id="processing-title">PROCESSING…</b><small id="processing-detail">Verifying secure access</small></div><strong id="processing-elapsed">0s</strong></div><div class="processing-track"><div id="processing-bar"></div></div><div class="processing-hint"><span class="status-dot"></span><b>System is working</b><span>Please wait — do not close this page</span></div><div class="processing-steps"><div class="processing-step active" id="processing-step-1"><i>1</i><div><b>Secure access</b><small>Verifying secure access…</small></div><span>Processing</span></div><div class="processing-step" id="processing-step-2"><i>2</i><div><b>Workspace</b><small>Waiting for workspace…</small></div><span>Waiting</span></div><div class="processing-step" id="processing-step-3"><i>3</i><div><b>Context</b><small>Waiting for saved context…</small></div><span>Waiting</span></div></div></div></div>`;let started=Date.now();window.__KOL_IDS_PROCESS_TIMER__=setInterval(()=>{const e=document.getElementById('processing-elapsed');if(e)e.textContent=Math.max(0,Math.floor((Date.now()-started)/1000))+'s'},250)}
 function setWorkspaceProgress(n,title,detail){for(let i=1;i<=3;i++){const el=document.getElementById('processing-step-'+i);if(!el)continue;el.classList.toggle('active',i===n);el.classList.toggle('done',i<n);const st=el.querySelector('span');if(st)st.textContent=i<n?'Complete':i===n?'Processing':'Waiting';const sm=el.querySelector('small');if(sm)sm.textContent=i<n?'Complete':i===n?detail:'Waiting for '+(i===2?'workspace':'saved context')+'…'}const t=document.getElementById('processing-title');const d=document.getElementById('processing-detail');const m=document.getElementById('processing-message');const bar=document.getElementById('processing-bar');if(t)t.textContent=title.toUpperCase();if(d)d.textContent=detail;if(m)m.textContent=detail+'…';if(bar)bar.style.width=((n/3)*100)+'%';}
 if(sb) sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_OUT'){S.session=null;auth()}});
@@ -872,6 +961,10 @@ boot();
 }
 </style>
 
+
+<style id="KOL_IDS_ACCOUNT_SIGNUP_BACKEND_V2">
+.kol-signup-form{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}.kol-signup-form label{display:grid;gap:6px;font-size:10px;font-weight:900;letter-spacing:.06em;color:#34434a}.kol-signup-form input{height:52px;border:1px solid #d4e6eb;border-radius:11px;padding:0 14px;background:#fff;color:#111}.kol-signup-form input:focus{outline:none;border-color:#71cfe5;box-shadow:0 0 0 3px rgba(113,207,229,.14)}.signup-plan{grid-column:1/-1;padding:13px 14px;border:1px solid #dfeaec;background:#f7fcfd;border-radius:12px}.signup-plan span,.signup-plan small{display:block;color:#7a858a;font-size:9px}.signup-plan b{display:block;font-size:15px;margin:4px 0}.kol-signup-form .entry-status{grid-column:1/-1;min-height:22px}.kol-signup-form .access-actions{grid-column:1/-1}.kol-signup-form .access-actions .entry-primary{margin-right:auto}@media(max-width:700px){.kol-signup-form{grid-template-columns:1fr}.signup-plan,.kol-signup-form .entry-status,.kol-signup-form .access-actions{grid-column:1}}
+</style>
 </html>
 <style id="KOL_IDS_REFERENCE_MATCH_V3">
 /* Exact visual adjustments requested from the supplied reference.
