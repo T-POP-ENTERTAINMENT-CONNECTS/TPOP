@@ -800,7 +800,9 @@ function auth(mode='login', notice=''){
       const result=await sb.auth.signInWithPassword({email:userEmail,password:userPassword});
       if(result.error)throw result.error;
       S.session=result.data.session;
-      await boot();
+      // Public product page stays at /KOLIDS. After successful sign-in,
+      // move the authenticated user into the private 7-Step workspace.
+      window.location.assign('/KOLIDSworkspace');
     }catch(x){
       setStatus(x.message||'Authentication failed. Check your Email and Password.','bad');
       setBusy(false);
@@ -815,6 +817,12 @@ async function boot(){
   const {data:{session}}=await sb.auth.getSession();
   S.session=session;
   if(!session){auth();return}
+  // /KOLIDS is the public product / pricing / trial / sign-in page.
+  // An already-authenticated user belongs in the private workspace.
+  if(window.location.pathname==='/KOLIDS' || window.location.pathname==='/KOLIDS.html'){
+    window.location.assign('/KOLIDSworkspace');
+    return;
+  }
   try{
     const r=await sb.rpc('bootstrap_workspace',{p_name:null});
     if(r.error)throw r.error;
