@@ -682,7 +682,7 @@ function auth(mode='login', notice=''){
         <label>Work email<input id="signup-email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
         <label>Full name<input id="signup-name" type="text" required autocomplete="name" placeholder="Your name"></label>
         <label>Organization / company<input id="signup-company" type="text" autocomplete="organization" placeholder="Company name"></label>
-        <label>Password<input id="signup-password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"></label>
+        <label>Password<div class="signup-password-wrap"><input id="signup-password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="signup-password-toggle" id="signup-view-password" aria-pressed="false">Show</button></div></label>
         <div class="signup-plan"><span>SELECTED PLAN</span><b>${esc(label)}</b><small>${isTrial?'7 days · 1 seat · FREE':'Organization workspace · payment required before activation'}</small></div>
         <div id="signup-status" class="entry-status" aria-live="polite"></div>
         <div class="access-actions"><button class="entry-primary" id="signup-submit" type="submit">Create Account →</button><button class="entry-ghost" type="button" id="signup-back">Back</button></div>
@@ -693,6 +693,16 @@ function auth(mode='login', notice=''){
     m.querySelector('.modal-close')?.addEventListener('click',close);
     m.querySelector('#signup-back')?.addEventListener('click',()=>{m.remove();openCommercialModal(isTrial?'trial':'plans')});
     m.addEventListener('click',e=>{if(e.target===m)close()});
+    m.querySelector('#signup-view-password')?.addEventListener('click',()=>{
+      const input=m.querySelector('#signup-password');
+      const btn=m.querySelector('#signup-view-password');
+      if(!input||!btn)return;
+      const show=input.type==='password';
+      input.type=show?'text':'password';
+      btn.textContent=show?'Hide':'Show';
+      btn.setAttribute('aria-pressed',show?'true':'false');
+      input.focus();
+    });
     m.querySelector('#kolIdsSignupForm')?.addEventListener('submit',async e=>{
       e.preventDefault();
       const status=m.querySelector('#signup-status'), submit=m.querySelector('#signup-submit');
@@ -702,11 +712,23 @@ function auth(mode='login', notice=''){
       const password=String(m.querySelector('#signup-password')?.value||'');
       const set=(msg,type='busy')=>{if(status){status.className='entry-status '+type;status.textContent=msg}};
       if(!email||!name||password.length<8){set('Please complete email, name and an 8+ character password.','bad');return}
-      submit.disabled=true;set('Creating secure KOL IDS account and organization…','busy');
+      submit.disabled=true;set('Creating your secure KOL IDS account…','busy');
       try{
-        const r=await fetch(String(C.CLIENT_SIGNUP_URL||'').trim(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name,organization_name:company,plan:code})});
-        const data=await r.json().catch(()=>({}));
-        if(!r.ok||!data.ok) throw new Error(data.error||'Account provisioning failed');
+        const endpoint=String(C.CLIENT_SIGNUP_URL||'').trim();
+        if(!endpoint) throw new Error('Account service is not configured yet.');
+        const controller=new AbortController();
+        const timer=setTimeout(()=>controller.abort(),20000);
+        let r;
+        try{
+          r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name,organization_name:company,plan:code}),signal:controller.signal});
+        }catch(fetchErr){
+          if(fetchErr?.name==='AbortError') throw new Error('Account creation timed out. Please try again.');
+          throw new Error('Unable to reach the account service. Please check your connection and try again.');
+        }finally{clearTimeout(timer)}
+        const raw=await r.text();
+        let data={};
+        try{data=raw?JSON.parse(raw):{}}catch(_){data={}}
+        if(!r.ok||!data.ok) throw new Error(data.error||`Account creation failed (${r.status||'unknown'}). Please try again.`);
         const login=await sb.auth.signInWithPassword({email,password});
         if(login.error) throw login.error;
         if(isTrial){
@@ -1089,6 +1111,15 @@ boot();
 
 <style id="KOL_IDS_ACCOUNT_SIGNUP_BACKEND_V2">
 .kol-signup-form{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}.kol-signup-form label{display:grid;gap:6px;font-size:10px;font-weight:900;letter-spacing:.06em;color:#34434a}.kol-signup-form input{height:52px;border:1px solid #d4e6eb;border-radius:11px;padding:0 14px;background:#fff;color:#111}.kol-signup-form input:focus{outline:none;border-color:#71cfe5;box-shadow:0 0 0 3px rgba(113,207,229,.14)}.signup-plan{grid-column:1/-1;padding:13px 14px;border:1px solid #dfeaec;background:#f7fcfd;border-radius:12px}.signup-plan span,.signup-plan small{display:block;color:#7a858a;font-size:9px}.signup-plan b{display:block;font-size:15px;margin:4px 0}.kol-signup-form .entry-status{grid-column:1/-1;min-height:22px}.kol-signup-form .access-actions{grid-column:1/-1}.kol-signup-form .access-actions .entry-primary{margin-right:auto}@media(max-width:700px){.kol-signup-form{grid-template-columns:1fr}.signup-plan,.kol-signup-form .entry-status,.kol-signup-form .access-actions{grid-column:1}}
+</style>
+
+<style id="KOL_IDS_SIGNUP_PASSWORD_V1">
+.signup-password-wrap{position:relative;display:flex;align-items:center}
+.signup-password-wrap input{padding-right:74px!important}
+.signup-password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:#f4fbfd;color:#35636d;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:900;cursor:pointer}
+.signup-password-toggle:hover{background:#e7f8fc}
+.signup-password-toggle:focus-visible{outline:2px solid #71cfe5;outline-offset:2px}
+@media(max-width:700px){.signup-password-toggle{padding:7px 10px}}
 </style>
 </html>
 <style id="KOL_IDS_REFERENCE_MATCH_V3">

@@ -355,7 +355,7 @@
       <form id="contactForm" novalidate>
         <div class="contact-grid">
           <div class="contact-field"><label for="contactName">Name *</label><input id="contactName" name="name" type="text" autocomplete="name" required placeholder="Your name"></div>
-          <div class="contact-field"><label for="contactEmail">Work email *</label><input id="contactEmail" name="email" type="email" autocomplete="email" required placeholder="you@company.com"></div>
+          <div class="contact-field"><label for="contactEmail">Email *</label><input id="contactEmail" name="email" type="email" autocomplete="email" required placeholder="you@example.com"></div>
           <div class="contact-field"><label for="contactCompany">Company / Organization</label><input id="contactCompany" name="company" type="text" autocomplete="organization" placeholder="Company name"></div>
           <div class="contact-field"><label for="contactTopic">What can we help with? *</label><select id="contactTopic" name="topic" required><option value="">Select one</option><option>Partnership</option><option>Entertainment</option><option>Business</option><option>Technology</option><option>Other</option></select></div>
           <div class="contact-field full contact-other" id="contactOtherWrap"><label for="contactOther">Please tell us what you need *</label><input id="contactOther" name="other" type="text" placeholder="Type your request"></div>
@@ -425,17 +425,28 @@
     const data = Object.fromEntries(new FormData(form).entries());
     if (data.topic === 'Other' && !String(data.other || '').trim()) { error.textContent = 'Please tell us what you need.'; otherInput.focus(); return; }
     if (!form.checkValidity()) { form.reportValidity(); return; }
-    const url = String(cfg.CONTACT_WEBAPP_URL || '').trim();
-    if (!url) { error.textContent = 'Contact service is not configured yet. Please email hello@tpopentertainmentconnects.com.'; return; }
     submit.disabled = true;
-    submit.textContent = 'Sending…';
-    const payload = { action:'PUBLIC_CONTACT', name:String(data.name||'').trim(), email:String(data.email||'').trim(), company:String(data.company||'').trim(), topic:String(data.topic||'').trim(), other:String(data.other||'').trim(), message:String(data.message||'').trim(), source:window.location.href };
+    submit.textContent = 'Opening email…';
+    const recipient = 'hello@tpopentertainmentconnects.com';
+    const subject = `[KOL IDS Contact] ${String(data.topic||'General inquiry').trim()}`;
+    const body = [
+      `Name: ${String(data.name||'').trim()}`,
+      `Email: ${String(data.email||'').trim()}`,
+      `Company / Organization: ${String(data.company||'').trim() || 'Not provided'}`,
+      `Topic: ${String(data.topic||'').trim()}`,
+      String(data.other||'').trim() ? `Details: ${String(data.other||'').trim()}` : '',
+      '',
+      'Message:',
+      String(data.message||'').trim(),
+      '',
+      `Source: ${window.location.href}`
+    ].filter(Boolean).join('\n');
     try {
-      await fetch(url, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload), keepalive:true });
+      window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       formWrap.hidden = true;
       success.hidden = false;
     } catch (err) {
-      error.textContent = 'We could not send your message. Please try again or email hello@tpopentertainmentconnects.com.';
+      error.textContent = 'Please email hello@tpopentertainmentconnects.com directly.';
       submit.disabled = false;
       submit.textContent = 'Send message →';
     }
