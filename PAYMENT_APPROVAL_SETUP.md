@@ -39,9 +39,9 @@ Create a small Apps Script project and paste:
 Set Script Properties:
 
 ```text
-KOL_IDS_SUPABASE_URL=https://xdmtuoyeyhkiwiozaut.supabase.co
+KOL_IDS_SUPABASE_URL=https://xdmtuoyeiyhkwiwozaut.supabase.co
 KOL_IDS_PAYMENT_APPROVAL_SECRET=<same value as Supabase Edge Function secret>
-KOL_IDS_PAYMENT_ADMIN_EMAIL=<your admin email>
+KOL_IDS_PAYMENT_ADMIN_EMAILS=tpopentconex@gmail.com,tpopconnectsbiz@gmail.com
 ```
 
 Run:
@@ -57,7 +57,7 @@ Then deploy the project as a Web App:
 
 After deployment, run `KOL_IDS_PAYMENT_SETUP()` once more so the deployed Web App URL is stored.
 
-The function creates the payment-proof Google Form and its form-submit trigger automatically.
+The function creates the payment-proof Google Form and its form-submit trigger automatically. Both configured admin emails receive the payment-review email with the same APPROVE / REJECT links. Either admin can act independently; the second admin does not need to approve.
 
 ### C. Frontend
 Copy the generated Google Form published URL into:
