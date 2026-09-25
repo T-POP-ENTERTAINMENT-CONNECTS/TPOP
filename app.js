@@ -272,7 +272,19 @@ th,td{padding:13px 12px}
 .kol-brand small{opacity:.92!important}
 @media(max-width:900px){
   .kol-side{width:0!important;padding:22px 0 16px!important;transform:translateX(-100%);overflow:hidden;box-shadow:none!important}
-  .kol-side.open{width:280px!important;padding:22px 14px 16px!important;transform:translateX(0);overflow-y:auto;box-shadow:20px 0 60px rgba(0,0,0,.22)!important}
+  .kol-side.open{width:280px!important;padding:24px 16px 18px!important;transform:translateX(0);overflow-y:auto;box-shadow:20px 0 60px rgba(0,0,0,.22)!important}
+  .kol-side.open .kol-brand{padding:8px 12px 28px!important;justify-content:flex-start!important;align-items:flex-start!important}
+  .kol-side.open .kol-brand b{display:block!important;font-size:17px!important;line-height:1.15!important;white-space:nowrap!important}
+  .kol-side.open .kol-brand small{display:block!important;font-size:8px!important;line-height:1.45!important;letter-spacing:.16em!important;white-space:nowrap!important}
+  .kol-side.open .kol-nav{width:100%!important;gap:5px!important}
+  .kol-side.open .kol-nav button{width:100%!important;min-height:54px!important;justify-content:flex-start!important;align-items:center!important;text-align:left!important;padding:9px 12px!important;gap:12px!important;border-radius:12px!important}
+  .kol-side.open .kol-nav .nav-icon{display:grid!important;flex:0 0 27px!important;width:27px!important;height:27px!important}
+  .kol-side.open .kol-nav .nav-copy{display:flex!important;min-width:0!important;flex:1 1 auto!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:3px!important;line-height:1.2!important;overflow:hidden!important}
+  .kol-side.open .kol-nav .nav-copy strong{display:block!important;width:100%!important;font-size:11px!important;line-height:1.25!important;font-weight:850!important;white-space:normal!important;text-align:left!important}
+  .kol-side.open .kol-nav .nav-copy small{display:block!important;width:100%!important;font-size:9px!important;line-height:1.35!important;color:#85838a!important;white-space:normal!important;text-align:left!important}
+  .kol-side.open .kol-nav button.active .nav-copy small{color:#b8c0c4!important}
+  .kol-side.open .side-spacer{min-height:18px!important}
+  .kol-side.open .side-foot{margin-top:12px!important}
   .kol-main{margin-left:0!important;width:100%;min-width:0}
   .kol-top{padding:0 14px!important;height:76px!important}
   .top-title-wrap{min-width:0}
@@ -299,6 +311,10 @@ th,td{padding:13px 12px}
 }
 @media(max-width:560px){
   .kol-side.open{width:min(286px,86vw)!important}
+  .kol-side.open .kol-brand{padding-left:10px!important;padding-right:10px!important}
+  .kol-side.open .kol-nav button{padding-left:10px!important;padding-right:10px!important}
+  .kol-side.open .kol-nav .nav-copy strong{font-size:10.5px!important}
+  .kol-side.open .kol-nav .nav-copy small{font-size:8.5px!important}
   .kol-top h1{font-size:22px!important}
   .kol-top p{font-size:10px!important}
   .mobile-menu{padding:9px 11px!important}
