@@ -35,3 +35,8 @@ For a new Supabase project, `supabase/schema.sql` is the consolidated schema.
 For an existing production project, run the dated migrations in `supabase/migrations/` in filename order.
 
 Never place service-role or webhook secrets in browser code.
+
+
+## GitHub Pages routing
+- Deploy the CONTENTS of this folder as the Pages site root (do not deploy the outer ZIP folder itself).
+- `/KOLIDS/` is `KOLIDS/index.html`; `/KOLIDSworkspace/` is `KOLIDSworkspace/index.html`. No `_redirects` or duplicate `KOLIDS.html` is required.
