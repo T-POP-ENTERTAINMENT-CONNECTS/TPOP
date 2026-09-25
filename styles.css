@@ -270,3 +270,35 @@
   .modal-backdrop#contactModal .contact-modal .modal-actions{flex-direction:column-reverse}
   .modal-backdrop#contactModal .contact-modal .modal-actions .btn{width:100%}
 }
+
+/* V26 — 7-Step production workspace cleanup */
+.kol-nav .nav-icon{
+  display:grid!important;
+  place-items:center;
+  width:25px!important;
+  height:25px!important;
+  flex:0 0 25px!important;
+  border:1px solid #e1e6e9;
+  border-radius:7px;
+  background:#f7f9fa;
+  color:#7a858b;
+  font-size:8px!important;
+  font-weight:900;
+  letter-spacing:.02em;
+}
+.kol-nav button.active .nav-icon{
+  background:#dff5ff;
+  border-color:#bce6f3;
+  color:#1f6f86;
+}
+.kol-nav button .nav-copy{min-width:0}
+.workflow-page .hero{margin-bottom:14px}
+.workflow-page .card{overflow:visible}
+.workflow-page .section-head{gap:12px}
+.workflow-page .sub{line-height:1.55}
+.workflow-page .bottom-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.workflow-page .bottom-actions .btn{min-height:38px}
+@media(max-width:760px){
+  .kol-nav .nav-icon{display:grid!important}
+  .workflow-page .bottom-actions .btn{flex:1 1 140px}
+}

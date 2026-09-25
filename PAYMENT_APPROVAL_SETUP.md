@@ -34,7 +34,7 @@ The function also requires the existing service-role/secret key already used by 
 ### B. Google Apps Script
 Create a small Apps Script project and paste:
 
-`integrations/google-apps-script/KOL_IDS_PAYMENT_APPROVAL.gs`
+`legacy-appscript/KOL_IDS_PAYMENT_APPROVAL.gs`
 
 Set Script Properties:
 
@@ -62,6 +62,7 @@ The function creates the payment-proof Google Form and its form-submit trigger a
 ### C. Frontend
 Copy the generated Google Form published URL into:
 
+- `config.js` → `PAYMENT_FORM_URL`
 - `KOLIDS.html` → `window.KOL_IDS_CONFIG.PAYMENT_FORM_URL`
 
 Then redeploy the site.

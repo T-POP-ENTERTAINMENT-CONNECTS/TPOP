@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /app.js
+Disallow: /config.js
 Disallow: /supabase/
 Sitemap: https://tpopconnects.com/sitemap.xml
