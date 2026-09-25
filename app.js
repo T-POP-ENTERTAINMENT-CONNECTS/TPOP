@@ -285,6 +285,11 @@ th,td{padding:13px 12px}
   .kol-side.open .kol-nav button.active .nav-copy small{color:#b8c0c4!important}
   .kol-side.open .side-spacer{min-height:18px!important}
   .kol-side.open .side-foot{margin-top:12px!important}
+  .kol-side.open .side-foot .org{display:block!important;font-size:10px!important;line-height:1.25!important;color:#fff!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .kol-side.open .side-foot .meta{display:block!important;font-size:8.5px!important;line-height:1.35!important;color:#a9a7ad!important;margin-top:4px!important;white-space:nowrap!important}
+  .kol-side.open .side-actions{display:flex!important;gap:6px!important;margin-top:11px!important}
+  .kol-side.open .side-actions button{display:block!important;flex:1 1 auto!important;font-size:9px!important;line-height:1.2!important;padding:8px 9px!important;color:#f0eef1!important;background:#222126!important;border:1px solid #303035!important;border-radius:8px!important}
+  .kol-side.open .side-actions button:before{content:none!important}
   .kol-main{margin-left:0!important;width:100%;min-width:0}
   .kol-top{padding:0 14px!important;height:76px!important}
   .top-title-wrap{min-width:0}
