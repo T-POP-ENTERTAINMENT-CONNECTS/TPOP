@@ -27,3 +27,10 @@ This package does not replace or alter the Supabase schema. The existing `audien
 6. Step 05: save one Digital or Offline performance record.
 7. Step 06: save Business Impact.
 8. Step 07: verify the report and PDF export.
+
+## 2026-09-25 — Non-linear 7-Step navigation
+- Removed all sidebar step navigation blockers.
+- Users can open Step 01–07 in any order at any time.
+- Step navigation no longer requires campaign, audience, creator, analysis, performance, or impact completion.
+- Continue buttons no longer act as workflow locks; data validation remains on the actual Save / Calculate actions.
+- Empty states explain missing context without preventing navigation.
