@@ -675,6 +675,24 @@ function auth(mode='login', notice=''){
   function openSignupModal(plan){
     closeCommercialModal();
     const code=planCode(plan), label=planLabel(code), isTrial=code==='TRIAL_7';
+    const billingFields=isTrial?'':`<section class="signup-billing" id="signup-billing-section">
+      <div class="signup-billing-head"><div><span>BILLING / DOCUMENT REQUEST</span><b>Do you need a quotation, tax invoice or receipt?</b></div><small>We collect these details before payment so your billing document can be prepared correctly.</small></div>
+      <div class="signup-billing-docs">
+        <label><input type="checkbox" name="billingDoc" value="QUOTATION"> Quotation</label>
+        <label><input type="checkbox" name="billingDoc" value="TAX_INVOICE"> Tax Invoice</label>
+        <label><input type="checkbox" name="billingDoc" value="RECEIPT"> Receipt</label>
+      </div>
+      <div class="signup-billing-details" id="signup-billing-details" hidden>
+        <div class="signup-billing-type"><span>Billing entity</span><label><input type="radio" name="billingType" value="INDIVIDUAL" checked> Individual / บุคคลธรรมดา</label><label><input type="radio" name="billingType" value="JURISTIC"> Juristic / นิติบุคคล</label></div>
+        <div class="signup-billing-grid">
+          <label>Legal name / ชื่อสำหรับออกเอกสาร<input id="billing-legal-name" type="text" placeholder="Full legal name / company legal name"></label>
+          <label>Tax ID / เลขประจำตัวผู้เสียภาษี<input id="billing-tax-id" type="text" inputmode="numeric" placeholder="Optional for individual"></label>
+          <label id="billing-branch-wrap" hidden>Branch / สาขา<input id="billing-branch" type="text" placeholder="สำนักงานใหญ่ / Branch number"></label>
+          <label>Phone / โทรศัพท์<input id="billing-phone" type="tel" placeholder="08x-xxx-xxxx"></label>
+          <label class="full">Billing address / ที่อยู่สำหรับออกเอกสาร<textarea id="billing-address" rows="3" placeholder="Full billing address"></textarea></label>
+        </div>
+      </div>
+    </section>`;
     const m=document.createElement('div');m.id='kolIdsSignupModal';m.className='commercial-modal';
     m.innerHTML=`<div class="commercial-modal-card" role="dialog" aria-modal="true" aria-labelledby="signup-title">
       <div class="commercial-modal-head"><div><span class="modal-kicker">KOL IDS · CREATE ACCOUNT</span><h2 id="signup-title">Create your ${esc(label)} account</h2><p>${isTrial?'Your 7-day trial is activated immediately after account creation.':'Your account and organization are created now. Paid workspace access is activated after payment confirmation.'}</p></div><button type="button" class="modal-close" aria-label="Close">×</button></div>
@@ -684,6 +702,7 @@ function auth(mode='login', notice=''){
         <label>Organization / company<input id="signup-company" type="text" autocomplete="organization" placeholder="Company name"></label>
         <label>Password<div class="signup-password-wrap"><input id="signup-password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="signup-password-toggle" id="signup-view-password" aria-pressed="false">Show</button></div></label>
         <div class="signup-plan"><span>SELECTED PLAN</span><b>${esc(label)}</b><small>${isTrial?'7 days · 1 seat · FREE':'Organization workspace · payment required before activation'}</small></div>
+        ${billingFields}
         <div id="signup-status" class="entry-status" aria-live="polite"></div>
         <div class="access-actions"><button class="entry-primary" id="signup-submit" type="submit">Create Account →</button><button class="entry-ghost" type="button" id="signup-back">Back</button></div>
       </form>
@@ -703,6 +722,12 @@ function auth(mode='login', notice=''){
       btn.setAttribute('aria-pressed',show?'true':'false');
       input.focus();
     });
+    if(!isTrial){
+      const docs=[...m.querySelectorAll('input[name="billingDoc"]')],details=m.querySelector('#signup-billing-details'),branch=m.querySelector('#billing-branch-wrap');
+      const syncBilling=()=>{if(details)details.hidden=!docs.some(x=>x.checked)};
+      docs.forEach(x=>x.addEventListener('change',syncBilling));syncBilling();
+      m.querySelectorAll('input[name="billingType"]').forEach(x=>x.addEventListener('change',()=>{if(branch)branch.hidden=x.value!=='JURISTIC'||!x.checked;}));
+    }
     m.querySelector('#kolIdsSignupForm')?.addEventListener('submit',async e=>{
       e.preventDefault();
       const status=m.querySelector('#signup-status'), submit=m.querySelector('#signup-submit');
@@ -711,6 +736,21 @@ function auth(mode='login', notice=''){
       const company=String(m.querySelector('#signup-company')?.value||'').trim();
       const password=String(m.querySelector('#signup-password')?.value||'');
       const set=(msg,type='busy')=>{if(status){status.className='entry-status '+type;status.textContent=msg}};
+      let billing=null;
+      if(!isTrial){
+        const documents=[...m.querySelectorAll('input[name="billingDoc"]:checked')].map(x=>x.value);
+        const billingType=String(m.querySelector('input[name="billingType"]:checked')?.value||'INDIVIDUAL');
+        const legalName=String(m.querySelector('#billing-legal-name')?.value||'').trim();
+        const taxId=String(m.querySelector('#billing-tax-id')?.value||'').trim();
+        const branch=String(m.querySelector('#billing-branch')?.value||'').trim();
+        const phone=String(m.querySelector('#billing-phone')?.value||'').trim();
+        const address=String(m.querySelector('#billing-address')?.value||'').trim();
+        if(documents.length){
+          if(!legalName||!phone||!address){set('Please complete the billing name, phone and billing address.','bad');return}
+          if(billingType==='JURISTIC'&&(!taxId||!branch)){set('For a juristic entity, Tax ID and Branch are required.','bad');return}
+          billing={documents,billingType,legalName,taxId,branch,phone,address};
+        }
+      }
       if(!email||!name||password.length<8){set('Please complete email, name and an 8+ character password.','bad');return}
       submit.disabled=true;set('Creating your secure KOL IDS account…','busy');
       try{
@@ -720,7 +760,7 @@ function auth(mode='login', notice=''){
         const timer=setTimeout(()=>controller.abort(),20000);
         let r;
         try{
-          r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name,organization_name:company,plan:code}),signal:controller.signal});
+          r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:controller.signal});
         }catch(fetchErr){
           if(fetchErr?.name==='AbortError') throw new Error('Account creation timed out. Please try again.');
           throw new Error('Unable to reach the account service. Please check your connection and try again.');
@@ -1722,4 +1762,19 @@ button,input,textarea,select{line-height:1.35;vertical-align:middle}
 #kolIdsSignupModal .entry-ghost{
   color:#070707!important;
 }
+#kolIdsSignupModal .signup-billing{grid-column:1/-1;margin-top:4px;border:1px solid #333;border-radius:14px;padding:15px;background:#111}
+#kolIdsSignupModal .signup-billing-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px}
+#kolIdsSignupModal .signup-billing-head span{display:block;font-size:8px;letter-spacing:.12em;font-weight:950;color:#9a9a94}
+#kolIdsSignupModal .signup-billing-head b{display:block;margin-top:4px;font-size:12px;color:#fff}
+#kolIdsSignupModal .signup-billing-head small{max-width:330px;color:#8f948f;font-size:9px;line-height:1.45}
+#kolIdsSignupModal .signup-billing-docs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+#kolIdsSignupModal .signup-billing-docs label,#kolIdsSignupModal .signup-billing-type label{display:flex;align-items:center;gap:6px;border:1px solid #353535;border-radius:9px;padding:9px;background:#181818;color:#d9d9d4;font-size:9px;font-weight:800}
+#kolIdsSignupModal .signup-billing-details{margin-top:10px;padding-top:10px;border-top:1px solid #303030}
+#kolIdsSignupModal .signup-billing-type{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+#kolIdsSignupModal .signup-billing-type>span{width:100%;font-size:8px;color:#92928c;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
+#kolIdsSignupModal .signup-billing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#kolIdsSignupModal .signup-billing-grid label{font-size:8px;font-weight:900;color:#bfc0ba}
+#kolIdsSignupModal .signup-billing-grid input,#kolIdsSignupModal .signup-billing-grid textarea{display:block;width:100%;margin-top:5px;border:1px solid #3a3a3a;border-radius:8px;background:#171717;color:#fff;padding:9px;font-size:10px;box-sizing:border-box}
+#kolIdsSignupModal .signup-billing-grid .full{grid-column:1/-1}
+@media(max-width:700px){#kolIdsSignupModal .signup-billing-docs,#kolIdsSignupModal .signup-billing-grid{grid-template-columns:1fr}#kolIdsSignupModal .signup-billing-grid .full{grid-column:auto}#kolIdsSignupModal .signup-billing-head{flex-direction:column}}
 </style>
