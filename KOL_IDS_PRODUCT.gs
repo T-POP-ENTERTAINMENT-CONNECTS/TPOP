@@ -6063,7 +6063,25 @@ KOL_IDS_PRODUCT_RUN = function() {
  * COMPATIBILITY EXPORT/OPEN HELPERS
  * Canonical self-service endpoints call these helpers.
  * ================================================== */
+function KOL_IDS_PRODUCT_REQUIRE_PAID_REPORT_EXPORT_() {
+  try {
+    var raw = (typeof KOL_IDS_SAAS_SCOPE_GET_ === 'function') ? KOL_IDS_SAAS_SCOPE_GET_('SESSION') : '';
+    var session = raw ? JSON.parse(raw) : null;
+    if (session && String(session.accessType || '').toUpperCase() === 'TRIAL') {
+      var err = new Error('Report export is a paid feature. Please choose a KOL IDS paid plan to download JSON/CSV. Your 7-day trial data will be preserved.');
+      err.code = 'REPORT_EXPORT_SUBSCRIPTION_REQUIRED';
+      err.upgradeRequired = true;
+      throw err;
+    }
+    return true;
+  } catch (e) {
+    if (e && e.code === 'REPORT_EXPORT_SUBSCRIPTION_REQUIRED') throw e;
+    throw e;
+  }
+}
+
 function KOL_IDS_PRODUCT_UI_EXPORT_REPORT(type, format) {
+  KOL_IDS_PRODUCT_REQUIRE_PAID_REPORT_EXPORT_();
   var report = KOL_IDS_PRODUCT_UI_GET_REPORT();
   var normalizedFormat = String(format || 'JSON').trim().toUpperCase();
   var normalizedType = String(type || 'CURRENT').trim().toUpperCase();
@@ -6077,6 +6095,7 @@ function KOL_IDS_PRODUCT_UI_EXPORT_REPORT(type, format) {
 }
 
 function KOL_IDS_PRODUCT_UI_EXPORT_HISTORY(analysisId) {
+  KOL_IDS_PRODUCT_REQUIRE_PAID_REPORT_EXPORT_();
   var history = KOL_IDS_PRODUCT_UI_GET_HISTORY();
   var id = String(analysisId || '').trim();
   var headers = history.headers || [];

@@ -4928,6 +4928,30 @@ function KOL_IDS_SYSTEM_SAAS_GET_HISTORY() {
 
 
 /* =========================================================
+ * REPORT EXPORT ENTITLEMENT GATE
+ * Trial users may run the product and view results, but may not
+ * download/export report data. Paid plans retain export access.
+ * This gate is server-side so it cannot be bypassed by hiding UI.
+ * ========================================================= */
+function KOL_IDS_SYSTEM_SAAS_REQUIRE_PAID_REPORT_EXPORT_() {
+  try {
+    var raw = (typeof KOL_IDS_SAAS_SCOPE_GET_ === 'function') ? KOL_IDS_SAAS_SCOPE_GET_('SESSION') : '';
+    var session = raw ? JSON.parse(raw) : null;
+    var accessType = session && String(session.accessType || '').toUpperCase();
+    if (accessType === 'TRIAL') {
+      var err = new Error('Report export is a paid feature. Please choose a KOL IDS paid plan to download JSON/CSV. Your 7-day trial data will be preserved.');
+      err.code = 'REPORT_EXPORT_SUBSCRIPTION_REQUIRED';
+      err.upgradeRequired = true;
+      throw err;
+    }
+    return true;
+  } catch (e) {
+    if (e && e.code === 'REPORT_EXPORT_SUBSCRIPTION_REQUIRED') throw e;
+    throw e;
+  }
+}
+
+/* =========================================================
  * 9. EXPORT CURRENT
  * ========================================================= */
 
@@ -4938,6 +4962,7 @@ function KOL_IDS_SYSTEM_SAAS_EXPORT_CURRENT() {
 
 
   KOL_IDS_SYSTEM_SAAS_REQUIRE_CLIENT_();
+  KOL_IDS_SYSTEM_SAAS_REQUIRE_PAID_REPORT_EXPORT_();
 
   return KOL_IDS_PRODUCT_UI_EXPORT_CURRENT();
 
@@ -4960,6 +4985,7 @@ function KOL_IDS_SYSTEM_SAAS_EXPORT_HISTORY(analysisId) {
   try {
 
   KOL_IDS_SYSTEM_SAAS_REQUIRE_CLIENT_();
+  KOL_IDS_SYSTEM_SAAS_REQUIRE_PAID_REPORT_EXPORT_();
   if (!analysisId) throw new Error('Analysis ID is required.');
   return KOL_IDS_PRODUCT_UI_EXPORT_HISTORY(analysisId);
 
