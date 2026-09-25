@@ -568,12 +568,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
     window.KOL_IDS_CONFIG = {
       SUPABASE_URL: 'https://xdmtuoyeiyhkwiwozaut.supabase.co',
       SUPABASE_ANON_KEY: 'sb_publishable_FVjCDqfF1JOu6h_Z8PwEeQ__iNaA0Sh',
-      CLIENT_SIGNIN_URL: 'https://xdmtuoyeiyhkwiwozaut.supabase.co/functions/v1/client-sign-in',
-      ORDER_FORM_URL: 'https://docs.google.com/forms/d/e/1FAIpQLScv-WC7h4CiyZ0EPm-_uTf-fhTSjUR5nXC9mC9cvWt0XknoNA/viewform',
-      PAYMENT_URL_3M: '',
-      PAYMENT_URL_6M: '',
-      PAYMENT_URL_12M: '',
-      TRIAL_URL: '',
       PAYMENT_FORM_URL: '',
       CLIENT_SIGNUP_URL: 'https://xdmtuoyeiyhkwiwozaut.supabase.co/functions/v1/client-sign-up',
       WORKSPACE_URL: ''
@@ -583,7 +577,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 (function(){
 'use strict';
 const C=window.KOL_IDS_CONFIG||{}, root=document.getElementById('app'); let sb=null;
-const S={session:null,org:null,license:null,brands:[],campaigns:[],creators:[],decisions:[],performance:[],outcomes:[],learning:[],page:'dashboard'};
+const S={session:null};
 const ready=C.SUPABASE_URL&&C.SUPABASE_ANON_KEY&&!C.SUPABASE_URL.includes('YOUR_');
 if(ready&&window.supabase) sb=window.supabase.createClient(C.SUPABASE_URL,C.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const esc=x=>String(x??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -816,41 +810,8 @@ async function boot(){
   if(!sb){auth('Supabase is not configured.');return}
   const {data:{session}}=await sb.auth.getSession();
   S.session=session;
-  // /KOLIDS is ALWAYS the public product / pricing / trial / sign-in page.
-  // Never redirect to the workspace just because a session already exists.
-  // The workspace opens only after the user explicitly completes Sign in.
+  // /KOLIDS remains the public entry page. Only an explicit successful sign-in opens the workspace.
   auth();
-  return;
-  try{
-    const r=await sb.rpc('bootstrap_workspace',{p_name:null});
-    if(r.error)throw r.error;
-    const ctx=r.data||{};
-    if(!ctx.access_granted){
-      const reason=String(ctx.access_reason||'NO_ACTIVE_SUBSCRIPTION');
-      root.innerHTML=`<div class="entry-page"><div class="entry-shell"><div class="entry-heading"><span class="entry-eyebrow">KOL IDS™ · ACCESS CONTROL</span><h1>Account verified — workspace access is not active yet</h1><p>${esc(reason==='PAYMENT_PENDING'?'Your account is ready. Complete payment and wait for payment approval; your same account and organization will then open the workspace.':reason==='SUBSCRIPTION_EXPIRED'?'Your subscription has expired. Renew the organization plan to continue analysis.':'Your account does not currently have an active KOL IDS subscription.')}</p><div class="access-actions"><button class="entry-primary" id="go-login" type="button">Back to Login</button><button class="entry-ghost" id="go-home" type="button">T POP Connects</button></div></div></div></div>`;
-      document.getElementById('go-login')?.addEventListener('click',()=>{sb.auth.signOut();auth()});
-      document.getElementById('go-home')?.addEventListener('click',()=>window.location.href='https://tpopconnects.com/');
-      return;
-    }
-    launchWorkspace();
-  }catch(e){
-    root.innerHTML='';
-    auth('login',e.message||'We could not verify workspace access. Please sign in again.');
-  }
-}
-
-async function launchWorkspace(){
-  if(window.__KOL_IDS_WORKSPACE_LOADING__) return;
-  if(window.location.pathname!=='/KOLIDSworkspace') window.history.replaceState({},'', '/KOLIDSworkspace');
-  window.__KOL_IDS_WORKSPACE_LOADING__=true;
-  if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
-  if(!document.querySelector('script[data-kol-ids-app]')){
-    const script=document.createElement('script');
-    script.src='/app.js?v=kolids-v25-workspace';
-    script.async=false;
-    script.dataset.kolIdsApp='1';
-    document.body.appendChild(script);
-  }
 }
 
 if(sb) sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_OUT'){S.session=null;auth()}});
@@ -859,7 +820,6 @@ boot();
 })();
 
   </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"749c9acf4fb64669aab9748edccbdafa","r":1,"spa":2}' crossorigin="anonymous"></script>
 
 
 <style id="KOL_IDS_TRIAL_CARD_RESPONSIVE_FINAL">

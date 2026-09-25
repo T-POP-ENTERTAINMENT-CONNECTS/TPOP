@@ -1,25 +1,15 @@
-# KOL IDS — T POP Connects GitHub build
+# KOL IDS™ Production File Map
 
-## Routing
-- T POP homepage `index.html` now sends every KOL IDS CTA to `./KOLIDS.html` on the same origin.
-- `KOLIDS` is the same-origin public KOL IDS entry point; successful Sign in opens `/KOLIDSworkspace`.
-- No external KOL IDS domain is used.
+### Web
+- `index.html` — T POP CONNECTS public site
+- `KOLIDS.html` — KOL IDS entry, pricing, trial and sign-in
+- `KOLIDSworkspace/index.html` — authenticated workspace shell
+- `app.js` — single workspace application runtime
+- `_redirects` — canonical KOL IDS routes
 
-## Workspace
-- Email + Password / Supabase Auth.
-- Organization workspace bootstrapped through `bootstrap_workspace`.
-- Campaign, Audience, Creator, Decision, Review & Run, Impact and Reports screens.
-- Data is saved to the Supabase tables defined in `supabase/schema.sql`.
-- Creator analysis stores decision records in `creator_decisions`.
-- Owner/Admin seat invitation calls the existing `invite_member` RPC.
+### Supabase
+- `supabase/schema.sql` — consolidated fresh-install schema
+- `supabase/migrations/` — incremental production migrations
+- `supabase/functions/` — production Edge Functions
 
-## Important
-The legacy Apps Script folder is retained as reference/backend logic. The GitHub cloud UI is not a direct execution environment for Apps Script `.gs` files. The cloud runtime uses Supabase tables/RPCs instead.
-
-
-## System Admin Notification / Approval Policy
-- `tpopentconex@gmail.com` and `tpopconnectsbiz@gmail.com` are the configured backend notification/approval accounts for payment review.
-- Both receive the same payment-review notification.
-- Either admin can approve or reject independently.
-- Approval is single-action: both admins do not need to approve the same order.
-- If one admin approves first, a later approval click is safely treated as already processed.
+There is intentionally no duplicate workspace HTML or legacy frontend bundle. Apps Script is isolated to the optional payment-approval integration only.

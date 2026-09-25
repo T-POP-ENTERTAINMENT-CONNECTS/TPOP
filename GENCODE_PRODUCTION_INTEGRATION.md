@@ -1,15 +1,21 @@
-# KOL IDS Gen Code Production Integration
+# KOL IDS™ Gen Code + Attribution
 
-The existing `legacy-appscript/KOL_IDS_GENCODE.gs` remains preserved as the canonical legacy implementation reference.
-The production GitHub/Supabase workspace now uses the same core semantics through `supabase/functions/intelligence-engine` and `public.gen_codes`:
-- one code per selected creator and campaign
-- unique code generation
-- discount type/value
+Production implementation is fully in the Supabase runtime:
+
+- `supabase/functions/intelligence-engine/index.ts`
+- `public.gen_codes`
+- `public.gen_code_attributions`
+- `supabase/migrations/20260925_gencode_attribution.sql`
+
+Supported fields and behavior:
+- one unique code per Creator per Campaign
+- Organization + Campaign + Creator scoping
+- percent / fixed / no discount
 - commission rate
-- validity / expiry
+- validity and expiry
 - attribution window
-- uses, orders, conversions, revenue, new customers, commission fields
-- organization/campaign/creator scoping
-- no fabricated conversions or revenue
-
-Run the included migration `supabase/migrations/20260925_gencode_attribution.sql` in Supabase SQL Editor before using Gen Code generation.
+- Uses / Orders / Conversions / Revenue / New Customers / Commission
+- duplicate order protection
+- attribution-window and expiry validation
+- Gen Code PDF
+- Full Campaign Intelligence PDF
