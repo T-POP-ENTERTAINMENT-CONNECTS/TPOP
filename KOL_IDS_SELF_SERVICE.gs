@@ -423,7 +423,7 @@ function KOL_IDS_SELF_EXPORT_REPORT(type, format) {
     try{ if(typeof KOL_IDS_COMMERCIAL_GET_ACCESS==='function') KOL_IDS_COMMERCIAL_GET_ACCESS(); }catch(ignoreCommercialReconcile){}
     KOL_IDS_SELF_ROUTE_();
     var raw=KOL_IDS_SAAS_SCOPE_GET_('SESSION'),session=raw?JSON.parse(raw):null;
-    if(session&&String(session.accessType||'').toUpperCase()==='TRIAL') var err = new Error('Report export is a paid feature. Please choose a KOL IDS paid plan to download JSON/CSV. Your 7-day trial data will be preserved.'); err.code='REPORT_EXPORT_SUBSCRIPTION_REQUIRED'; err.upgradeRequired=true; throw err;
+    if(session&&String(session.accessType||'').toUpperCase()==='TRIAL') throw new Error('Report download/export is available only after subscribing to a paid plan. Your 7-day trial data is preserved.');
     if (type && typeof type === 'object') { format = type.fileType; type = type.reportType; }
     return KOL_IDS_PRODUCT_UI_EXPORT_REPORT(type, format);
   });
@@ -451,7 +451,7 @@ function KOL_IDS_SELF_EXPORT_CURRENT() {
   KOL_IDS_TRACE_ENTER_('KOL_IDS_SELF_EXPORT_CURRENT');
   var __kolIdsTraceStartedAt = Date.now();
   try {
- return KOL_IDS_ENT_EXECUTE_BRIDGE_('EXPORT_CURRENT', true, function(){ KOL_IDS_SELF_ROUTE_(); var raw=KOL_IDS_SAAS_SCOPE_GET_('SESSION'),session=raw?JSON.parse(raw):null; if(session&&String(session.accessType||'').toUpperCase()==='TRIAL')var err = new Error('Report export is a paid feature. Please choose a KOL IDS paid plan to download JSON/CSV. Your 7-day trial data will be preserved.'); err.code='REPORT_EXPORT_SUBSCRIPTION_REQUIRED'; err.upgradeRequired=true; throw err; return KOL_IDS_PRODUCT_UI_EXPORT_CURRENT(); }); 
+ return KOL_IDS_ENT_EXECUTE_BRIDGE_('EXPORT_CURRENT', true, function(){ KOL_IDS_SELF_ROUTE_(); var raw=KOL_IDS_SAAS_SCOPE_GET_('SESSION'),session=raw?JSON.parse(raw):null; if(session&&String(session.accessType||'').toUpperCase()==='TRIAL')throw new Error('Report download/export is available only after subscribing to a paid plan. Your 7-day trial data is preserved.'); return KOL_IDS_PRODUCT_UI_EXPORT_CURRENT(); }); 
   } catch (__kolIdsTraceError) {
     KOL_IDS_TRACE_ERROR_('KOL_IDS_SELF_EXPORT_CURRENT', __kolIdsTraceError);
     throw __kolIdsTraceError;
@@ -463,7 +463,7 @@ function KOL_IDS_SELF_EXPORT_HISTORY(id) {
   KOL_IDS_TRACE_ENTER_('KOL_IDS_SELF_EXPORT_HISTORY');
   var __kolIdsTraceStartedAt = Date.now();
   try {
- return KOL_IDS_ENT_EXECUTE_BRIDGE_('EXPORT_HISTORY', true, function(){ KOL_IDS_SELF_ROUTE_(); var raw=KOL_IDS_SAAS_SCOPE_GET_('SESSION'),session=raw?JSON.parse(raw):null; if(session&&String(session.accessType||'').toUpperCase()==='TRIAL')var err = new Error('Report export is a paid feature. Please choose a KOL IDS paid plan to download JSON/CSV. Your 7-day trial data will be preserved.'); err.code='REPORT_EXPORT_SUBSCRIPTION_REQUIRED'; err.upgradeRequired=true; throw err; return KOL_IDS_SELF_SERVICE_PRODUCT_exportHistorySafe_(id); }); 
+ return KOL_IDS_ENT_EXECUTE_BRIDGE_('EXPORT_HISTORY', true, function(){ KOL_IDS_SELF_ROUTE_(); var raw=KOL_IDS_SAAS_SCOPE_GET_('SESSION'),session=raw?JSON.parse(raw):null; if(session&&String(session.accessType||'').toUpperCase()==='TRIAL')throw new Error('Report download/export is available only after subscribing to a paid plan. Your 7-day trial data is preserved.'); return KOL_IDS_SELF_SERVICE_PRODUCT_exportHistorySafe_(id); }); 
   } catch (__kolIdsTraceError) {
     KOL_IDS_TRACE_ERROR_('KOL_IDS_SELF_EXPORT_HISTORY', __kolIdsTraceError);
     throw __kolIdsTraceError;
