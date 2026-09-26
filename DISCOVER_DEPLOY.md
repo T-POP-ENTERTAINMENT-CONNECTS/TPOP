@@ -95,3 +95,20 @@ Keep JWT verification enabled. The function performs an additional organization-
 Treat public creator information as potentially personal data. Public availability does not automatically remove data-protection obligations. Maintain a documented purpose, lawful processing basis, privacy notice where required, retention schedule, source/terms register, data-subject request process, and provider-contract review. Do not infer or store sensitive traits from public content merely because an algorithm could infer them.
 
 This is an engineering control set, not legal advice. Have Thai PDPA counsel review the final production data map, provider contracts and customer-facing notice before launch.
+
+## V30.1 compliance / provider policy gate
+
+Set these server-side secrets only. Never put provider credentials in `app.js` or HTML.
+
+- `KOLIDS_ALLOWED_ORIGIN=https://tpopconnects.com`
+- `YOUTUBE_DATA_API_KEY=<server secret>`
+- `YOUTUBE_DERIVED_METRICS_APPROVED=false` by default; set `true` only after the intended analytics/derived-metrics use case is accepted under the applicable YouTube policy/audit path.
+- `KOLIDS_PROVIDER_URL=<approved provider endpoint>`
+- `KOLIDS_PROVIDER_API_KEY=<server secret>`
+- `KOLIDS_PROVIDER_DERIVED_METRICS_ALLOWED=false` by default; set `true` only where the provider agreement explicitly permits the required derived analytics and storage.
+- `TIKTOK_RESEARCH_COMMERCIAL_APPROVED=false` by default. Do not enable the TikTok Research API path for a commercial KOL IDS deployment unless the applicable access/use case has been approved.
+- `TIKTOK_RESEARCH_ACCESS_TOKEN=<server secret>` only when approved.
+
+Discover records the source, terms URL, policy profile, freshness, data-quality flags and whether derived metrics were permitted by the source policy.
+
+The system does not scrape platform pages and does not accept user-supplied provider URLs, which avoids turning Discover into an arbitrary outbound fetch/SSRF surface.

@@ -7,9 +7,9 @@
 - Google Account → not a KOL IDS credential
 - Client ID / Access Key → removed from customer login
 - Workspace → organization-based
-- 3 Months → THB 39,000 · 1 User
-- 6 Months → THB 73,900 · 2 Users
-- 12 Months → THB 139,000 · 3 Users
+- 3 Months → THB 35,000 · 1 User
+- 6 Months → THB 65,000 · 2 Users
+- 12 Months → THB 125,000 · 3 Users
 - Trial → 7 Days · 1 User
 - Team → Owner/Admin invites members individually
 - Seat limit → enforced by cloud/database rules
@@ -37,3 +37,12 @@
 ## UI release note — V20
 
 The workspace shell and in-app experience were rebuilt as a premium enterprise creator-decision workspace. The V20 UI adds a command-center Overview, grouped navigation, richer information hierarchy, executive metrics, workflow readiness, and refined responsive surfaces. This is a frontend-only presentation layer change; Supabase schema, Auth, RLS, Edge Functions, payment logic, and the existing data model are intentionally unchanged.
+
+
+## V30.1 Commercial / Input Friction Update
+- 3 Months → THB 35,000 · 1 User
+- 6 Months → THB 65,000 · 2 Users
+- 12 Months → THB 125,000 · 3 Users
+- Campaign intake reduced to essential decision inputs; dates and key messages are optional.
+- Audience intake uses a short brief as the main required evidence; persona name defaults automatically.
+- Discover uses source-policy gates so derived metrics are only enabled where the API/provider contract permits them.
