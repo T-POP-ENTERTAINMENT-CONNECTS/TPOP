@@ -536,8 +536,24 @@ function intelligenceCall(action,payload={}){
       organization_id:S.org?.id,
       campaign_id:S.selectedCampaign?.id
     }
-  }).then(({data,error})=>{
-    if(error) throw error;
+  }).then(async ({data,error})=>{
+    if(error){
+      // Supabase FunctionsHttpError keeps the Edge Function response in error.context.
+      // Surface the actual server message instead of the generic HTTP 400 text.
+      let detail='';
+      try{
+        const response=error.context;
+        if(response && typeof response.clone==='function'){
+          const copy=response.clone();
+          let body=null;
+          try{body=await copy.json()}catch(_){try{body={message:await response.clone().text()}}catch(__){}}
+          if(body&&typeof body==='object') detail=String(body.error||body.message||body.detail||'');
+          else if(typeof body==='string') detail=body;
+        }
+      }catch(_){/* Response may not contain readable text. */}
+      const status=Number(error.context?.status||error.status||0);
+      throw new Error(detail||(status?`Supabase HTTP ${status}: ${error.message||'request rejected'}`:error.message)||'Supabase request failed.');
+    }
     if(!data) throw new Error('No response from the intelligence engine.');
     if(data.error) throw new Error(data.error);
     if(data.success===false) throw new Error(data.error||'Intelligence engine rejected the request.');
@@ -587,7 +603,30 @@ function renderDiscoverResult(data){
 }
 function renderDiscoverQueue(){const el=document.getElementById('discover-queue');if(!el)return;const items=S.discoverResults||[];el.innerHTML=items.length?items.map((data,i)=>{const c=data.creator||{},a=data.analysis||{},chs=data.channels||[],imported=!!data._imported;return `<div class="list-card" style="align-items:flex-start;gap:12px"><div style="min-width:0;flex:1"><b>${esc(c.name||c.handle||'Creator')}</b><small>@${esc(c.handle||'')} · ${chs.length||1} platform${(chs.length||1)>1?'s':''} · ${imported?'Added to workspace':'Ready to add'}</small><small>Audience ${a.audienceFit==null?'—':Math.round(a.audienceFit)} · Content ${a.contentFit==null?'—':Math.round(a.contentFit)} · Brand ${a.brandFit==null?'—':Math.round(a.brandFit)} · Performance ${a.performanceFit==null?'—':Math.round(a.performanceFit)}</small></div><div class="actions"><button class="btn ${imported?'':'primary'}" type="button" data-discover-import-index="${i}" ${imported?'disabled':''}>${imported?'Added':'Add to workspace'}</button></div></div>`}).join(''):'<div class="empty">No creators added yet. Search the first @handle above, add it, then continue with the next one.</div>';el.querySelectorAll('[data-discover-import-index]').forEach(b=>b.onclick=()=>importDiscoveredCreator(items[Number(b.dataset.discoverImportIndex)]));const count=document.getElementById('discover-count');if(count)count.textContent=`${items.length}/100 discovered`}
 function formatDiscoverMetric(v,label){const n=Number(v);if(!Number.isFinite(n))return String(v);if(/rate|percent|%/i.test(label))return `${n}%`;if(Math.abs(n)>=1e9)return `${(n/1e9).toFixed(1)}B`;if(Math.abs(n)>=1e6)return `${(n/1e6).toFixed(1)}M`;if(Math.abs(n)>=1e3)return `${(n/1e3).toFixed(1)}K`;return String(Math.round(n));}
-async function discoverCreator(e){e.preventDefault();const handle=String(document.getElementById('discover-handle')?.value||'').trim();const platform=document.getElementById('discover-platform')?.value||'instagram';const multi=[...document.querySelectorAll('[data-discover-platform].selected')].map(x=>x.dataset.discoverPlatform);const platforms=[...new Set([platform,...multi])];if(!handle){toast('Enter a creator @handle first.','error');return}if((S.discoverResults||[]).length>=100){toast('Maximum 100 creators per analysis.','error');return}const key=`creator::${handle.replace(/^@/,'').trim().toLowerCase()}`;if((S.discoverResults||[]).some(x=>discoverKey(x)===key)){toast('This creator is already in the Discover list.','error');return}const btn=document.getElementById('discover-submit');if(btn){btn.disabled=true;btn.textContent='Discovering channels…'}const el=document.getElementById('discover-result');if(el)el.innerHTML='<div class="empty">Identifying the Creator and checking selected channels…</div>';try{const data=await intelligenceCall('discover',{platform,platforms,handle,campaign_id:S.selectedCampaign?.id||null});data._imported=false;S.discoverResults.push(data);renderDiscoverResult(data);renderDiscoverQueue();toast(`${data.creator?.name||'Creator'} found · ${data.channels?.length||1} channel(s) verified.`,'good');const input=document.getElementById('discover-handle');if(input){input.value='';setTimeout(()=>input.focus(),0)}}catch(err){renderDiscoverResult({error:err.message||'Creator discovery failed'});toast(err.message||'Creator discovery failed','error')}finally{if(btn){btn.disabled=false;btn.textContent='Discover Creator'}}}
+function normalizeDiscoverHandle(value,platform){
+ let raw=String(value||'').trim();
+ if(!raw)return '';
+ // Accept either @handle or a public profile URL; send only the normalized handle to the Edge Function.
+ if(/^https?:\/\//i.test(raw)){
+  try{
+   const u=new URL(raw);const parts=u.pathname.split('/').filter(Boolean);const host=u.hostname.toLowerCase();
+   if(platform==='youtube'){
+    const at=parts.find(x=>x.startsWith('@'));if(at)raw=at;
+    else if(parts[0]==='channel'&&parts[1])raw=parts[1];
+    else if(parts[0]==='user'&&parts[1])raw=parts[1];
+    else if(parts[0]==='c'&&parts[1])raw=parts[1];
+    else raw=parts[0]||'';
+   }else if(platform==='tiktok')raw=parts.find(x=>x.startsWith('@'))||parts[0]||'';
+   else if(platform==='instagram'||platform==='x'||platform==='lemon8')raw=parts[0]||'';
+   else if(platform==='facebook')raw=parts[0]||u.searchParams.get('id')||'';
+   else raw=parts[0]||'';
+   if(host==='youtu.be'&&parts[0])raw=parts[0];
+  }catch(_){return ''}
+ }
+ raw=raw.replace(/^@+/,'').trim();
+ return /^[A-Za-z0-9._-]{1,100}$/.test(raw)?raw:'';
+}
+async function discoverCreator(e){e.preventDefault();const rawHandle=String(document.getElementById('discover-handle')?.value||'').trim();const platform=document.getElementById('discover-platform')?.value||'instagram';const handle=normalizeDiscoverHandle(rawHandle,platform);const multi=[...document.querySelectorAll('[data-discover-platform].selected')].map(x=>x.dataset.discoverPlatform);const platforms=[...new Set([platform,...multi])];if(!rawHandle){toast('Enter a creator @handle or public profile URL first.','error');return}if(!handle){toast('Enter a valid @handle or a supported public profile URL for the selected platform.','error');return}if((S.discoverResults||[]).length>=100){toast('Maximum 100 creators per analysis.','error');return}const key=`creator::${handle.replace(/^@/,'').trim().toLowerCase()}`;if((S.discoverResults||[]).some(x=>discoverKey(x)===key)){toast('This creator is already in the Discover list.','error');return}const btn=document.getElementById('discover-submit');if(btn){btn.disabled=true;btn.textContent='Discovering channels…'}const el=document.getElementById('discover-result');if(el)el.innerHTML='<div class="empty">Identifying the Creator and checking selected channels…</div>';try{const data=await intelligenceCall('discover',{platform,platforms,handle,campaign_id:S.selectedCampaign?.id||null});data._imported=false;S.discoverResults.push(data);renderDiscoverResult(data);renderDiscoverQueue();toast(`${data.creator?.name||'Creator'} found · ${data.channels?.length||1} channel(s) verified.`,'good');const input=document.getElementById('discover-handle');if(input){input.value='';setTimeout(()=>input.focus(),0)}}catch(err){const message=err.message||'Creator discovery failed';renderDiscoverResult({error:message});toast(message,'error')}finally{if(btn){btn.disabled=false;btn.textContent='Discover Creator'}}}
 async function importDiscoveredCreator(data){if(!data?.catalogIds?.length&&!data?.catalogId){toast('This discovery result cannot be imported.','error');return}try{const catalogIds=data.catalogIds?.length?data.catalogIds:[data.catalogId];const r=await intelligenceCall('import_discovered_creator',{catalog_ids:catalogIds,primary_catalog_id:data.catalogId});if(!r?.success)throw new Error(r?.error||'Import failed');const k=discoverKey(data);const item=(S.discoverResults||[]).find(x=>discoverKey(x)===k);if(item)item._imported=true;await refresh();toast(`${r.creator?.name||'Creator'} added with ${(r.channels||[]).length||1} platform(s).`,'good');renderDiscoverQueue();renderPage()}catch(err){toast(err.message||'Could not import creator','error')}}
 function creatorSignalCoverage(x){const ci=x.payload?.intelligence||{};return{required:Object.keys(signalExamples).filter(k=>Array.isArray(ci[k])&&ci[k].length).length,total:Object.keys(signalExamples).length}}
 function chipGroup(key,selected){const vals=[...(signalExamples[key]||[])];const customs=(selected||[]).filter(v=>v&&!vals.includes(v));return `<div class="signal-box"><h4>${key.replaceAll('_',' ')}</h4><div class="chips" data-chips-for="${key}">${vals.map(v=>`<button type="button" class="chip ${selected.includes(v)?'selected':''}" data-chip="${key}" data-value="${esc(v)}">${esc(v)}</button>`).join('')}${customs.map(v=>`<button type="button" class="chip selected custom-signal-chip" data-custom-signal="${key}" data-custom-value="${esc(v)}">${esc(v)} <b aria-hidden="true">×</b></button>`).join('')}</div><input class="signal-other" data-other-for="${key}" placeholder="Type your own signal and press Enter" autocomplete="off" enterkeyhint="done"></div>`}

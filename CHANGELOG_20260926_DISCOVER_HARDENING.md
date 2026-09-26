@@ -24,3 +24,11 @@
 
 ### Important provider note
 TikTok Research API access is restricted by TikTok's eligibility/terms. Commercial KOL IDS usage must use a permitted commercial/contracted API or approved data provider rather than assuming Research API access is allowed.
+
+
+## V31.1.1 — Discover request diagnostics
+- Hardened Edge Function request validation and stage-specific failure logging.
+- Added stable error codes/request IDs for validation, access, rate limit and not-found responses.
+- Added audit-write error checks and clearer import/discovery error surfaces.
+- Expanded CORS allow-headers for Supabase client headers.
+- Improved frontend parsing of JSON/text Edge Function error bodies and surfaced HTTP status.

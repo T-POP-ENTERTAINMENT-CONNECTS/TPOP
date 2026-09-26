@@ -112,3 +112,16 @@ Set these server-side secrets only. Never put provider credentials in `app.js` o
 Discover records the source, terms URL, policy profile, freshness, data-quality flags and whether derived metrics were permitted by the source policy.
 
 The system does not scrape platform pages and does not accept user-supplied provider URLs, which avoids turning Discover into an arbitrary outbound fetch/SSRF surface.
+
+
+## V31.1.1 diagnostic hardening (2026-09-26)
+
+For this patch, update both the website bundle and the Edge Function; updating only one side leaves the old behavior in place.
+
+1. Replace the deployed frontend `app.js` with the ZIP version and publish the website.
+2. Deploy `supabase/functions/discover-creator/index.ts` to the existing `discover-creator` function. Keep JWT verification enabled.
+3. No new SQL migration is introduced by this diagnostic patch. If Discover tables were never installed, apply the Discover migrations in order: `20260926_discover_intelligence.sql`, `20260926_pricing_input_discover_compliance.sql`, then `20260927_discover_multi_platform.sql`. Do not rerun unrelated base SQL.
+4. In Supabase Dashboard → Edge Functions → `discover-creator` → Logs, use the `requestId` shown in the page error to locate the exact failing stage. Stages include membership, subscription, input validation, catalog lookup, provider fetch, catalog persistence, benchmark, analysis, and audit logging.
+5. Browser DevTools → Network → `discover-creator` → Response now shows a specific validation/error code instead of relying on the generic “Failed to load resource” console line.
+
+The handler now validates platform and handle inputs separately, returns request IDs and stable error codes, logs unexpected failures with the stage, checks audit-write failures, and allows common Supabase client headers in CORS preflight. It does not expose database/provider exception text to customers.
