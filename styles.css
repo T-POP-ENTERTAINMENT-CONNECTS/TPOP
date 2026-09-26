@@ -302,3 +302,13 @@
   .kol-nav .nav-icon{display:grid!important}
   .workflow-page .bottom-actions .btn{flex:1 1 140px}
 }
+
+/* V30.2 Smart Assist — UX layer only; does not alter analysis logic */
+.smart-assist{display:flex;align-items:center;gap:14px;margin:0 0 14px;padding:14px 16px;border:1px solid rgba(84,221,255,.22);border-radius:16px;background:linear-gradient(135deg,rgba(20,30,42,.96),rgba(14,18,27,.96));box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.smart-assist-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:rgba(84,221,255,.1);color:#65e7ff;font-size:18px;flex:0 0 auto}
+.smart-assist-main{min-width:0;flex:1}.smart-assist-kicker{font-size:9px;letter-spacing:.14em;color:#65e7ff;font-weight:700}.smart-assist-title{margin-top:3px;font-size:15px;font-weight:700;color:#fff}.smart-assist-body{margin-top:4px;font-size:11px;line-height:1.55;color:#aeb9c8}.smart-assist-badge{font-size:9px;color:#cbd5e1;border:1px solid rgba(255,255,255,.12);padding:7px 9px;border-radius:999px;white-space:nowrap}@media(max-width:700px){.smart-assist{align-items:flex-start}.smart-assist-badge{display:none}}
+
+/* V30.2 Smart Assist — UX layer only; does not alter analysis logic */
+.smart-assist{display:flex;align-items:center;gap:14px;margin:0 0 14px;padding:14px 16px;border:1px solid rgba(84,221,255,.22);border-radius:16px;background:linear-gradient(135deg,rgba(20,30,42,.96),rgba(14,18,27,.96));box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.smart-assist-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:rgba(84,221,255,.1);color:#65e7ff;font-size:18px;flex:0 0 auto}
+.smart-assist-main{min-width:0;flex:1}.smart-assist-kicker{font-size:9px;letter-spacing:.14em;color:#65e7ff;font-weight:700}.smart-assist-title{margin-top:3px;font-size:15px;font-weight:700;color:#fff}.smart-assist-body{margin-top:4px;font-size:11px;line-height:1.55;color:#aeb9c8}.smart-assist-badge{font-size:9px;color:#cbd5e1;border:1px solid rgba(255,255,255,.12);padding:7px 9px;border-radius:999px;white-space:nowrap}@media(max-width:700px){.smart-assist{align-items:flex-start}.smart-assist-badge{display:none}}
