@@ -5,14 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f5fbfd" />
-  <meta name="description" content="KOL IDS™ — private creator decision intelligence workspace by T POP CONNECTS." />
+  <meta name="description" content="KOL IDS™ · private creator decision intelligence workspace by T POP CONNECTS." />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <meta name="googlebot" content="noindex,nofollow,noarchive" />
   <link rel="canonical" href="https://tpopconnects.com/KOLIDS" />
-  <meta property="og:title" content="KOL IDS™ — Creator Decision Intelligence" />
+  <meta property="og:title" content="KOL IDS™ · Creator Decision Intelligence" />
   <meta property="og:description" content="Private KOL IDS™ workspace by T POP CONNECTS." />
   <meta property="og:url" content="https://tpopconnects.com/" />
-  <title>KOL IDS™ — Creator Decision Intelligence | T POP CONNECTS</title>
+  <title>KOL IDS™ · Creator Decision Intelligence | T POP CONNECTS</title>
 
   <!--
     KOL IDS GitHub Workspace
@@ -505,7 +505,7 @@
 .commercial-plan-grid .commercial-plan small{font-size:9px!important}
 @media(max-width:760px){.trial-offer-primary{align-items:stretch!important;flex-direction:column!important;padding:21px!important}.trial-hero-btn{width:100%;min-height:56px}.trial-primary{align-items:stretch!important;flex-direction:column!important}.trial-modal-cta{width:100%!important}.commercial-plan-grid{grid-template-columns:1fr!important}.trial-primary h3{font-size:27px!important}}
 
-/* KOL IDS payment presentation — V22 */
+/* KOL IDS payment presentation · V22 */
 .payment-instruction-card{
   margin:18px 0 4px;padding:18px 20px;border:1px solid rgba(255,255,255,.14);
   border-radius:16px;background:transparent!important;box-shadow:none!important;
@@ -603,7 +603,7 @@ const S={session:null,org:null,license:null,brands:[],campaigns:[],creators:[],d
 const ready=C.SUPABASE_URL&&C.SUPABASE_ANON_KEY&&!C.SUPABASE_URL.includes('YOUR_');
 if(ready&&window.supabase) sb=window.supabase.createClient(C.SUPABASE_URL,C.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const esc=x=>String(x??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-const num=x=>x==null||x===''?'—':new Intl.NumberFormat('en-US',{maximumFractionDigits:1}).format(x);
+const num=x=>x==null||x===''?'·':new Intl.NumberFormat('en-US',{maximumFractionDigits:1}).format(x);
 function toast(m,t='info'){let e=document.getElementById('toast');if(e){e.textContent=m;e.className='toast show '+t;setTimeout(()=>e.className='toast',3000)}}
 function auth(mode='login', notice=''){
   root.innerHTML=`<div class="entry-page">
@@ -618,7 +618,7 @@ function auth(mode='login', notice=''){
       <section class="sales-panel">
         <div class="sales-kicker">CREATOR DECISION INTELLIGENCE</div>
         <h2>Stop choosing creators by instinct.</h2>
-        <p>KOL IDS turns creator selection into an evidence based decision process — combining fit, impact, commercial efficiency, confidence, risk and post campaign learning in one intelligence workspace.</p>
+        <p>KOL IDS turns creator selection into an evidence based decision process · combining fit, impact, commercial efficiency, confidence, risk and post campaign learning in one intelligence workspace.</p>
         <div class="sales-grid">
           <article><b>WHO should we choose?</b><span>Rank creators against the campaign context, not follower count alone.</span></article>
           <article><b>WHY should we choose them?</b><span>Expose decision signals, evidence gaps and confidence instead of hiding the reasoning.</span></article>
@@ -729,10 +729,10 @@ function auth(mode='login', notice=''){
       <div class="signup-payment-head"><div><span>PAYMENT</span><b>Complete your payment</b></div><small>Your payment proof is submitted directly with this account application. No separate form is required.</small></div>
       <div class="payment-account-card"><div><span>Kasikornbank (KBank)</span><b>บจก. ที ป็อป เอนเตอร์เทนเมนท์ คอนเนคส์</b><strong>215-182-2269</strong><small>Savings Account / บัญชีออมทรัพย์</small></div><div class="payment-account-note">Your workspace will be activated after we verify your payment.</div></div>
       <div class="signup-payment-grid">
-        <label>Payment method / วิธีชำระ<select id="payment-method"><option value="BANK_TRANSFER_KBANK">Bank Transfer — KBank</option><option value="CHEQUE">Cheque</option></select></label>
+        <label>Payment method / วิธีชำระ<select id="payment-method"><option value="BANK_TRANSFER_KBANK">Bank Transfer · KBank</option><option value="CHEQUE">Cheque</option></select></label>
         <label>Payment date / วันที่ชำระ<input id="payment-date" type="date" required></label>
         <label>Payment reference / เลขที่อ้างอิง<input id="payment-reference" type="text" placeholder="Optional"></label>
-        <label class="payment-proof-file">Payment proof / หลักฐานการชำระ<input id="payment-proof-file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"><small>Upload JPG, PNG, WEBP or PDF — max 8 MB.</small></label>
+        <label class="payment-proof-file">Payment proof / หลักฐานการชำระ<input id="payment-proof-file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"><small>Upload JPG, PNG, WEBP or PDF · max 8 MB.</small></label>
         <label class="full">Payment proof URL / ลิงก์หลักฐาน<input id="payment-proof-url" type="url" placeholder="https://…"><small>Use this only if the proof is hosted elsewhere.</small></label>
       </div>
     </section>`;
@@ -963,7 +963,7 @@ async function boot(){
     const ctx=r.data||{};
     if(!ctx.access_granted){
       const reason=String(ctx.access_reason||'NO_ACTIVE_SUBSCRIPTION');
-      root.innerHTML=`<div class="entry-page"><div class="entry-shell"><div class="entry-heading"><span class="entry-eyebrow">KOL IDS™ · ACCESS CONTROL</span><h1>Account verified — workspace access is not active yet</h1><p>${esc(reason==='PAYMENT_PENDING'?'Your account is ready. Complete payment and wait for payment approval; your same account and organization will then open the workspace.':reason==='SUBSCRIPTION_EXPIRED'?'Your subscription has expired. Renew the organization plan to continue analysis.':'Your account does not currently have an active KOL IDS subscription.')}</p><div class="access-actions"><button class="entry-primary" id="go-login" type="button">Back to Login</button><button class="entry-ghost" id="go-home" type="button">T POP Connects</button></div></div></div></div>`;
+      root.innerHTML=`<div class="entry-page"><div class="entry-shell"><div class="entry-heading"><span class="entry-eyebrow">KOL IDS™ · ACCESS CONTROL</span><h1>Account verified · workspace access is not active yet</h1><p>${esc(reason==='PAYMENT_PENDING'?'Your account is ready. Complete payment and wait for payment approval; your same account and organization will then open the workspace.':reason==='SUBSCRIPTION_EXPIRED'?'Your subscription has expired. Renew the organization plan to continue analysis.':'Your account does not currently have an active KOL IDS subscription.')}</p><div class="access-actions"><button class="entry-primary" id="go-login" type="button">Back to Login</button><button class="entry-ghost" id="go-home" type="button">T POP Connects</button></div></div></div></div>`;
       document.getElementById('go-login')?.addEventListener('click',()=>{sb.auth.signOut();auth()});
       document.getElementById('go-home')?.addEventListener('click',()=>window.location.href='https://tpopconnects.com/');
       return;
@@ -982,7 +982,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='/app.js?v=20261001-performance-impact-premium-v1';
+    script.src='/app.js?v=20261001-creator-mobile-motion-final-v1';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);
@@ -1123,7 +1123,7 @@ boot();
 
 
 <style id="KOL_IDS_12M_TEXT_BLUE_HARD_FINAL_V11">
-/* V11 HARD FINAL — 12 MONTHS: same dark card, ALL visible type + CTA blue. */
+/* V11 HARD FINAL · 12 MONTHS: same dark card, ALL visible type + CTA blue. */
 .commercial-plan-grid-four .commercial-plan.featured,
 .commercial-plan-grid-four .commercial-plan.featured:hover,
 .commercial-plan-grid-four .commercial-plan.featured:focus-within,
@@ -1361,7 +1361,7 @@ boot();
 /* Exact visual adjustments requested from the supplied reference.
    Existing sections, content and JS behavior remain intact. */
 
-/* CREATOR DECISION INTELLIGENCE — larger, clearer type */
+/* CREATOR DECISION INTELLIGENCE · larger, clearer type */
 .sales-panel .sales-kicker{font-size:11px;letter-spacing:.16em}
 .sales-panel h2{font-size:32px!important;line-height:1.08!important;margin:9px 0 10px!important}
 .sales-panel p{font-size:13px!important;line-height:1.55!important}
@@ -1539,7 +1539,7 @@ boot();
 }
 </style>
 <style id="KOL_IDS_TPOP_MONO_MODAL_FINAL">
-/* T POP Connects monochrome refinement — white / black with restrained cyan removed from the purchase modal. */
+/* T POP Connects monochrome refinement · white / black with restrained cyan removed from the purchase modal. */
 .commercial-modal{background:rgba(0,0,0,.52)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important}
 .commercial-modal-card{width:min(1120px,100%)!important;padding:30px!important;border:1px solid #d9d9d9!important;border-radius:20px!important;background:#fff!important;color:#111!important;box-shadow:0 28px 80px rgba(0,0,0,.28)!important}
 .commercial-modal-head{gap:18px!important;margin-bottom:20px!important}
@@ -1646,7 +1646,7 @@ body{background:#f7f7f7!important}
 </style>
 
 <style id="KOL_IDS_TPOP_WEBSITE_PARITY_FINAL">
-/* T POP ENTERTAINMENT CONNECTS — WEBSITE PARITY FOR KOL IDS ENTRY */
+/* T POP ENTERTAINMENT CONNECTS · WEBSITE PARITY FOR KOL IDS ENTRY */
 :root{
   --entry-bg:#070707!important;
   --entry-ink:#f5f5f2!important;
@@ -1928,7 +1928,7 @@ button,input,textarea,select{line-height:1.35;vertical-align:middle}
 
 <style>
 
-/* V5 UI TUNING — brighten only the Create Account modal text shown in the signup screenshot */
+/* V5 UI TUNING · brighten only the Create Account modal text shown in the signup screenshot */
 #kolIdsSignupModal .commercial-modal-head .modal-kicker{
   color:#d8d8d3!important;
 }

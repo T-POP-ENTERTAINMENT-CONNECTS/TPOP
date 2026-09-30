@@ -1,4 +1,4 @@
-# KOL IDS™ — FINAL CLEAN DEPLOY PACKAGE
+# KOL IDS™ · FINAL CLEAN DEPLOY PACKAGE
 
 This package is the production runtime/deployment source for the current KOL IDS system.
 
