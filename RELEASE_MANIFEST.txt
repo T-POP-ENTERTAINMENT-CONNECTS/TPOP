@@ -1,0 +1,8 @@
+KOL IDS FINAL CLEAN
+Build: 2026-10-01
+Canonical runtime: app.js
+Workflow: Step 01–08
+Step 08: Campaign History
+Approval UI: approval.html
+Backend source: supabase/functions + supabase/migrations + supabase/schema.sql
+Historical changelogs and duplicate patch artifacts: excluded

@@ -1,0 +1,11 @@
+/app.js
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  CDN-Cache-Control: no-store
+/KOLIDS.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+/KOLIDSworkspace
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+/KOLIDSworkspace/
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+/KOLIDSworkspace/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0

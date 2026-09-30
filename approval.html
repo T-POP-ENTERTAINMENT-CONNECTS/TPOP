@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KOL IDS™ · Account Review</title>
+<style>
+:root{font-family:Inter,Arial,sans-serif;color:#111;background:#f5f6f7}
+*{box-sizing:border-box}body{margin:0;background:#f5f6f7}.wrap{max-width:720px;margin:60px auto;padding:20px}.card{background:#fff;border:1px solid #ddd;border-radius:18px;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}
+.kicker{font-size:11px;letter-spacing:.14em;color:#777;font-weight:800}.h1{font-size:30px;font-weight:800;margin:10px 0}.muted{color:#666;line-height:1.55}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:24px 0}.cell{border:1px solid #eee;border-radius:12px;padding:14px}.cell span{display:block;color:#888;font-size:11px;margin-bottom:5px}.cell b{font-size:14px;word-break:break-word}.actions{display:flex;gap:10px;margin-top:24px}.btn{border:0;border-radius:10px;padding:14px 18px;font-weight:800;cursor:pointer;font-size:14px}.approve{background:#111;color:#fff}.reject{background:#fff;color:#111;border:1px solid #ccc}.btn:disabled{opacity:.5;cursor:wait}.status{margin-top:18px;padding:14px;border-radius:10px;background:#f3f4f5;display:none;line-height:1.5}.error{background:#fff0f0;color:#8a2634}.success{background:#eef9f0;color:#216b2a}@media(max-width:600px){.wrap{margin:15px auto;padding:12px}.card{padding:22px}.grid{grid-template-columns:1fr}.actions{flex-direction:column}.h1{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<div class="kicker">KOL IDS™ · ACCOUNT REVIEW</div>
+<div class="h1" id="title">Review this application</div>
+<p class="muted" id="intro">This secure page is hosted on tpopconnects.com. Opening this page does not change the account state.</p>
+<div class="grid">
+  <div class="cell"><span>Order</span><b id="order">—</b></div>
+  <div class="cell"><span>Action</span><b id="action">—</b></div>
+</div>
+<div class="actions" id="actions">
+  <button class="btn approve" id="approve">CONFIRM APPROVE</button>
+  <button class="btn reject" id="reject">REJECT</button>
+</div>
+<div class="status" id="status"></div>
+</div></div>
+<script>
+const ENDPOINT='https://xdmtuoyeiyhkwiwozaut.supabase.co/functions/v1/signup-approval';
+const params=new URLSearchParams(location.search);const token=params.get('approval')||'';
+const $=id=>document.getElementById(id);
+function decodePayload(t){try{const p=t.split('.')[0];const s=p.replace(/-/g,'+').replace(/_/g,'/');const b=s+'==='.slice((s.length+3)%4);return JSON.parse(decodeURIComponent(Array.from(atob(b),c=>'%'+c.charCodeAt(0).toString(16).padStart(2,'0')).join('')))}catch{return null}}
+const payload=decodePayload(token);
+if(!token||!payload||!payload.order_number||!['approve','reject'].includes(payload.action)){
+  $('title').textContent='Invalid approval link';$('intro').textContent='This approval link is missing, invalid, or expired.';$('actions').style.display='none';
+}else{
+  $('order').textContent=payload.order_number;$('action').textContent=payload.action==='approve'?'Approve account':'Reject application';
+  $('title').textContent=payload.action==='approve'?'Approve this account':'Reject this application';
+  $('approve').style.display=payload.action==='approve'?'block':'none';$('reject').style.display=payload.action==='reject'?'none':'block';
+}
+async function submit(action){
+  if(!token||!payload)return;
+  const status=$('status');status.style.display='block';status.className='status';status.textContent='Processing…';$('approve').disabled=true;$('reject').disabled=true;
+  try{
+    const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({approval:token})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok||!data.ok)throw new Error(data.error||`Request failed (${r.status})`);
+    $('actions').style.display='none';status.className='status success';
+    status.innerHTML=action==='approve'?`<b>Account approved.</b><br>Order ${data.order_number||payload.order_number} has been sent to the payment approval service. The customer will receive the activation email when activation completes.`:`<b>Application rejected.</b><br>Order ${data.order_number||payload.order_number} has been sent to the payment approval service.`;
+  }catch(e){status.className='status error';status.textContent=e.message||'Approval failed.';$('approve').disabled=false;$('reject').disabled=false}
+}
+$('approve').onclick=()=>submit('approve');$('reject').onclick=()=>submit('reject');
+</script>
+</body></html>
