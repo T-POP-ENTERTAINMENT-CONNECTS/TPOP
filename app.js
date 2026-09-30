@@ -1343,11 +1343,23 @@ function showPaidExportGate(){
  document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)m.remove()});document.getElementById('kol-export-close').onclick=()=>m.remove();document.getElementById('kol-export-upgrade').onclick=()=>{window.location.href='/KOLIDS'};
 }
 function csvSafeName(name){return String(name||'Campaign').trim().replace(/[^A-Za-z0-9-_]+/g,'-').replace(/^-+|-+$/g,'')||'Campaign'}
+function csvDateStamp(){const d=new Date();return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`}
+function csvIsoNow(){return new Date().toISOString()}
 function csvCell(v){return `"${String(v==null?'':v).replace(/"/g,'""')}"`}
+function enterpriseCSV(headers,rows,scope){
+ const metaHeaders=['Export Version','Generated At','Product','Data Scope',...headers];
+ const generated=csvIsoNow();
+ const metaRows=rows.map(r=>['2.0',generated,'KOL IDS','Enterprise / '+scope,...r]);
+ return {headers:metaHeaders,rows:metaRows};
+}
 function downloadCSVFile(filename,headers,rows){
  const csv='\ufeff'+[headers,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function downloadEnterpriseCSV(filename,headers,rows,scope){
+ const out=enterpriseCSV(headers,rows,scope);
+ downloadCSVFile(filename,out.headers,out.rows);
 }
 function exportGateOr(fn){if(reportExportIsTrial()){showPaidExportGate();return}fn()}
 function reportContext(){
@@ -1359,7 +1371,7 @@ function downloadDecisionCSV(){exportGateOr(()=>{
  if(!rows.length){toast('Run creator fit calculation first.','error');return}
  const headers=['Campaign','Campaign ID','Creator ID','Creator','Channel','Followers','ER','Decision','Overall Fit','Confidence','Evidence','Audience Fit','Content Fit','Brand Fit','Performance Fit','Commercial Fit','Risk','Why','If Selected','Campaign Move'];
  const out=rows.map(({creator:r,decision:d})=>{const e=d.evidence||{};return [S.selectedCampaign?.name,S.selectedCampaign?.id,r.id,r.name,r.payload?.channel,r.payload?.followers,r.payload?.engagementRate,d.decision,d.score,e.confidence,e.evidence||e.method,e.audienceFit,e.contentFit,e.brandFit,e.performance,e.commercial,e.risk,e.reason,e.ifSelected||creatorAdaptation(e),e.campaignMove||creatorAdaptation(e)]});
- downloadCSVFile(`KOL-IDS-${csvSafeName(S.selectedCampaign?.name)}-Decision.csv`,headers,out);toast('Decision CSV saved','good')
+ downloadEnterpriseCSV(`KOL-IDS_Decision_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,out,'Decision readiness');toast('Decision CSV saved','good')
 })}
 function performanceExportRows(){
  const {snap}=reportContext(),perf=snap.perf,creatorName=id=>S.creators.find(c=>String(c.id)===String(id))?.name||'Creator';
@@ -1367,18 +1379,18 @@ function performanceExportRows(){
  const rows=perf.map(x=>{const m=x.metadata||{},t=String(m.channelType||'PERFORMANCE').toUpperCase();return [S.selectedCampaign?.name,S.selectedCampaign?.id,t,x.creator_id,creatorName(x.creator_id),x.observed_at,x.source,x.status,x.actual_score,m.genCode,m.attributionWindowDays,x.spend_thb,x.revenue_thb,m.platform,x.reach,x.impressions,x.views,x.likes,x.comments,x.shares,m.saves,x.clicks,m.landingSessions,m.leads,x.conversions,x.engagement,m.contentPieces,m.orders,m.paidOrders,m.gmv,m.discounts,m.refunds,m.netSales,m.newCustomers,m.commissionRate,m.commissionAmount,m.aov,m.eventType,m.capacity,m.attendance,m.qualifiedLeads,m.qrScans,m.demos,m.samples,m.engagement,x.conversions,m.notes]});
  return {headers,rows}
 }
-function downloadPerformanceCSV(){exportGateOr(()=>{const {headers,rows}=performanceExportRows();if(!rows.length){toast('No performance records to export yet.','error');return}downloadCSVFile(`KOL-IDS-${csvSafeName(S.selectedCampaign?.name)}-Performance.csv`,headers,rows);toast('Performance CSV saved','good')})}
+function downloadPerformanceCSV(){exportGateOr(()=>{const {headers,rows}=performanceExportRows();if(!rows.length){toast('No performance records to export yet.','error');return}downloadEnterpriseCSV(`KOL-IDS_Performance_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,rows,'Performance observations');toast('Performance CSV saved','good')})}
 function downloadImpactCSV(){exportGateOr(()=>{
  const {snap}=reportContext(),i=snap.impact;
  const headers=['Campaign','Campaign ID','Metric','Value','Unit'];
  const pairs=[['Impact score',i.score,'score'],['Revenue',i.revenue,'THB'],['Spend',i.spend,'THB'],['ROAS',i.roas,'x'],['ROI',i.roi,'%'],['Conversions',i.conversions,'count'],['Reach',i.reach,'count'],['Views',i.views,'count'],['Clicks',i.clicks,'count'],['Engagement',i.engagement,'count'],['Event attendance',i.attendance,'count'],['Event leads',i.leads,'count'],['CTR',i.ctr,'%'],['Engagement rate',i.engagementRate,'%'],['Conversion rate',i.conversionRate,'%'],['Digital records',i.digitalRecords,'count'],['E-commerce records',i.ecommerceRecords,'count'],['Event records',i.offlineRecords,'count']];
- downloadCSVFile(`KOL-IDS-${csvSafeName(S.selectedCampaign?.name)}-Business-Impact.csv`,headers,pairs.map(x=>[S.selectedCampaign?.name,S.selectedCampaign?.id,x[0],x[1],x[2]]));toast('Business impact CSV saved','good')
+ downloadEnterpriseCSV(`KOL-IDS_Business-Impact_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,pairs.map(x=>[S.selectedCampaign?.name,S.selectedCampaign?.id,x[0],x[1],x[2]]),'Business impact');toast('Business impact CSV saved','good')
 })}
 function downloadLearningCSV(){exportGateOr(()=>{
  const {snap}=reportContext(),l=snap.learning||{};
  const headers=['Campaign','Campaign ID','Learning Type','Value'];
  const rows=[['Worked',l.worked],['Friction',l.friction],['Next hypothesis',l.hypothesis],...(l.nextActions||[]).map((x,i)=>[`Next action ${i+1}`,x])].map(x=>[S.selectedCampaign?.name,S.selectedCampaign?.id,x[0],x[1]]);
- downloadCSVFile(`KOL-IDS-${csvSafeName(S.selectedCampaign?.name)}-Learning.csv`,headers,rows);toast('Learning CSV saved','good')
+ downloadEnterpriseCSV(`KOL-IDS_Learning_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,rows,'Learning and next actions');toast('Learning CSV saved','good')
 })}
 function downloadReportCSV(){exportGateOr(()=>{
  const {p,snap,c,a}=reportContext(),decision=snap.decisionRows;
@@ -1393,7 +1405,7 @@ function downloadReportCSV(){exportGateOr(()=>{
    fields.forEach(([f,v,u=''])=>push('Performance',f,v,x.creator_id,rn,t,u,d?.decision||'',d?.score??'',d?.decision?.evidence?.confidence??'',x.source||''));
  });
  Object.entries(snap.impact||{}).forEach(([k,v])=>push('Business Impact',k,v,'','','','', '', '', '',''));['worked','friction','hypothesis'].forEach(k=>push('Learning',k,snap.learning?.[k]));(snap.learning?.nextActions||[]).forEach((x,i)=>push('Learning',`nextAction${i+1}`,x));
- downloadCSVFile(`KOL-IDS-${csvSafeName(c.name)}-Campaign-Intelligence.csv`,headers,rows);toast('Campaign Intelligence CSV saved','good')
+ downloadEnterpriseCSV(`KOL-IDS_Campaign-Intelligence_${csvSafeName(c.name)}_${csvDateStamp()}.csv`,headers,rows,'Campaign intelligence');toast('Campaign Intelligence CSV saved','good')
 })}
 function reportLiveSnapshot(){
  const p=S.selectedCampaign?.payload||{};
@@ -1704,5 +1716,157 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
       .creator-fit-main{width:100%!important}
     }
   `;
+  document.head.appendChild(s);
+})();
+
+
+/* V6 — Creator mobile reference layout: spacious 3-metric / 3-action composition */
+(function(){
+  const styleId='kol-ids-creator-mobile-reference-v6';
+  if(document.getElementById(styleId)) return;
+  const s=document.createElement('style'); s.id=styleId;
+  s.textContent=`
+@media (max-width:900px){
+  /* Keep the creator decision surface centered and deliberately narrow like the mobile reference. */
+  .creator-registry-v3{
+    width:min(100%,642px)!important;
+    max-width:642px!important;
+    margin:0 auto!important;
+    padding:28px 30px 30px!important;
+    border-radius:20px!important;
+  }
+  .creator-registry-v3 .creator-registry-head{display:flex!important;flex-direction:column!important;gap:14px!important;margin-bottom:18px!important}
+  .creator-registry-v3 .creator-registry-head h2{font-size:25px!important;line-height:1.08!important;letter-spacing:-.04em!important}
+  .creator-registry-v3 .creator-registry-head .sub{font-size:10px!important;line-height:1.5!important}
+  .creator-registry-v3 .hero-actions{width:100%!important;display:flex!important;flex-wrap:wrap!important;gap:8px!important}
+  .creator-registry-v3 .hero-actions .creator-header-counters{display:none!important}
+  .creator-registry-v3 .hero-actions .btn{min-height:40px!important;padding:10px 14px!important;font-size:10px!important}
+
+  .creator-fit-list{border-radius:16px!important;overflow:hidden!important}
+  .creator-fit-list-head{display:none!important}
+  .creator-fit-main{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:16px!important;
+    padding:12px 28px 30px!important;
+    min-height:0!important;
+    align-items:stretch!important;
+  }
+  .creator-identity{
+    grid-column:1/-1!important;
+    display:grid!important;
+    grid-template-columns:34px 112px minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:12px!important;
+    min-width:0!important;
+    padding:0!important;
+  }
+  .creator-check{width:34px!important;flex:0 0 34px!important;display:grid!important;place-items:center!important}
+  .creator-check span{width:34px!important;height:34px!important;border-radius:10px!important;border-width:0!important;background:#18252d!important}
+  .creator-check input:checked+span:after{font-size:22px!important;left:6px!important;top:1px!important}
+  .creator-row-avatar{width:112px!important;height:112px!important;flex:0 0 112px!important;border-radius:18px!important;font-size:26px!important}
+  .creator-row-name{font-size:30px!important;line-height:1.05!important;letter-spacing:-.045em!important;font-weight:950!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .creator-handle{font-size:14px!important;line-height:1.25!important;margin-top:7px!important;color:#a0a7ad!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .creator-mini-meta{font-size:14px!important;gap:9px!important;margin-top:8px!important;color:#6c767e!important;line-height:1.3!important}
+  .creator-mini-meta span{padding-right:9px!important}
+
+  /* Fit / evidence / confidence become the three large cards from the reference. */
+  .creator-score,.creator-stat{
+    grid-column:auto!important;
+    grid-row:auto!important;
+    min-width:0!important;
+    min-height:142px!important;
+    padding:22px 18px!important;
+    border:1px solid #e1e5e8!important;
+    border-radius:18px!important;
+    background:#fff!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+  }
+  .creator-score{border-color:#e1e5e8!important}
+  .creator-score-number{font-size:48px!important;line-height:.95!important;letter-spacing:-.07em!important}
+  .creator-score-number small{font-size:16px!important;margin-left:3px!important}
+  .creator-score-label{font-size:16px!important;margin-top:10px!important;font-weight:900!important;color:#66717a!important}
+  .creator-stat{border-left:1px solid #e1e5e8!important;padding-left:18px!important}
+  .creator-stat b{font-size:48px!important;line-height:.95!important;letter-spacing:-.06em!important}
+  .creator-stat span{font-size:12px!important;letter-spacing:.16em!important;margin-top:10px!important;color:#9aa1a6!important}
+
+  .creator-read{
+    grid-column:1/-1!important;
+    grid-row:auto!important;
+    padding:0 0 2px!important;
+    min-width:0!important;
+  }
+  .creator-read-top{gap:7px!important}
+  .decision-badge,.gap-badge{font-size:12px!important;padding:7px 11px!important}
+  .creator-read p{font-size:16px!important;line-height:1.45!important;margin:12px 0 0!important;color:#5e6971!important}
+  .creator-next{font-size:16px!important;line-height:1.4!important;margin-top:8px!important;color:#2d3940!important}
+
+  .creator-actions-v3{
+    grid-column:1/-1!important;
+    grid-row:auto!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:16px!important;
+    justify-content:stretch!important;
+    padding:0!important;
+  }
+  .creator-actions-v3 .btn,.creator-actions-v3 .social-link{
+    width:100%!important;
+    min-height:92px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:12px 10px!important;
+    border-radius:18px!important;
+    font-size:20px!important;
+    font-weight:850!important;
+  }
+
+  .creator-fit-details{
+    padding:28px 28px 30px!important;
+    background:#fbfcfd!important;
+    border-top:1px dashed #e2e8eb!important;
+  }
+  .creator-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important;padding-top:0!important}
+  .creator-detail{
+    min-height:272px!important;
+    padding:20px!important;
+    border-radius:18px!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+  .creator-detail-top{font-size:18px!important;gap:8px!important}
+  .creator-detail-top span{font-size:18px!important;color:#5d6870!important}
+  .creator-detail-top b{font-size:34px!important;line-height:1!important}
+  .creator-detail-bar{height:10px!important;margin:13px 0!important}
+  .creator-detail p{font-size:16px!important;line-height:1.45!important;min-height:58px!important;margin:0!important;color:#7a838a!important}
+  .creator-detail-action{font-size:16px!important;line-height:1.4!important;margin-top:auto!important;padding-top:14px!important;color:#315f67!important}
+  .creator-detail-bottom{grid-template-columns:1fr!important;gap:12px!important;margin-top:16px!important}
+  .creator-detail-bottom>div{padding:16px 18px!important;border-radius:14px!important}
+  .creator-detail-bottom>div>b{font-size:14px!important;margin-bottom:5px!important}
+  .creator-detail-bottom>div>span{font-size:14px!important;line-height:1.45!important}
+
+  .creator-registry-v3 > div:last-child{margin-top:16px!important}
+  .creator-registry-v3 > div:last-child .btn{width:100%!important;min-height:48px!important;font-size:12px!important}
+}
+@media (max-width:560px){
+  .creator-registry-v3{padding:20px 14px 22px!important;border-radius:18px!important}
+  .creator-fit-main{grid-template-columns:1fr 1fr!important;padding:12px 14px 24px!important;gap:12px!important}
+  .creator-identity{grid-template-columns:32px 88px minmax(0,1fr)!important;gap:9px!important}
+  .creator-check{width:32px!important;flex-basis:32px!important}.creator-check span{width:32px!important;height:32px!important}
+  .creator-row-avatar{width:88px!important;height:88px!important;flex-basis:88px!important;border-radius:15px!important}
+  .creator-row-name{font-size:23px!important}.creator-handle{font-size:11px!important;margin-top:5px!important}.creator-mini-meta{font-size:11px!important;gap:6px!important;margin-top:6px!important}.creator-mini-meta span{padding-right:6px!important}
+  .creator-score,.creator-stat{min-height:120px!important;padding:17px 10px!important}
+  .creator-score{grid-column:1/-1!important}
+  .creator-score-number,.creator-stat b{font-size:40px!important}.creator-score-label{font-size:14px!important}.creator-stat span{font-size:10px!important;margin-top:8px!important}
+  .creator-read p,.creator-next{font-size:13px!important}.decision-badge,.gap-badge{font-size:10px!important;padding:6px 9px!important}
+  .creator-actions-v3{gap:10px!important}.creator-actions-v3 .btn,.creator-actions-v3 .social-link{min-height:70px!important;border-radius:14px!important;font-size:16px!important}
+  .creator-fit-details{padding:18px 14px 22px!important}.creator-detail-grid{gap:10px!important}.creator-detail{min-height:205px!important;padding:14px!important;border-radius:14px!important}.creator-detail-top span{font-size:14px!important}.creator-detail-top b{font-size:27px!important}.creator-detail-bar{height:7px!important;margin:10px 0!important}.creator-detail p{font-size:12px!important;min-height:45px!important}.creator-detail-action{font-size:12px!important;padding-top:10px!important}.creator-detail-bottom>div{padding:13px 14px!important}.creator-detail-bottom>div>b{font-size:12px!important}.creator-detail-bottom>div>span{font-size:12px!important}
+}
+`;
   document.head.appendChild(s);
 })();

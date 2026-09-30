@@ -7,3 +7,5 @@ Step 08: Campaign History
 Approval UI: approval.html
 Backend source: supabase/functions + supabase/migrations + supabase/schema.sql
 Historical changelogs and duplicate patch artifacts: excluded
+
+Enterprise CSV export standard: v2.0; cache build: 20261001-csv-enterprise-01

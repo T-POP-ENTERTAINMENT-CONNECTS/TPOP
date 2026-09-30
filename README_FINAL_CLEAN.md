@@ -28,3 +28,10 @@ Deploy the `index.ts` file in each function directory. Keep `supabase/config.tom
 Never commit Supabase secret/service keys or Resend API keys. Configure them in Supabase Edge Function Secrets.
 
 The browser only contains the publishable Supabase key.
+
+## Enterprise CSV Export Standard
+- CSV exports use schema version 2.0.
+- Every exported row includes Export Version, Generated At, Product, and Data Scope metadata for auditability and downstream BI workflows.
+- Export filenames include the KOL IDS report type, campaign name, and export date.
+- UTF-8 BOM is preserved for reliable Thai/Unicode rendering in Excel and Google Sheets.
+- Existing paid-export gating and report calculations are unchanged.
