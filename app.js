@@ -1047,7 +1047,7 @@ function creators(c){
   document.querySelectorAll('[data-edit-saved]').forEach(b=>b.onclick=()=>editSavedCreator(b.dataset.editSaved));
   document.querySelectorAll('[data-remove-saved]').forEach(b=>b.onclick=()=>removeSavedCreator(b.dataset.removeSaved));
   document.getElementById('save-shortlist-registry')?.addEventListener('click',async()=>{const btn=document.getElementById('save-shortlist-registry');if(btn?.dataset.busy==='1')return;if(!S.selectedCampaign){toast('Create a campaign first.','error');return}const ids=[...document.querySelectorAll('[data-shortlist-creator]:checked')].map(x=>x.dataset.shortlistCreator).filter(id=>S.creators.some(c=>String(c.id)===String(id)));if(!ids.length){toast('Select at least one creator before continuing.','error');return}const payload={...(S.selectedCampaign.payload||{}),decisionShortlistIds:ids,decisionShortlistUpdatedAt:new Date().toISOString()};if(btn){btn.dataset.busy='1';btn.disabled=true;btn.textContent='Saving shortlist…'}try{const q=await sb.from('campaigns').update({payload,updated_at:new Date().toISOString()}).eq('id',S.selectedCampaign.id).eq('organization_id',S.org.id).select().single();if(q.error)throw q.error;S.selectedCampaign=q.data;const i=S.campaigns.findIndex(x=>x.id===q.data.id);if(i>=0)S.campaigns[i]=q.data;toast(`${ids.length} creator${ids.length===1?'':'s'} moved to Decision`,'good');S.page=3;renderPage()}catch(err){toast(err.message||'Could not save shortlist. Your current selection is still on screen.','error')}finally{if(btn){btn.dataset.busy='0';btn.disabled=false;btn.textContent='Save shortlist → Decision'}}});
-  document.getElementById('save-creator-fit-pdf')?.addEventListener('click',downloadCreatorFitPDF);
+  document.getElementById('save-creator-fit-pdf')?.addEventListener('click',()=>exportGateOr(downloadCreatorFitPDF));
   document.getElementById('run-creator-fit')?.addEventListener('click',async()=>{const btn=document.getElementById('run-creator-fit');if(!btn||btn.dataset.busy==='1')return;if(!S.selectedCampaign){toast('Create and save a campaign first.','error');return}if(!S.selectedAudience){toast('Complete Audience before calculating creator fit.','error');S.page=1;renderPage();return}btn.dataset.busy='1';btn.disabled=true;btn.textContent='Calculating…';try{const data=await calculateCreatorFitSafe(S.creators.map(x=>x.id));if(!data.success)throw new Error(data.error||'Creator fit analysis failed.');await refresh();toast(`${data.localFallback?'Local fit calculated':'Creator fit calculated'} · ${data.rows?.length||0} creators`,'good');renderPage()}catch(err){toast(err.message||'Creator fit analysis failed.','error')}finally{if(document.body.contains(btn)){btn.dataset.busy='0';btn.disabled=false;btn.textContent='Calculate / refresh fit'}}});
  };
  try{renderRegistry()}catch(err){
@@ -1393,11 +1393,11 @@ function renderBusinessImpactPage(c){const fmt=n=>Number(n||0).toLocaleString('e
  document.getElementById('regenerate-linked-learning')?.addEventListener('click',()=>{document.getElementById('learn-worked').value=linkedLearning.worked;document.getElementById('learn-friction').value=linkedLearning.friction;document.getElementById('learn-hypothesis').value=linkedLearning.hypothesis;toast('Learning refreshed from linked campaign evidence','good')});
  document.getElementById('learning-form').onsubmit=async e=>{e.preventDefault();const next={...(S.selectedCampaign.payload||{}),impactObjective:p.objective||p.goal||'',impactNotes:document.getElementById('learn-friction').value.trim(),learning:{worked:document.getElementById('learn-worked').value.trim(),friction:document.getElementById('learn-friction').value.trim(),hypothesis:document.getElementById('learn-hypothesis').value.trim(),nextActions:recs,sources:linkedLearning.sources,generatedAt:new Date().toISOString()},businessImpact:{score:impactScore,revenue,spend,roi,roas,conversions:conv,reach,views,clicks,engagement:eng,attendance,leads,ctr,engagementRate:engRate,conversionRate:convRate,digitalRecords:digital.length,offlineRecords:offline.length,calculatedAt:new Date().toISOString()}};const q=await sb.from('campaigns').update({payload:next,updated_at:new Date().toISOString()}).eq('id',S.selectedCampaign.id).select().single();if(q.error){toast(q.error.message,'error');return}S.selectedCampaign=q.data;toast('Business impact, learning and next actions saved','good');renderPage()};document.getElementById('impact-csv').onclick=downloadImpactCSV;document.getElementById('continue-report').onclick=()=>{S.page=6;renderPage()}}
 function downloadImpactPDF(){if(!window.jspdf?.jsPDF){window.print();return}const p=S.selectedCampaign?.payload?.businessImpact||{},l=S.selectedCampaign?.payload?.learning||{},doc=new window.jspdf.jsPDF();doc.setFontSize(18);doc.text('KOL IDS — Business Impact & Learning',14,18);doc.setFontSize(9);doc.text(`Campaign: ${S.selectedCampaign?.name||'—'}`,14,27);doc.text(`Impact ${Math.round(p.score??0)} | Revenue ${money(p.revenue)} | Spend ${money(p.spend)} | ROAS ${p.roas==null?'—':Number(p.roas).toFixed(2)+'x'} | ROI ${p.roi==null?'—':Math.round(p.roi)+'%'}`,14,35);let y=48;doc.setFontSize(11);doc.text('Learning',14,y);doc.setFontSize(9);for(const [label,val] of [['Worked',l.worked],['Friction',l.friction],['Next hypothesis',l.hypothesis]]){y+=9;doc.text(`${label}:`,14,y);if(val)doc.text(doc.splitTextToSize(String(val),180),28,y,{maxWidth:165});y+=Math.max(8,doc.splitTextToSize(String(val||'—'),165).length*5)}doc.save('KOL-IDS-Business-Impact-Learning.pdf')}
-function reportExportIsTrial(){const trial=Boolean(S.plan?.is_trial||String(S.subscription?.plan_code||'').toUpperCase()==='TRIAL_7');const role=String(S.membership?.role||'').toLowerCase();const ownerOrAdmin=role==='owner'||role==='admin';return trial&&!ownerOrAdmin}
+function reportExportIsTrial(){return Boolean(S.plan?.is_trial||String(S.subscription?.plan_code||'').toUpperCase()==='TRIAL_7')}
 function showPaidExportGate(){
  const old=document.getElementById('kol-export-gate');if(old)old.remove();
  const m=document.createElement('div');m.id='kol-export-gate';m.className='kol-export-modal';
- m.innerHTML=`<div class="kol-export-card" role="dialog" aria-modal="true" aria-labelledby="kol-export-title"><div class="kol-export-kicker">KOL IDS · PAID REPORT EXPORT</div><h3 id="kol-export-title">Export is available on a paid plan</h3><p>Your Trial workspace can review the full report on screen. Downloading raw report data as JSON or CSV is reserved for paid workspace access.</p><div class="kol-export-plans"><div class="kol-export-plan"><b>3 Months</b><span>Paid workspace</span></div><div class="kol-export-plan"><b>6 Months</b><span>Paid workspace</span></div><div class="kol-export-plan"><b>12 Months</b><span>Paid workspace</span></div></div><div class="kol-export-actions"><button type="button" id="kol-export-close">Not now</button><button type="button" class="primary" id="kol-export-upgrade">Upgrade to export →</button></div></div>`;
+ m.innerHTML=`<div class="kol-export-card" role="dialog" aria-modal="true" aria-labelledby="kol-export-title"><div class="kol-export-kicker">KOL IDS · PAID EXPORT</div><h3 id="kol-export-title">Unlock report exports</h3><p>Your Trial workspace can review everything on screen. CSV exports from Reports and the Creator Fit PDF are available after upgrading to a paid plan.</p><div class="kol-export-plans"><div class="kol-export-plan"><b>3 Months</b><strong>THB 35,000</strong><span>1 user · paid workspace</span></div><div class="kol-export-plan"><b>6 Months</b><strong>THB 65,000</strong><span>2 users · paid workspace</span></div><div class="kol-export-plan"><b>12 Months</b><strong>THB 125,000</strong><span>3 users · paid workspace</span></div></div><div class="kol-export-actions"><button type="button" id="kol-export-close">Not now</button><button type="button" class="primary" id="kol-export-upgrade">View plans &amp; subscribe →</button></div></div>`;
  document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)m.remove()});document.getElementById('kol-export-close').onclick=()=>m.remove();document.getElementById('kol-export-upgrade').onclick=()=>{window.location.href='/KOLIDS'};
 }
 function csvSafeName(name){return String(name||'Campaign').trim().replace(/[^A-Za-z0-9-_]+/g,'-').replace(/^-+|-+$/g,'')||'Campaign'}
@@ -2073,5 +2073,255 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
       .kol-report-page>.card .reports-next-cards .signal-box{min-height:0!important}
     }
   `;
+  document.head.appendChild(s);
+})();
+
+
+/* FINAL MOBILE CREATOR FIT — 3-UP METRICS / COMPACT REFERENCE */
+(function(){
+  const styleId='kol-ids-creator-mobile-3up-final';
+  if(document.getElementById(styleId)) return;
+  const s=document.createElement('style'); s.id=styleId;
+  s.textContent=`
+@media (max-width:560px){
+  .creator-registry-v3{
+    width:100%!important;max-width:100%!important;margin:0 auto!important;
+    padding:14px 10px 18px!important;border-radius:16px!important;
+  }
+  .creator-fit-main{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:9px!important;padding:12px 12px 18px!important;
+  }
+  .creator-identity{
+    grid-column:1/-1!important;
+    grid-template-columns:30px 76px minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+  .creator-check,.creator-check span{width:30px!important;height:30px!important;flex-basis:30px!important}
+  .creator-check input:checked+span:after{font-size:18px!important;left:5px!important;top:2px!important}
+  .creator-row-avatar{width:76px!important;height:76px!important;flex-basis:76px!important;border-radius:14px!important}
+  .creator-row-name{font-size:21px!important;line-height:1.05!important;letter-spacing:-.035em!important}
+  .creator-handle{font-size:10px!important;margin-top:4px!important}
+  .creator-mini-meta{font-size:10px!important;gap:5px!important;margin-top:5px!important;line-height:1.25!important}
+  .creator-mini-meta span{padding-right:5px!important}
+
+  .creator-score,.creator-stat{
+    grid-column:auto!important;grid-row:auto!important;
+    min-width:0!important;min-height:82px!important;
+    padding:12px 6px!important;border:1px solid #e1e5e8!important;
+    border-radius:14px!important;background:#fff!important;
+  }
+  .creator-score{align-items:center!important;justify-content:center!important;text-align:center!important}
+  .creator-stat{align-items:center!important;justify-content:center!important;text-align:center!important;border-left:1px solid #e1e5e8!important;padding-left:6px!important}
+  .creator-score-number,.creator-stat b{font-size:31px!important;line-height:.95!important;letter-spacing:-.06em!important}
+  .creator-score-number small{font-size:10px!important;margin-left:2px!important}
+  .creator-score-label{font-size:10px!important;margin-top:6px!important}
+  .creator-stat span{font-size:8px!important;letter-spacing:.12em!important;margin-top:6px!important}
+
+  .creator-read{grid-column:1/-1!important;padding:1px 0 0!important}
+  .creator-read-top{gap:5px!important}
+  .decision-badge,.gap-badge{font-size:9px!important;padding:5px 8px!important}
+  .creator-read p{font-size:12px!important;line-height:1.4!important;margin:8px 0 0!important}
+  .creator-next{font-size:12px!important;line-height:1.35!important;margin-top:5px!important}
+
+  .creator-actions-v3{
+    grid-column:1/-1!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:8px!important;padding:0!important;
+  }
+  .creator-actions-v3 .btn,.creator-actions-v3 .social-link{
+    width:100%!important;min-width:0!important;min-height:62px!important;
+    padding:8px 5px!important;border-radius:13px!important;font-size:13px!important;
+  }
+
+  .creator-fit-details{padding:14px 12px 18px!important}
+  .creator-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .creator-detail{min-height:174px!important;padding:12px!important;border-radius:13px!important}
+  .creator-detail-top span{font-size:11px!important}
+  .creator-detail-top b{font-size:24px!important}
+  .creator-detail-bar{height:6px!important;margin:8px 0!important}
+  .creator-detail p{font-size:10.5px!important;line-height:1.35!important;min-height:38px!important}
+  .creator-detail-action{font-size:10.5px!important;line-height:1.35!important;padding-top:8px!important;margin-top:5px!important}
+  .creator-detail-bottom{grid-template-columns:1fr!important;gap:8px!important;margin-top:10px!important}
+  .creator-detail-bottom>div{padding:10px 11px!important;border-radius:11px!important}
+  .creator-detail-bottom>div>b{font-size:10px!important}
+  .creator-detail-bottom>div>span{font-size:10px!important;line-height:1.35!important}
+}
+@media (max-width:390px){
+  .creator-registry-v3{padding-left:8px!important;padding-right:8px!important}
+  .creator-fit-main{gap:7px!important;padding-left:9px!important;padding-right:9px!important}
+  .creator-identity{grid-template-columns:28px 68px minmax(0,1fr)!important;gap:7px!important}
+  .creator-check,.creator-check span{width:28px!important;height:28px!important;flex-basis:28px!important}
+  .creator-row-avatar{width:68px!important;height:68px!important;flex-basis:68px!important;border-radius:13px!important}
+  .creator-row-name{font-size:19px!important}
+  .creator-handle,.creator-mini-meta{font-size:9px!important}
+  .creator-score,.creator-stat{min-height:76px!important;padding:10px 4px!important}
+  .creator-score-number,.creator-stat b{font-size:28px!important}
+  .creator-score-label{font-size:9px!important}.creator-stat span{font-size:7px!important}
+  .creator-actions-v3{gap:6px!important}
+  .creator-actions-v3 .btn,.creator-actions-v3 .social-link{min-height:58px!important;font-size:12px!important}
+  .creator-detail-grid{gap:7px!important}
+  .creator-detail{min-height:165px!important;padding:10px!important}
+  .creator-detail-top span{font-size:10px!important}.creator-detail-top b{font-size:22px!important}
+  .creator-detail p,.creator-detail-action{font-size:9.5px!important}
+}
+`;
+  document.head.appendChild(s);
+})();
+
+/* ENTERPRISE PERFORMANCE + BUSINESS IMPACT UI — 20261001 */
+
+/* ENTERPRISE PERFORMANCE + BUSINESS IMPACT UI — 20261001 */
+(function(){
+  const styleId='kol-ids-enterprise-performance-impact-ui-20261001';
+  if(document.getElementById(styleId)) return;
+  const s=document.createElement('style');
+  s.id=styleId;
+  s.textContent=`
+  /* ---------- Performance desktop ---------- */
+  .performance-type-picker{
+    background:linear-gradient(180deg,#fbfeff 0%,#f7fbfc 100%)!important;
+    border:1px solid #d9e9ed!important;
+    box-shadow:0 8px 24px rgba(20,45,55,.035)!important;
+  }
+  .performance-type-picker .section-head{margin-bottom:12px!important}
+  .performance-type-picker .type-grid{gap:10px!important}
+  .performance-type-option{
+    min-height:64px!important;
+    padding:12px 14px!important;
+    border-radius:12px!important;
+    border-color:#dce5e8!important;
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease!important;
+  }
+  .performance-type-option:hover{transform:translateY(-1px);border-color:#b9dce4;box-shadow:0 8px 20px rgba(24,80,92,.07)}
+  .performance-type-option:has(input:checked){border-color:#8ecfdc;background:#f3fcfe;box-shadow:inset 0 0 0 1px #8ecfdc,0 8px 20px rgba(24,80,92,.06)}
+  .performance-type-option b{font-size:11px!important;font-weight:900!important}
+  .performance-type-option small{font-size:8.5px!important;line-height:1.4!important}
+
+  .performance-entry-section,.ecommerce-panel,.gen-code-panel{
+    border-color:#dfe7ea!important;
+    box-shadow:0 8px 28px rgba(20,30,40,.035)!important;
+  }
+  .performance-entry-section .section-head,.ecommerce-panel .section-head{margin-bottom:12px!important}
+  .performance-entry-section .form-grid,.ecommerce-panel .form-grid{gap:10px!important}
+  .performance-entry-section .field,.ecommerce-panel .field{min-width:0!important}
+  .performance-entry-section .field input,
+  .performance-entry-section .field select,
+  .performance-entry-section .field textarea,
+  .ecommerce-panel .field input,
+  .ecommerce-panel .field select,
+  .ecommerce-panel .field textarea{
+    border-color:#dce4e8!important;
+    border-radius:10px!important;
+    min-height:40px!important;
+    background:#fff!important;
+  }
+  .performance-entry-section .field textarea,.ecommerce-panel .field textarea{min-height:88px!important}
+  .performance-entry-section .field input:focus,
+  .performance-entry-section .field select:focus,
+  .performance-entry-section .field textarea:focus,
+  .ecommerce-panel .field input:focus,
+  .ecommerce-panel .field select:focus,
+  .ecommerce-panel .field textarea:focus{border-color:#8ecfdc!important;box-shadow:0 0 0 3px rgba(174,239,255,.24)!important;outline:0!important}
+  .performance-entry-section .actions,.ecommerce-panel .actions,.gen-code-panel .actions{align-items:center!important}
+  .performance-entry-section .actions .btn,.ecommerce-panel .actions .btn,.gen-code-panel .actions .btn{min-height:40px!important}
+
+  .gen-code-panel{background:linear-gradient(180deg,#fff 0%,#fbfdfe 100%)!important}
+  .gen-code-panel .table-wrap,.gen-code-table .table-wrap{border:1px solid #e0e7ea!important;border-radius:12px!important;box-shadow:none!important}
+  .gen-code-panel table th,.gen-code-table table th{background:#17181c!important;color:#aeefff!important;font-size:8px!important;letter-spacing:.08em!important}
+  .gen-code-panel table td,.gen-code-table table td{font-size:9px!important;padding:10px!important}
+  .gen-code-panel .footer-note{font-size:8px!important;line-height:1.5!important;color:#78858c!important}
+
+  /* Recorded outcomes */
+  .performance-entry-section ~ .card .table-wrap,
+  .card:has([data-edit-performance]) .table-wrap{border:1px solid #e0e7ea!important;border-radius:12px!important;box-shadow:none!important}
+  .card:has([data-edit-performance]) table th{background:#17181c!important;color:#aeefff!important;font-size:8px!important;letter-spacing:.08em!important}
+  .card:has([data-edit-performance]) table td{font-size:9px!important;padding:10px 9px!important;vertical-align:middle!important}
+  .card:has([data-edit-performance]) table td .actions{display:flex!important;gap:6px!important;align-items:center!important}
+  .card:has([data-edit-performance]) table td .actions .btn{min-height:32px!important;padding:7px 10px!important;white-space:nowrap!important}
+
+  /* ---------- Business Impact ---------- */
+  [data-kol-business-impact="1"] .hero{margin-bottom:4px!important}
+  [data-kol-business-impact="1"] > .grid.g4:first-of-type .metric{
+    background:linear-gradient(180deg,#fff 0%,#fbfcfd 100%)!important;
+    border:1px solid #e0e7ea!important;
+    border-radius:14px!important;
+    box-shadow:0 8px 24px rgba(20,30,40,.035)!important;
+  }
+  [data-kol-business-impact="1"] > .grid.g4:first-of-type .metric strong{font-size:25px!important;letter-spacing:-.035em!important}
+  [data-kol-business-impact="1"] .card{border-color:#e0e7ea!important;box-shadow:0 8px 28px rgba(20,30,40,.03)!important}
+  [data-kol-business-impact="1"] .mini-stat{font-size:21px!important;font-weight:900!important;letter-spacing:-.025em!important}
+  [data-kol-business-impact="1"] .signal-box{border-color:#e0e7ea!important;border-radius:12px!important}
+  [data-kol-business-impact="1"] .business-learning-cards .signal-box{
+    min-height:118px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-start!important;
+    background:#fff8e8!important;
+    border-color:#f0dfbd!important;
+  }
+  [data-kol-business-impact="1"] .business-learning-cards .signal-box>b{font-size:11px!important;letter-spacing:.01em!important}
+  [data-kol-business-impact="1"] .business-learning-cards .signal-box p{font-size:12px!important;line-height:1.5!important;margin:9px 0 5px!important}
+  [data-kol-business-impact="1"] .business-learning-cards .signal-box small{font-size:9px!important;line-height:1.45!important}
+  [data-kol-business-impact="1"] #learning-form textarea{min-height:110px!important;border-radius:11px!important;border-color:#dce4e8!important}
+  [data-kol-business-impact="1"] #learning-form textarea:focus{border-color:#c7b078!important;box-shadow:0 0 0 3px rgba(255,228,167,.28)!important;outline:0!important}
+  [data-kol-business-impact="1"] #learning-form .actions{margin-top:12px!important}
+  [data-kol-business-impact="1"] .bottom-actions{margin-top:16px!important;align-items:center!important}
+  [data-kol-business-impact="1"] .bottom-actions .btn{min-height:40px!important}
+
+  /* ---------- Mobile: keep every control inside viewport ---------- */
+  @media(max-width:760px){
+    .performance-type-picker .type-grid{grid-template-columns:1fr 1fr!important;gap:7px!important}
+    .performance-type-option{min-height:56px!important;padding:9px 10px!important;align-items:flex-start!important}
+    .performance-type-option b{font-size:9px!important;line-height:1.25!important}
+    .performance-type-option small{font-size:7px!important;line-height:1.35!important;margin-top:2px!important}
+    .performance-type-option input{width:14px!important;height:14px!important;flex:0 0 14px!important;margin-top:1px!important}
+    .performance-type-option:last-child{grid-column:1/-1}
+
+    .performance-entry-section,.ecommerce-panel,.gen-code-panel{padding:12px!important}
+    .performance-entry-section .section-head,.ecommerce-panel .section-head,.gen-code-panel .section-head{margin-bottom:9px!important}
+    .performance-entry-section .section-head h2,.ecommerce-panel .section-head h2,.gen-code-panel .section-head h2{font-size:14px!important}
+    .performance-entry-section .field label,.ecommerce-panel .field label,.gen-code-panel .field label{font-size:8px!important}
+    .performance-entry-section .field input,
+    .performance-entry-section .field select,
+    .performance-entry-section .field textarea,
+    .ecommerce-panel .field input,
+    .ecommerce-panel .field select,
+    .ecommerce-panel .field textarea,
+    .gen-code-panel .field input,
+    .gen-code-panel .field select{width:100%!important;min-width:0!important;box-sizing:border-box!important}
+    .performance-entry-section .actions,.ecommerce-panel .actions,.gen-code-panel .actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important}
+    .performance-entry-section .actions .btn,.ecommerce-panel .actions .btn,.gen-code-panel .actions .btn{width:100%!important;min-width:0!important;padding:9px 7px!important;font-size:8px!important;white-space:normal!important}
+
+    .gen-code-panel .form-grid{grid-template-columns:1fr!important}
+    .gen-code-panel .form-grid .field.full{grid-column:1!important}
+    .gen-code-individual-table{min-width:590px!important}
+    .gen-code-table .table-wrap,.gen-code-panel .table-wrap{max-width:100%!important;overflow-x:auto!important}
+
+    .card:has([data-edit-performance]) .table-wrap{margin-left:-2px!important;margin-right:-2px!important}
+    .card:has([data-edit-performance]) table{min-width:760px!important}
+    .card:has([data-edit-performance]) table td .actions{flex-wrap:nowrap!important}
+    .card:has([data-edit-performance]) table td .actions .btn{font-size:8px!important;padding:7px 9px!important}
+
+    [data-kol-business-impact="1"] > .grid.g4:first-of-type{grid-template-columns:1fr 1fr!important;gap:7px!important}
+    [data-kol-business-impact="1"] > .grid.g4:first-of-type .metric{padding:10px!important;border-radius:11px!important}
+    [data-kol-business-impact="1"] > .grid.g4:first-of-type .metric strong{font-size:19px!important}
+    [data-kol-business-impact="1"] .mini-stat{font-size:18px!important}
+    [data-kol-business-impact="1"] .business-learning-cards{grid-template-columns:1fr!important;gap:7px!important}
+    [data-kol-business-impact="1"] .business-learning-cards .signal-box{min-height:0!important;padding:11px!important}
+    [data-kol-business-impact="1"] .business-learning-cards .signal-box p{font-size:10px!important;line-height:1.45!important}
+    [data-kol-business-impact="1"] .business-learning-cards .signal-box small{font-size:8px!important}
+    [data-kol-business-impact="1"] #learning-form textarea{min-height:96px!important}
+    [data-kol-business-impact="1"] .bottom-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important}
+    [data-kol-business-impact="1"] .bottom-actions .btn{width:100%!important;min-width:0!important;padding:9px 7px!important;font-size:8px!important;white-space:normal!important}
+  }
+  @media(max-width:420px){
+    .performance-type-picker .type-grid{grid-template-columns:1fr!important}
+    .performance-type-option:last-child{grid-column:auto}
+    .performance-type-option{min-height:48px!important}
+    .performance-entry-section .actions,.ecommerce-panel .actions,.gen-code-panel .actions{grid-template-columns:1fr!important}
+    [data-kol-business-impact="1"] > .grid.g4:first-of-type{grid-template-columns:1fr 1fr!important}
+    [data-kol-business-impact="1"] .bottom-actions{grid-template-columns:1fr!important}
+  }
+`;
   document.head.appendChild(s);
 })();
