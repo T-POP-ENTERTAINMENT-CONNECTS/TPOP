@@ -456,27 +456,33 @@
     if (data.topic === 'Other' && !String(data.other || '').trim()) { error.textContent = 'Please tell us what you need.'; otherInput.focus(); return; }
     if (!form.checkValidity()) { form.reportValidity(); return; }
     submit.disabled = true;
-    submit.textContent = 'Opening email…';
-    const recipient = 'hello@tpopentertainmentconnects.com';
+    submit.textContent = 'Sending…';
     const subject = `[KOL IDS Contact] ${String(data.topic||'General inquiry').trim()}`;
-    const body = [
-      `Name: ${String(data.name||'').trim()}`,
-      `Email: ${String(data.email||'').trim()}`,
-      `Company / Organization: ${String(data.company||'').trim() || 'Not provided'}`,
-      `Topic: ${String(data.topic||'').trim()}`,
-      String(data.other||'').trim() ? `Details: ${String(data.other||'').trim()}` : '',
-      '',
-      'Message:',
-      String(data.message||'').trim(),
-      '',
-      `Source: ${window.location.href}`
-    ].filter(Boolean).join('\n');
+    const payload = {
+      name: String(data.name||'').trim(),
+      email: String(data.email||'').trim(),
+      company: String(data.company||'').trim(),
+      topic: String(data.topic||'').trim(),
+      other: String(data.other||'').trim(),
+      message: String(data.message||'').trim(),
+      source: window.location.href
+    };
     try {
-      window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      const supabaseUrl = (cfg.SUPABASE_URL || 'https://xdmtuoyeiyhkwiwozaut.supabase.co').replace(/\/$/, '');
+      const response = await fetch(`${supabaseUrl}/functions/v1/contact-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || `Contact submission failed (${response.status})`);
+      }
       formWrap.hidden = true;
       success.hidden = false;
     } catch (err) {
-      error.textContent = 'Please email hello@tpopentertainmentconnects.com directly.';
+      console.error('KOL IDS contact submission failed:', err);
+      error.textContent = 'We could not send your message right now. Please try again.';
       submit.disabled = false;
       submit.textContent = 'Send message →';
     }
