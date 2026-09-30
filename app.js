@@ -367,7 +367,65 @@ th,td{padding:13px 12px}
 .kol-top>*{position:relative!important;z-index:1!important;}
 
 /* Creator registry v2 — compact decision dashboard */
-.creator-registry-card{border-radius:22px!important;padding:18px!important;background:rgba(255,255,255,.96)!important;box-shadow:0 18px 55px rgba(20,22,30,.06)!important}.history-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}.history-actions .btn{min-width:58px}.history-remove{border-color:#ead7d7!important;color:#a55f64!important;background:#fff!important}.history-remove:hover{background:#fff5f5!important;border-color:#dfbfc2!important}@media(max-width:760px){.history-row{display:grid!important;grid-template-columns:auto 1fr!important}.history-status{grid-column:2}.history-actions{grid-column:1/-1;justify-content:flex-start}.history-actions .btn{min-width:72px}}
+.creator-registry-card{border-radius:22px!important;padding:18px!important;background:rgba(255,255,255,.96)!important;box-shadow:0 18px 55px rgba(20,22,30,.06)!important}
+/* Campaign History — premium archive layout */
+.campaign-history-page{max-width:1380px;margin:0 auto}
+.campaign-history-page .history-hero{align-items:flex-end!important;margin-bottom:10px!important}
+.campaign-history-page .history-hero h2{letter-spacing:-.035em!important}
+.campaign-history-page .history-hero p{max-width:760px!important}
+.campaign-history-page .history-hero .hero-actions{display:flex;align-items:center;justify-content:flex-end}
+.campaign-history-page .history-rule{width:54px;height:2px;border-radius:999px;background:#4fd7e8;margin:4px 0 18px}
+.campaign-history-page .history-archive-card{padding:0!important;overflow:hidden;border:1px solid #e5eaee!important;background:#fff!important;box-shadow:0 20px 65px rgba(20,28,38,.07)!important;border-radius:24px!important}
+.campaign-history-page .history-archive-card>.section-head{padding:24px 26px 20px!important;margin:0!important;border-bottom:1px solid #edf0f2!important;background:linear-gradient(180deg,#fff 0%,#fbfdfe 100%)!important}
+.campaign-history-page .history-archive-card>.section-head h2{font-size:21px!important;letter-spacing:-.025em!important;margin:4px 0 5px!important}
+.campaign-history-page .history-archive-card>.section-head .sub{max-width:780px!important;font-size:11px!important;line-height:1.55!important}
+.campaign-history-page .history-list{padding:14px 16px 18px!important;background:#f7f9fa!important}
+.campaign-history-page .history-row{display:grid!important;grid-template-columns:58px minmax(0,1fr) 170px auto;align-items:center;gap:18px;min-height:118px;padding:20px 22px;margin:0 0 10px;border:1px solid #e6ebee;border-radius:18px;background:#fff;box-shadow:0 8px 26px rgba(20,32,42,.045);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.campaign-history-page .history-row:last-child{margin-bottom:0}
+.campaign-history-page .history-row:hover{transform:translateY(-1px);border-color:#d9e5e9;box-shadow:0 14px 34px rgba(20,32,42,.08)}
+.campaign-history-page .history-index{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:#17191d;color:#aeefff;font-size:12px;font-weight:950;letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.campaign-history-page .history-main{min-width:0;display:flex;flex-direction:column;gap:5px}
+.campaign-history-page .history-main b{font-size:17px;line-height:1.15;letter-spacing:-.02em;color:#151b20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.campaign-history-page .history-main small{font-size:10px;line-height:1.45;color:#78828a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.campaign-history-page .history-main small:first-of-type{color:#39444b;font-weight:800}
+.campaign-history-page .history-status{justify-self:start;display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:7px 11px;border:1px solid #d9eef3;border-radius:999px;background:#effbfe;color:#2d7382;font-size:9px;font-weight:950;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.campaign-history-page .history-actions{justify-self:end;display:flex!important;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap!important}
+.campaign-history-page .history-actions .btn{min-width:76px!important;min-height:42px!important;padding:10px 14px!important;border-radius:12px!important;font-size:10px!important;font-weight:900!important}
+.campaign-history-page .history-open{background:#17191d!important;color:#fff!important;border-color:#17191d!important;box-shadow:0 7px 18px rgba(23,25,29,.12)!important}
+.campaign-history-page .history-open:hover{background:#25282d!important}
+.campaign-history-page .history-remove{background:#fff!important;border-color:#e8d4d6!important;color:#a45d63!important}
+.campaign-history-page .history-remove:hover{background:#fff7f7!important;border-color:#dcb9bd!important}
+.campaign-history-page .history-empty{margin:0!important;padding:42px 24px!important;text-align:center;border:1px dashed #d9e1e5;border-radius:16px;background:#fff;color:#77818a;font-size:11px;line-height:1.6}
+@media(max-width:900px){
+ .campaign-history-page .history-row{grid-template-columns:50px minmax(0,1fr) 150px auto;gap:14px;padding:18px}
+ .campaign-history-page .history-main b{font-size:15px}
+ .campaign-history-page .history-status{font-size:8px}
+}
+@media(max-width:760px){
+ .campaign-history-page .history-hero{margin-bottom:12px!important}
+ .campaign-history-page .history-hero .hero-actions{justify-content:stretch}
+ .campaign-history-page .history-hero .hero-actions .btn{width:100%}
+ .campaign-history-page .history-rule{margin-bottom:14px}
+ .campaign-history-page .history-archive-card{border-radius:18px!important}
+ .campaign-history-page .history-archive-card>.section-head{padding:20px 18px 17px!important;display:flex!important;align-items:flex-start!important;gap:12px!important}
+ .campaign-history-page .history-archive-card>.section-head .pill{flex:0 0 auto}
+ .campaign-history-page .history-list{padding:10px!important}
+ .campaign-history-page .history-row{grid-template-columns:42px minmax(0,1fr)!important;gap:12px!important;align-items:start!important;padding:16px!important;min-height:0!important;border-radius:16px!important}
+ .campaign-history-page .history-index{width:38px;height:38px;border-radius:11px;font-size:10px}
+ .campaign-history-page .history-main b{font-size:14px;white-space:normal;overflow:visible}
+ .campaign-history-page .history-main small{white-space:normal;overflow:visible}
+ .campaign-history-page .history-status{grid-column:2!important;justify-self:start!important;margin-top:-3px}
+ .campaign-history-page .history-actions{grid-column:1/-1!important;justify-self:stretch!important;display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important;margin-top:2px}
+ .campaign-history-page .history-actions .btn{width:100%!important;min-width:0!important;min-height:44px!important}
+}
+@media(max-width:420px){
+ .campaign-history-page .history-archive-card>.section-head{display:block!important}
+ .campaign-history-page .history-archive-card>.section-head .pill{display:inline-flex!important;margin-top:10px}
+ .campaign-history-page .history-list{padding:8px!important}
+ .campaign-history-page .history-row{padding:14px!important}
+ .campaign-history-page .history-actions{grid-template-columns:1fr!important}
+}
+.history-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}.history-actions .btn{min-width:58px}.history-remove{border-color:#ead7d7!important;color:#a55f64!important;background:#fff!important}.history-remove:hover{background:#fff5f5!important;border-color:#dfbfc2!important}@media(max-width:760px){.history-row{display:grid!important;grid-template-columns:auto 1fr!important}.history-status{grid-column:2}.history-actions{grid-column:1/-1;justify-content:flex-start}.history-actions .btn{min-width:72px}}
 .creator-registry-card .table-wrap{border:0!important;border-radius:16px!important;background:transparent!important;overflow:auto}
 .creator-registry-card table{min-width:1180px!important;border-collapse:separate!important;border-spacing:0 8px!important}
 .creator-registry-card th{background:#f7f9fb!important;border:0!important;padding:11px 12px!important;color:#707681!important}
@@ -1180,12 +1238,12 @@ function downloadCreatorFitPDF(){
    drawGuidance([['Role',st.bestRole],['Gap',st.fitGap],['Format',st.contentFormat],['Plan',st.deployment]],sy+23);
    stroke(C.line);doc.line(M,sy+39,W-M,sy+39);
  };
- const perPage=1;
+ const perPage=2;
  for(let pageIndex=0;pageIndex<rows.length;pageIndex+=perPage){
    if(pageIndex)doc.addPage();
    pageHeader();
    const pageRows=rows.slice(pageIndex,pageIndex+perPage);
-   pageRows.forEach((row,i)=>drawCreator(row,pageIndex+i,rows.length,27+i*86));
+   pageRows.forEach((row,i)=>drawCreator(row,pageIndex+i,rows.length,27+i*83));
    text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.text('Generated from the saved creator profile and current campaign / audience context.',M,H-5);
    doc.text(`Page ${Math.floor(pageIndex/perPage)+1} / ${Math.ceil(rows.length/perPage)}`,W-M,H-5,{align:'right'});
  }
@@ -1451,7 +1509,7 @@ function reports(c){
  const active=p.selectedCreatorIds||[],selected=decisionRows;
  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
  const topByCreator=(()=>{const by={};perf.filter(x=>x.actual_score!=null).forEach(x=>(by[String(x.creator_id)]??=[]).push(Number(x.actual_score)));return Object.entries(by).map(([id,v])=>({id,name:creatorName(id),score:v.reduce((a,b)=>a+b,0)/v.length,n:v.length})).sort((a,b)=>b.score-a.score).slice(0,3)})();
- c.innerHTML=`<div data-kol-report-page="1"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><button class="btn primary" id="report-campaign-intelligence-csv">Campaign Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Business impact CSV</button></div></div>
+ c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><button class="btn primary" id="report-campaign-intelligence-csv">Campaign Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Business impact CSV</button></div></div>
  <div class="grid g4"><div class="metric"><span class="label">Creators approved</span><strong>${active.length}</strong><small>Decision shortlist</small></div><div class="metric"><span class="label">Performance records</span><strong>${perf.length}</strong><small>All outcome types</small></div><div class="metric"><span class="label">Impact score</span><strong>${Math.round(impact.score)}</strong><small>Calculated live</small></div><div class="metric"><span class="label">ROAS</span><strong>${impact.roas==null?'—':Number(impact.roas).toFixed(2)+'x'}</strong><small>Revenue / spend</small></div></div>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">01 · Campaign & Audience</div><h2>Strategic context</h2></div></div><div class="grid g2"><div class="signal-box"><h4>Campaign</h4><p><b>${esc(S.selectedCampaign?.name||'—')}</b></p><p>${esc((p.objectives||[]).join(' · ')||p.objective||p.goal||'—')}</p><p>${esc((p.brandPersonalities||[]).join(' · ')||'—')}</p></div><div class="signal-box"><h4>Audience</h4><p><b>${esc(S.selectedAudience?.payload?.audienceType||'—')}</b></p><p>${esc(S.selectedAudience?.payload?.audiencePersona||'—')}</p></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">02 · Creator Decision</div><h2>Approved creator evidence</h2></div></div>${selected.length?`<div class="table-wrap"><table><thead><tr><th>Creator</th><th>Decision</th><th>Overall</th><th>Audience</th><th>Content</th><th>Brand</th><th>Performance</th><th>Commercial</th><th>Risk</th></tr></thead><tbody>${selected.map(x=>{const e=x.decision.evidence||{};return `<tr><td><b>${esc(x.creator.name)}</b></td><td>${esc(x.decision.decision||'—')}</td><td>${x.decision.score==null?'—':Math.round(x.decision.score)}</td><td>${Math.round(e.audienceFit??50)}</td><td>${Math.round(e.contentFit??50)}</td><td>${Math.round(e.brandFit??50)}</td><td>${Math.round(e.performance??0)}</td><td>${Math.round(e.commercial??50)}</td><td>${Math.round(e.risk??50)}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">No approved creators yet.</div>'}</section>
@@ -1867,6 +1925,153 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
   .creator-actions-v3{gap:10px!important}.creator-actions-v3 .btn,.creator-actions-v3 .social-link{min-height:70px!important;border-radius:14px!important;font-size:16px!important}
   .creator-fit-details{padding:18px 14px 22px!important}.creator-detail-grid{gap:10px!important}.creator-detail{min-height:205px!important;padding:14px!important;border-radius:14px!important}.creator-detail-top span{font-size:14px!important}.creator-detail-top b{font-size:27px!important}.creator-detail-bar{height:7px!important;margin:10px 0!important}.creator-detail p{font-size:12px!important;min-height:45px!important}.creator-detail-action{font-size:12px!important;padding-top:10px!important}.creator-detail-bottom>div{padding:13px 14px!important}.creator-detail-bottom>div>b{font-size:12px!important}.creator-detail-bottom>div>span{font-size:12px!important}
 }
+
+/* FINAL SIDEBAR TYPOGRAPHY — stage titles bold, supporting descriptions regular */
+.kol-nav button .nav-copy small{font-weight:400!important;}
+.kol-side.open .kol-nav .nav-copy small{font-weight:400!important;}
+
 `;
+  document.head.appendChild(s);
+})();
+
+
+/* REPORTS PREMIUM UI — 20261001 */
+(function(){
+  const styleId='kol-ids-reports-premium-20261001';
+  if(document.getElementById(styleId)) return;
+  const s=document.createElement('style');
+  s.id=styleId;
+  s.textContent=`
+    .kol-report-page{max-width:1320px!important;margin:0 auto!important}
+    .kol-report-page>.hero{
+      padding:24px 26px!important;
+      margin-bottom:18px!important;
+      border:1px solid #e3e6ea!important;
+      border-radius:18px!important;
+      background:linear-gradient(135deg,#ffffff 0%,#fbfcfd 72%,#f3fbfd 100%)!important;
+      box-shadow:0 12px 36px rgba(20,22,30,.055)!important;
+      align-items:center!important;
+    }
+    .kol-report-page>.hero>div:first-child{min-width:0!important;max-width:760px!important}
+    .kol-report-page>.hero .kicker{font-size:8px!important;letter-spacing:.18em!important;font-weight:950!important;color:#5d7a84!important}
+    .kol-report-page>.hero h2{font-size:30px!important;line-height:1.05!important;margin:6px 0 8px!important;letter-spacing:-.055em!important}
+    .kol-report-page>.hero p{font-size:11px!important;line-height:1.6!important;color:#68727b!important;max-width:720px!important}
+    .kol-report-page>.hero .hero-actions{
+      display:grid!important;
+      grid-template-columns:repeat(2,minmax(150px,1fr))!important;
+      gap:8px!important;
+      min-width:330px!important;
+      max-width:390px!important;
+      padding:7px!important;
+      border:1px solid #e3e6ea!important;
+      border-radius:14px!important;
+      background:#f7f8fa!important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important;
+    }
+    .kol-report-page>.hero .hero-actions .btn{
+      width:100%!important;
+      min-height:42px!important;
+      padding:10px 12px!important;
+      border-radius:10px!important;
+      font-size:9px!important;
+      letter-spacing:-.01em!important;
+      white-space:nowrap!important;
+      box-shadow:none!important;
+    }
+    .kol-report-page>.hero .hero-actions .btn.primary{
+      background:#17171b!important;
+      border-color:#17171b!important;
+      box-shadow:0 8px 18px rgba(20,20,25,.14)!important;
+    }
+    .kol-report-page>.card{
+      position:relative!important;
+      overflow:hidden!important;
+      border:1px solid #e3e6ea!important;
+      border-radius:18px!important;
+      background:#fff!important;
+      box-shadow:0 10px 34px rgba(20,22,30,.045)!important;
+      padding:21px 22px!important;
+    }
+    .kol-report-page>.card:before{
+      content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+      background:linear-gradient(180deg,#4fd7e8,#cceff3);opacity:.75;
+    }
+    .kol-report-page>.card .section-head{margin-bottom:16px!important;padding-bottom:12px!important;border-bottom:1px solid #eef0f2!important}
+    .kol-report-page>.card .section-head .label{font-size:8px!important;letter-spacing:.17em!important;color:#6c858d!important}
+    .kol-report-page>.card .section-head h2{font-size:18px!important;line-height:1.15!important;margin-top:4px!important}
+    .kol-report-page>.card .section-head .sub{font-size:9px!important;line-height:1.55!important;max-width:900px!important}
+    .kol-report-page>.card .signal-box{
+      min-width:0!important;
+      padding:16px!important;
+      border:1px solid #e5e8eb!important;
+      border-radius:13px!important;
+      background:linear-gradient(180deg,#fff,#fafbfc)!important;
+      box-shadow:0 5px 16px rgba(20,22,30,.035)!important;
+    }
+    .kol-report-page>.card .signal-box h4{
+      margin:0 0 9px!important;
+      font-size:10px!important;
+      line-height:1.25!important;
+      letter-spacing:.01em!important;
+      color:#252a2f!important;
+    }
+    .kol-report-page>.card .signal-box p{
+      margin:5px 0 0!important;
+      font-size:10px!important;
+      line-height:1.55!important;
+      color:#626d75!important;
+      overflow-wrap:anywhere!important;
+    }
+    .kol-report-page>.card .signal-box p b{color:#17171b!important}
+    .kol-report-page>.card .table-wrap{
+      border:1px solid #e2e6e9!important;
+      border-radius:13px!important;
+      box-shadow:none!important;
+    }
+    .kol-report-page>.card table{min-width:920px!important}
+    .kol-report-page>.card th{
+      background:#17171b!important;
+      color:#d9fbff!important;
+      border-bottom:0!important;
+      padding:11px 12px!important;
+      font-size:7px!important;
+      letter-spacing:.14em!important;
+    }
+    .kol-report-page>.card td{padding:11px 12px!important;font-size:9px!important;vertical-align:top!important;color:#424b52!important}
+    .kol-report-page>.card tbody tr:hover td{background:#fbfdfe!important}
+    .kol-report-page>.card:nth-of-type(3) .signal-box,
+    .kol-report-page>.card:nth-of-type(4) .signal-box{background:#f8fafb!important}
+    .kol-report-page>.card .reports-next-cards .signal-box{
+      background:#fff8e8!important;
+      border-color:#f0dfbd!important;
+      box-shadow:0 5px 16px rgba(113,78,27,.045)!important;
+      min-height:126px!important;
+    }
+    .kol-report-page>.card .reports-next-cards .signal-box h4,
+    .kol-report-page>.card .reports-next-cards .signal-box p{color:#6b4f28!important}
+    .kol-report-page>.card .reports-next-cards .signal-box h4{font-size:10px!important;font-weight:900!important}
+    .kol-report-page>.card .reports-next-cards .signal-box p{font-size:10px!important;line-height:1.55!important}
+    .kol-report-page>.card .pill{font-size:8px!important;padding:5px 8px!important}
+    .kol-report-page>.card .empty{padding:18px!important;border:1px dashed #dfe3e6!important;border-radius:12px!important;color:#7b838a!important;background:#fafbfc!important;font-size:10px!important}
+    @media(max-width:900px){
+      .kol-report-page>.hero{align-items:flex-start!important;flex-direction:column!important}
+      .kol-report-page>.hero .hero-actions{width:100%!important;max-width:none!important;min-width:0!important}
+      .kol-report-page>.card{padding:16px!important}
+    }
+    @media(max-width:560px){
+      .kol-report-page>.hero{padding:16px!important;border-radius:15px!important}
+      .kol-report-page>.hero h2{font-size:24px!important}
+      .kol-report-page>.hero p{font-size:9px!important}
+      .kol-report-page>.hero .hero-actions{grid-template-columns:1fr 1fr!important;gap:6px!important;padding:6px!important}
+      .kol-report-page>.hero .hero-actions .btn{min-height:40px!important;padding:8px 6px!important;font-size:8px!important;white-space:normal!important}
+      .kol-report-page>.card{padding:13px!important;border-radius:14px!important}
+      .kol-report-page>.card .section-head h2{font-size:15px!important}
+      .kol-report-page>.card .section-head .sub{font-size:8.5px!important}
+      .kol-report-page>.card .signal-box{padding:12px!important}
+      .kol-report-page>.card .signal-box h4{font-size:9px!important}
+      .kol-report-page>.card .signal-box p{font-size:9px!important}
+      .kol-report-page>.card .reports-next-cards .signal-box{min-height:0!important}
+    }
+  `;
   document.head.appendChild(s);
 })();
