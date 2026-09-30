@@ -46,7 +46,7 @@ async function submit(action){
     const data=await r.json().catch(()=>({}));
     if(!r.ok||!data.ok)throw new Error(data.error||`Request failed (${r.status})`);
     $('actions').style.display='none';status.className='status success';
-    status.innerHTML=action==='approve'?`<b>Account approved.</b><br>Order ${data.order_number||payload.order_number} has been sent to the payment approval service. The customer will receive the activation email when activation completes.`:`<b>Application rejected.</b><br>Order ${data.order_number||payload.order_number} has been sent to the payment approval service.`;
+    status.innerHTML=action==='approve'?`<b>Account approved.</b><br>Order ${data.order_number||payload.order_number} is now active. The customer will receive the activation email shortly.`:`<b>Application rejected.</b><br>Order ${data.order_number||payload.order_number} has been rejected.`;
   }catch(e){status.className='status error';status.textContent=e.message||'Approval failed.';$('approve').disabled=false;$('reject').disabled=false}
 }
 $('approve').onclick=()=>submit('approve');$('reject').onclick=()=>submit('reject');
