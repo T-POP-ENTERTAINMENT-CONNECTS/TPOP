@@ -1,14 +1,14 @@
 (function(){
 'use strict';
-// KOL IDS FINAL HARD ROUTE · BUSINESS IMPACT / PERFORMANCE SEPARATION · 2026-09-30
-if(window.__KOL_IDS_RUNTIME_VERSION__ && window.__KOL_IDS_RUNTIME_VERSION__ !== 'V36.4-BUSINESS-IMPACT-BLANK-FIX'){
+// KOL IDS FINAL HARD ROUTE · CREATOR INTELLIGENCE INTERACTION FIX · 2026-10-01
+if(window.__KOL_IDS_RUNTIME_VERSION__ && window.__KOL_IDS_RUNTIME_VERSION__ !== 'V36.5-CREATOR-INTELLIGENCE-INTERACTION-FIX'){
   // A stale runtime may already be on the page. Clear its mount and let this release own the workspace.
   const stale=document.getElementById('app');
   if(stale) stale.innerHTML='';
 }
 if(window.__KOL_IDS_RUNTIME_STARTED__) return;
-window.__KOL_IDS_RUNTIME_STARTED__='V36.4-BUSINESS-IMPACT-BLANK-FIX';
-window.__KOL_IDS_RUNTIME_VERSION__='V36.4-BUSINESS-IMPACT-BLANK-FIX';
+window.__KOL_IDS_RUNTIME_STARTED__='V36.5-CREATOR-INTELLIGENCE-INTERACTION-FIX';
+window.__KOL_IDS_RUNTIME_VERSION__='V36.5-CREATOR-INTELLIGENCE-INTERACTION-FIX';
 const C=window.KOL_IDS_CONFIG||{},root=document.getElementById('app');
 let sb=null;
 const S={session:null,org:null,membership:null,plan:null,subscription:null,access:false,accessReason:null,page:0,campaigns:[],audiences:[],creators:[],decisions:[],reviews:[],impacts:[],selectedCampaign:null,selectedAudience:null,analysis:null,engineRuns:[],portfolioRuns:[],performance:[],predictions:[],creatorBatch:[],creatorEditTarget:null,performanceEditTarget:null,audienceDraft:null,creatorFitAutoKey:null,creatorFitAutoBusy:false,localFitRows:[]};
@@ -367,7 +367,7 @@ th,td{padding:13px 12px}
 .kol-top>*{position:relative!important;z-index:1!important;}
 
 /* Creator registry v2 — compact decision dashboard */
-.creator-registry-card{border-radius:22px!important;padding:18px!important;background:rgba(255,255,255,.96)!important;box-shadow:0 18px 55px rgba(20,22,30,.06)!important}
+.creator-registry-card{border-radius:22px!important;padding:18px!important;background:rgba(255,255,255,.96)!important;box-shadow:0 18px 55px rgba(20,22,30,.06)!important}.history-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}.history-actions .btn{min-width:58px}.history-remove{border-color:#ead7d7!important;color:#a55f64!important;background:#fff!important}.history-remove:hover{background:#fff5f5!important;border-color:#dfbfc2!important}@media(max-width:760px){.history-row{display:grid!important;grid-template-columns:auto 1fr!important}.history-status{grid-column:2}.history-actions{grid-column:1/-1;justify-content:flex-start}.history-actions .btn{min-width:72px}}
 .creator-registry-card .table-wrap{border:0!important;border-radius:16px!important;background:transparent!important;overflow:auto}
 .creator-registry-card table{min-width:1180px!important;border-collapse:separate!important;border-spacing:0 8px!important}
 .creator-registry-card th{background:#f7f9fb!important;border:0!important;padding:11px 12px!important;color:#707681!important}
@@ -415,7 +415,7 @@ const pages=[
  {label:'Campaign History',group:'Archive',icon:'08'}
 ];
 function shell(){
- const descriptions=['Define campaign context & objective','Define the audience persona','Add creators manually and build creator intelligence','Calculate fit, explain the result & select creators','Measure digital and offline outcomes','Translate outcomes into business impact','Export the decision and impact report'];
+ const descriptions=['Define campaign context & objective','Define the audience persona','Add creators manually and build creator intelligence','Calculate fit, explain the result & select creators','Measure digital and offline outcomes','Translate outcomes into business impact','Export the decision and impact report','Review saved campaigns and return to any campaign context'];
  const analysisId='AN-'+String(S.session?.user?.id||'').replace(/[^A-Za-z0-9]/g,'').slice(0,10).toUpperCase();
  root.innerHTML=`<div class="kol-shell"><aside class="kol-side" id="side"><div class="kol-brand"><div><b>KOL IDS™</b><small>INVESTMENT DECISION INTELLIGENCE</small></div></div><nav class="kol-nav">${pages.map((p,i)=>'<button data-page="'+i+'" class="'+(i===S.page?'active':'')+'"><span class="nav-icon">'+String(i+1).padStart(2,'0')+'</span><span class="nav-copy"><strong>Step '+String(i+1).padStart(2,'0')+' · '+p.label+'</strong><small>'+descriptions[i]+'</small></span></button>').join('')}</nav><div class="side-spacer"></div><div class="side-foot"><div class="org">System status</div><div class="meta">Connected</div><div class="side-actions"><button id="logout">Sign out</button></div></div></aside><main class="kol-main"><header class="kol-top"><div class="top-title-wrap"><button class="mobile-menu" id="mobile-menu" aria-label="Open menu">Menu</button><div><h1 id="title">Campaign</h1><p id="copy">Define campaign context & objective</p></div></div><div class="top-actions"><span class="top-email">${esc(S.session?.user?.email||'')}</span><span class="top-chip">${esc(analysisId)}</span><button class="btn new-analysis-btn" id="new-analysis">New analysis</button></div></header><div id="content" class="kol-content"></div></main></div>`;
  document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{
@@ -473,6 +473,28 @@ function renderPage(){
  if(target===7){campaignHistory(c);return;}
  return campaignIntake(c);
 }
+async function removeCampaignFromHistory(id){
+ const row=S.campaigns.find(x=>String(x.id)===String(id));
+ if(!row)return;
+ const name=row.name||'this campaign';
+ if(!window.confirm(`Remove ${name} from Campaign History?\n\nThis permanently removes the campaign and its campaign-linked records from this workspace.`))return;
+ const btn=document.querySelector(`[data-history-remove="${String(id).replace(/"/g,'\\"')}"]`);
+ if(btn?.dataset.busy==='1')return;
+ if(btn){btn.dataset.busy='1';btn.disabled=true;btn.textContent='Removing…'}
+ try{
+   const q=await sb.from('campaigns').delete().eq('id',id).eq('organization_id',S.org.id);
+   if(q.error)throw q.error;
+   const wasSelected=String(S.selectedCampaign?.id||'')===String(id);
+   if(wasSelected){S.selectedCampaign=null;S.selectedAudience=null;S.analysis=null;S.creatorBatch=[];S.localFitRows=[];S.creatorEditTarget=null;S.performanceEditTarget=null}
+   await refresh();
+   toast(`${name} removed from campaign history`,'good');
+   if(S.page===7)renderPage();else renderPage();
+ }catch(err){
+   toast(err?.message||'Could not remove campaign. No changes were kept.','error');
+ }finally{
+   if(btn&&document.body.contains(btn)){btn.dataset.busy='0';btn.disabled=false;btn.textContent='Remove'}
+ }
+}
 function campaignHistory(c){
  const rows=[...S.campaigns].sort((a,b)=>new Date(b.updated_at||b.created_at||0)-new Date(a.updated_at||a.created_at||0));
  const date=v=>{if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'})};
@@ -483,11 +505,12 @@ function campaignHistory(c){
   <div class="history-rule"></div>
   <section class="card history-archive-card">
    <div class="section-head"><div><div class="label">WORKSPACE RECORD</div><h2>Campaign history</h2><p class="sub">Open a previous campaign to continue from its saved context. ${rows.length} campaign${rows.length===1?'':'s'} recorded.</p></div><span class="pill cyan">${rows.length} SAVED</span></div>
-   <div class="history-list">${rows.length?rows.map((x,i)=>`<div class="history-row"><div class="history-index">${String(i+1).padStart(2,'0')}</div><div class="history-main"><b>${esc(x.name||'Untitled Campaign')}</b><small>${esc(String(x.status||'draft').toLowerCase())} · ${esc(objective(x))}</small><small>Created ${date(x.created_at)} · Updated ${date(x.updated_at||x.created_at)}</small></div><div class="history-status">${esc(status(x))}</div><button class="btn history-open" data-history-open="${esc(x.id)}">Open</button></div>`).join(''):'<div class="empty history-empty">No saved campaigns yet. Create a campaign and it will appear here automatically.</div>'}</div>
+   <div class="history-list">${rows.length?rows.map((x,i)=>`<div class="history-row"><div class="history-index">${String(i+1).padStart(2,'0')}</div><div class="history-main"><b>${esc(x.name||'Untitled Campaign')}</b><small>${esc(String(x.status||'draft').toLowerCase())} · ${esc(objective(x))}</small><small>Created ${date(x.created_at)} · Updated ${date(x.updated_at||x.created_at)}</small></div><div class="history-status">${esc(status(x))}</div><div class="history-actions"><button class="btn history-open" type="button" data-history-open="${esc(x.id)}">Open</button><button class="btn danger history-remove" type="button" data-history-remove="${esc(x.id)}">Remove</button></div></div>`).join(''):'<div class="empty history-empty">No saved campaigns yet. Create a campaign and it will appear here automatically.</div>'}</div>
   </section>
  </div>`;
  document.getElementById('history-new-campaign')?.addEventListener('click',()=>{S.selectedCampaign=null;S.selectedAudience=null;S.analysis=null;S.creatorBatch=[];S.page=0;renderPage();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>document.getElementById('campaign-name')?.focus(),60)});
  document.querySelectorAll('[data-history-open]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.historyOpen;selectCampaign(id);S.page=0;renderPage();window.scrollTo({top:0,behavior:'smooth'})}));
+ document.querySelectorAll('[data-history-remove]').forEach(b=>b.addEventListener('click',()=>removeCampaignFromHistory(b.dataset.historyRemove)));
 }
 
 function selectCampaign(id){S.selectedCampaign=S.campaigns.find(x=>x.id===id)||null;S.selectedAudience=S.audiences.find(x=>x.campaign_id===id)||null;S.audienceDraft=null;S.analysis=null;renderPage()}
@@ -957,17 +980,51 @@ function creators(c){
    }).join('')}</div>
    <div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn primary" id="save-shortlist-registry">Save shortlist → Decision</button></div>
   </section>`:'<div class="empty">Save creators first. Then choose the creators that should move into Decision.</div>';
-  document.getElementById('shortlist-count-number').textContent=document.querySelectorAll('[data-shortlist-creator]:checked').length;
-  document.querySelectorAll('[data-shortlist-creator]').forEach(el=>el.onchange=()=>{document.getElementById('shortlist-count-number').textContent=document.querySelectorAll('[data-shortlist-creator]:checked').length});
+  const updateShortlistCount=()=>{
+   const shortlistCount=document.getElementById('shortlist-count-number');
+   if(shortlistCount) shortlistCount.textContent=String(document.querySelectorAll('[data-shortlist-creator]:checked').length);
+  };
+  updateShortlistCount();
+  document.querySelectorAll('[data-shortlist-creator]').forEach(el=>el.onchange=updateShortlistCount);
   document.querySelectorAll('[data-edit-saved]').forEach(b=>b.onclick=()=>editSavedCreator(b.dataset.editSaved));
   document.querySelectorAll('[data-remove-saved]').forEach(b=>b.onclick=()=>removeSavedCreator(b.dataset.removeSaved));
   document.getElementById('save-shortlist-registry')?.addEventListener('click',async()=>{const btn=document.getElementById('save-shortlist-registry');if(btn?.dataset.busy==='1')return;if(!S.selectedCampaign){toast('Create a campaign first.','error');return}const ids=[...document.querySelectorAll('[data-shortlist-creator]:checked')].map(x=>x.dataset.shortlistCreator).filter(id=>S.creators.some(c=>String(c.id)===String(id)));if(!ids.length){toast('Select at least one creator before continuing.','error');return}const payload={...(S.selectedCampaign.payload||{}),decisionShortlistIds:ids,decisionShortlistUpdatedAt:new Date().toISOString()};if(btn){btn.dataset.busy='1';btn.disabled=true;btn.textContent='Saving shortlist…'}try{const q=await sb.from('campaigns').update({payload,updated_at:new Date().toISOString()}).eq('id',S.selectedCampaign.id).eq('organization_id',S.org.id).select().single();if(q.error)throw q.error;S.selectedCampaign=q.data;const i=S.campaigns.findIndex(x=>x.id===q.data.id);if(i>=0)S.campaigns[i]=q.data;toast(`${ids.length} creator${ids.length===1?'':'s'} moved to Decision`,'good');S.page=3;renderPage()}catch(err){toast(err.message||'Could not save shortlist. Your current selection is still on screen.','error')}finally{if(btn){btn.dataset.busy='0';btn.disabled=false;btn.textContent='Save shortlist → Decision'}}});
   document.getElementById('save-creator-fit-csv')?.addEventListener('click',downloadDecisionCSV);
   document.getElementById('run-creator-fit')?.addEventListener('click',async()=>{const btn=document.getElementById('run-creator-fit');if(!btn||btn.dataset.busy==='1')return;if(!S.selectedCampaign){toast('Create and save a campaign first.','error');return}if(!S.selectedAudience){toast('Complete Audience before calculating creator fit.','error');S.page=1;renderPage();return}btn.dataset.busy='1';btn.disabled=true;btn.textContent='Calculating…';try{const data=await calculateCreatorFitSafe(S.creators.map(x=>x.id));if(!data.success)throw new Error(data.error||'Creator fit analysis failed.');await refresh();toast(`${data.localFallback?'Local fit calculated':'Creator fit calculated'} · ${data.rows?.length||0} creators`,'good');renderPage()}catch(err){toast(err.message||'Creator fit analysis failed.','error')}finally{if(document.body.contains(btn)){btn.dataset.busy='0';btn.disabled=false;btn.textContent='Calculate / refresh fit'}}});
  };
- renderRegistry();
- document.querySelectorAll('[data-chip]').forEach(b=>b.onclick=()=>{b.classList.toggle('selected')}); document.querySelectorAll('.signal-other').forEach(input=>{input.addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();const value=input.value.trim();if(!value)return;const k=input.dataset.otherFor;const wrap=document.querySelector(`[data-chips-for="${k}"]`);if(!wrap)return;const exists=[...wrap.querySelectorAll('[data-custom-signal]')].some(b=>String(b.dataset.customValue).toLowerCase()===value.toLowerCase());if(!exists){const btn=document.createElement('button');btn.type='button';btn.className='chip selected custom-signal-chip';btn.dataset.customSignal=k;btn.dataset.customValue=value;btn.innerHTML=`${esc(value)} <b aria-hidden="true">×</b>`;btn.onclick=()=>btn.remove();wrap.appendChild(btn)}input.value='';});}); document.querySelectorAll('.custom-signal-chip').forEach(b=>b.onclick=()=>b.remove());
- document.getElementById('cr-photo').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const data=await compressCreatorImage(file);document.getElementById('cr-photo-data').value=data;document.getElementById('cr-photo-status').textContent='Photo ready';document.getElementById('creator-photo-preview').innerHTML=`<img src="${data}" alt="Creator preview" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid #e6e7eb">`}catch(err){toast(err.message||'Could not process image','error')}};
+ try{renderRegistry()}catch(err){
+   console.error('[KOL IDS] Creator registry render failed',err);
+   const wrap=document.getElementById('creator-registry-shortlist');
+   if(wrap)wrap.innerHTML='<div class="empty">Creator registry could not render. Your creator form is still available. Refresh the page after checking the console error.</div>';
+   toast('Creator registry had a display error. The creator form remains available.','error');
+ }
+ // Bind Creator Intelligence controls through one stable form-level delegation.
+ // This avoids losing click handlers when the registry is re-rendered by fit calculations.
+ const creatorForm=document.getElementById('creator-form');
+ if(creatorForm && !creatorForm.dataset.interactionBound){
+   creatorForm.dataset.interactionBound='1';
+   creatorForm.addEventListener('click',e=>{
+     const chip=e.target.closest('[data-chip]');
+     if(chip && creatorForm.contains(chip)){e.preventDefault();chip.classList.toggle('selected');return;}
+     const custom=e.target.closest('.custom-signal-chip');
+     if(custom && creatorForm.contains(custom)){e.preventDefault();custom.remove();}
+   });
+   creatorForm.addEventListener('keydown',e=>{
+     const input=e.target.closest('.signal-other');
+     if(!input || e.key!=='Enter')return;
+     e.preventDefault();
+     const value=input.value.trim(); if(!value)return;
+     const k=input.dataset.otherFor;
+     const wrap=creatorForm.querySelector(`[data-chips-for="${k}"]`); if(!wrap)return;
+     const exists=[...wrap.querySelectorAll('[data-custom-signal]')].some(b=>String(b.dataset.customValue).toLowerCase()===value.toLowerCase());
+     if(!exists){
+       const btn=document.createElement('button');btn.type='button';btn.className='chip selected custom-signal-chip';btn.dataset.customSignal=k;btn.dataset.customValue=value;btn.innerHTML=`${esc(value)} <b aria-hidden="true">×</b>`;wrap.appendChild(btn);
+     }
+     input.value='';
+   });
+ }
+ const photoInput=document.getElementById('cr-photo');
+ if(photoInput) photoInput.onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const data=await compressCreatorImage(file);const dataEl=document.getElementById('cr-photo-data'),statusEl=document.getElementById('cr-photo-status'),previewEl=document.getElementById('creator-photo-preview');if(dataEl)dataEl.value=data;if(statusEl)statusEl.textContent='Photo ready';if(previewEl)previewEl.innerHTML=`<img src="${data}" alt="Creator preview" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid #e6e7eb">`}catch(err){toast(err.message||'Could not process image','error')}};
  document.querySelectorAll('[data-edit-saved]').forEach(b=>b.onclick=()=>editSavedCreator(b.dataset.editSaved));
  let creatorMutationBusy=false;
 document.getElementById('creator-action').onclick=async()=>{
@@ -1009,7 +1066,6 @@ document.getElementById('creator-action').onclick=async()=>{
    window.__KOL_IDS_CREATOR_ACTION_OBSERVER.observe(document.body,{subtree:true,childList:true});
  }
 
- document.querySelectorAll('[data-shortlist-creator]').forEach(x=>x.onchange=()=>{document.getElementById('shortlist-count-number').textContent=document.querySelectorAll('[data-shortlist-creator]:checked').length});
 }
 async function compressCreatorImage(file){if(!file.type.startsWith('image/'))throw new Error('Please upload an image file.');if(file.size>8*1024*1024)throw new Error('Image is too large. Please use an image under 8 MB.');return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read image.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('Could not decode image.'));img.onload=()=>{const max=900,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/webp',.82))};img.src=reader.result};reader.readAsDataURL(file)})}
 function calculateDecision(c){const s=creatorSignal(c),w=decisionWeights();if(w.total!==100)return{...s,decision:'INVALID WEIGHTS',score:null};const score=clamp(s.fit*(w.brand/100)+s.audienceFit*(w.audience/100)+s.contentFit*(w.campaign/100)+s.confidence*(w.confidence/100)+(s.commercial==null?0:s.commercial)*(w.value/100)+(100-s.risk)*(w.risk/100));const threshold=num(S.selectedCampaign?.payload?.threshold)??70;const ceiling=num(S.selectedCampaign?.payload?.riskCeiling)??60;let decision;if(s.coverage.required<8||s.completeness<100)decision='INSUFFICIENT INTELLIGENCE';else if(s.evidence<50)decision='REVIEW REQUIRED';else if(s.risk>ceiling)decision='RISK EXCEEDS CEILING';else if(score>=threshold&&s.confidence>=60)decision='RECOMMENDED';else if(score>=60)decision='CONSIDER';else decision='NOT RECOMMENDED';return{...s,score:Math.round(score*100)/100,decision,threshold,ceiling,method:'Weighted decision = brand + audience + campaign/content + confidence + value − risk; evidence completeness gates the output.'}}
