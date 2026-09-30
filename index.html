@@ -211,32 +211,37 @@
     }
   </style>
 
-<style id="TPOP_LANDING_MOTION_20261001">
+<style id="TPOP_LANDING_MOTION_20261001_V2">
   html{scroll-behavior:smooth}
   body{overflow-x:hidden}
-  .hero{position:relative;overflow:hidden}
-  .hero::before{content:"";position:absolute;width:38vw;height:38vw;max-width:560px;max-height:560px;left:-14vw;top:8vh;border:1px solid rgba(255,255,255,.08);border-radius:50%;animation:tpopOrbit 18s linear infinite;pointer-events:none}
-  .hero::after{content:"";position:absolute;width:1px;height:38vh;right:10%;top:16%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.35),transparent);transform-origin:top;animation:tpopScan 5.5s ease-in-out infinite;pointer-events:none}
-  .hero .eyebrow,.hero h1,.hero .hero-copy,.hero .hero-actions{opacity:0;transform:translateY(22px);animation:tpopHeroIn .85s cubic-bezier(.22,.8,.25,1) forwards}
-  .hero .eyebrow{animation-delay:.08s}.hero h1{animation-delay:.18s}.hero .hero-copy{animation-delay:.34s}.hero .hero-actions{animation-delay:.48s}
-  .division,.product,.manifesto,.section-head,.statement,.contact{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.22,.8,.25,1),transform .7s cubic-bezier(.22,.8,.25,1)}
-  .tpop-reveal-in{opacity:1!important;transform:none!important}
+  .hero{position:relative;overflow:hidden;isolation:isolate}
+  .hero::before{content:"";position:absolute;width:38vw;height:38vw;max-width:560px;max-height:560px;left:-14vw;top:8vh;border:1px solid rgba(255,255,255,.11);border-radius:50%;animation:tpopOrbit 16s linear infinite;pointer-events:none;z-index:-1}
+  .hero::after{content:"";position:absolute;width:1px;height:38vh;right:10%;top:16%;background:linear-gradient(180deg,transparent,rgba(174,239,255,.55),transparent);transform-origin:top;animation:tpopScan 4.2s ease-in-out infinite;pointer-events:none;z-index:-1}
+  .tpop-motion-orb{position:absolute;width:min(34vw,500px);height:min(34vw,500px);right:-10vw;top:22vh;border-radius:50%;background:radial-gradient(circle,rgba(174,239,255,.14) 0,rgba(174,239,255,.05) 28%,transparent 68%);filter:blur(2px);animation:tpopFloat 7s ease-in-out infinite;pointer-events:none;z-index:-1}
+  .tpop-motion-line{position:absolute;left:0;right:0;top:42%;height:1px;background:linear-gradient(90deg,transparent,rgba(174,239,255,.16),transparent);transform:scaleX(.2);transform-origin:center;animation:tpopLine 5.5s ease-in-out infinite;pointer-events:none;z-index:-1}
+  .hero .eyebrow,.hero h1,.hero .hero-copy,.hero .hero-actions{opacity:0;transform:translateY(26px) scale(.985);filter:blur(4px);animation:tpopHeroIn .95s cubic-bezier(.22,.8,.25,1) forwards}
+  .hero .eyebrow{animation-delay:.05s}.hero h1{animation-delay:.16s}.hero .hero-copy{animation-delay:.32s}.hero .hero-actions{animation-delay:.46s}
+  .division,.product,.manifesto,.section-head,.statement,.contact{opacity:0;transform:translateY(24px) scale(.985);filter:blur(3px);transition:opacity .8s cubic-bezier(.22,.8,.25,1),transform .8s cubic-bezier(.22,.8,.25,1),filter .8s ease}
+  .tpop-reveal-in{opacity:1!important;transform:none!important;filter:none!important}
   .division{transition-delay:var(--motion-delay,0ms)}
-  .division:hover{transform:translateY(-6px)!important;transition:transform .25s ease,box-shadow .25s ease}
-  .product-card{transition:transform .3s ease,box-shadow .3s ease}
-  .product-card:hover{transform:translateY(-5px);box-shadow:0 24px 60px rgba(0,0,0,.28)}
-  nav{transition:background .25s ease,border-color .25s ease,transform .25s ease}
-  nav.tpop-scrolled{background:rgba(7,7,7,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom-color:rgba(255,255,255,.16)}
-  @keyframes tpopHeroIn{to{opacity:1;transform:none}}
+  .division:hover{transform:translateY(-7px)!important;transition:transform .3s ease,box-shadow .3s ease}
+  .product-card{transition:transform .35s ease,box-shadow .35s ease}
+  .product-card:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 26px 65px rgba(0,0,0,.30)}
+  nav{transition:background .3s ease,border-color .3s ease,transform .3s ease,box-shadow .3s ease}
+  nav.tpop-scrolled{background:rgba(7,7,7,.90);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom-color:rgba(255,255,255,.16);box-shadow:0 10px 35px rgba(0,0,0,.16)}
+  @keyframes tpopHeroIn{to{opacity:1;transform:none;filter:none}}
   @keyframes tpopOrbit{to{transform:rotate(360deg)}}
-  @keyframes tpopScan{0%,100%{opacity:.15;transform:scaleY(.7) translateY(0)}50%{opacity:.7;transform:scaleY(1) translateY(12px)}}
+  @keyframes tpopScan{0%,100%{opacity:.12;transform:scaleY(.55) translateY(0)}50%{opacity:.9;transform:scaleY(1) translateY(18px)}}
+  @keyframes tpopFloat{0%,100%{transform:translate3d(0,0,0) scale(.94);opacity:.65}50%{transform:translate3d(-28px,22px,0) scale(1.06);opacity:1}}
+  @keyframes tpopLine{0%,100%{transform:scaleX(.12);opacity:.25}50%{transform:scaleX(1);opacity:.85}}
   @media(max-width:700px){
     .hero::before{width:78vw;height:78vw;left:-35vw;top:14vh}.hero::after{right:7%;height:28vh}
-    .hero .eyebrow,.hero h1,.hero .hero-copy,.hero .hero-actions{transform:translateY(14px)}
+    .tpop-motion-orb{width:72vw;height:72vw;right:-30vw;top:28vh}.tpop-motion-line{top:48%}
+    .hero .eyebrow,.hero h1,.hero .hero-copy,.hero .hero-actions{transform:translateY(16px) scale(.99)}
     .division:hover,.product-card:hover{transform:none!important;box-shadow:none}
   }
   @media(prefers-reduced-motion:reduce){
-    html{scroll-behavior:auto}.hero::before,.hero::after{animation:none!important}.hero .eyebrow,.hero h1,.hero .hero-copy,.hero .hero-actions,.division,.product,.manifesto,.section-head,.statement,.contact{animation:none!important;transition:none!important;opacity:1!important;transform:none!important}
+    html{scroll-behavior:auto}.hero::before,.hero::after,.tpop-motion-orb,.tpop-motion-line{animation:none!important}.hero .eyebrow,.hero h1,.hero .hero-copy,.hero .hero-actions,.division,.product,.manifesto,.section-head,.statement,.contact{animation:none!important;transition:none!important;filter:none!important;opacity:1!important;transform:none!important}
   }
 </style>
 
@@ -485,9 +490,14 @@
 </script>
 
 
-<script id="TPOP_LANDING_MOTION_20261001_SCRIPT">
+<script id="TPOP_LANDING_MOTION_20261001_V2_SCRIPT">
 (function(){
   const nav=document.querySelector('nav');
+  const hero=document.querySelector('.hero');
+  if(hero){
+    const orb=document.createElement('span');orb.className='tpop-motion-orb';hero.appendChild(orb);
+    const line=document.createElement('span');line.className='tpop-motion-line';hero.appendChild(line);
+  }
   const reveal=[...document.querySelectorAll('.division,.product,.manifesto,.section-head,.statement,.contact')];
   reveal.forEach((el,i)=>{if(el.classList.contains('division'))el.style.setProperty('--motion-delay',`${Math.min(i%3,2)*70}ms`)});
   const io='IntersectionObserver' in window?new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('tpop-reveal-in');io.unobserve(e.target)}}),{threshold:.12,rootMargin:'0px 0px -8% 0px'}):null;
