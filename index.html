@@ -257,7 +257,7 @@
     .hero-outline:hover{border-color:rgba(174,239,255,.55)!important;background:rgba(174,239,255,.07)!important}
     .hero-floating{position:absolute;padding:13px 16px;border:1px solid rgba(255,255,255,.11);background:rgba(5,13,23,.55);backdrop-filter:blur(14px);min-width:150px;box-shadow:0 20px 70px rgba(0,0,0,.22);animation:floatCard 6s ease-in-out infinite}
     .hero-floating b{font-size:20px;color:var(--accent);display:block;line-height:1}.hero-floating span{display:block;margin-top:8px;font-size:9px;letter-spacing:.18em;color:#f3ffff}.hero-floating small{display:block;margin-top:5px;font-size:9px;color:rgba(255,255,255,.4)}
-    .hero-floating-left{left:0;bottom:21%;transform:rotate(-2deg)}.hero-floating-right{right:0;top:39%;transform:rotate(2deg);animation-delay:-2.5s}
+    .hero-floating-left{left:0;bottom:21%;transform:rotate(-2deg);background:rgba(5,13,23,.16);border-color:rgba(255,255,255,.08);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);box-shadow:0 14px 42px rgba(0,0,0,.14)}.hero-floating-right{right:0;top:39%;transform:rotate(2deg);animation-delay:-2.5s}
     .hero-scroll{position:absolute;right:0;bottom:-4px;display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.38);font-size:8px;letter-spacing:.2em;writing-mode:vertical-rl}.hero-scroll i{width:1px;height:55px;background:linear-gradient(var(--accent),transparent);animation:scrollPulse 2s ease-in-out infinite}
     @keyframes gridDrift{from{transform:perspective(800px) rotateX(62deg) translateY(28%) translateX(0)}to{transform:perspective(800px) rotateX(62deg) translateY(28%) translateX(-72px)}}
     @keyframes glowPulse{0%,100%{opacity:.55;transform:scale(.95)}50%{opacity:1;transform:scale(1.08)}}
@@ -272,6 +272,7 @@
       .hero-v2 h1 span,.hero-v2 h1 strong{display:block;max-width:100%;transform-origin:left center}
       .hero-mini-label{font-size:8px;letter-spacing:.23em}.hero-subline{font-size:9px;line-height:1.7;letter-spacing:.12em;max-width:330px}.hero-v2-bottom{display:block;margin-top:42px}.hero-v2 .hero-copy{font-size:14px;max-width:430px;line-height:1.75}.hero-v2 .hero-actions{margin-top:22px}.hero-floating{display:none}.hero-scroll{display:none}.hero-ring-a{width:112vw;height:112vw}.hero-ring-b{width:78vw;height:78vw}.hero-glow-a{width:350px;height:350px;left:calc(50% - 175px)}
     }
+    .hero-floating-left{padding:11px 14px}.hero-floating-left b{font-size:18px}.hero-floating-left span{margin-top:6px}.hero-floating-left small{margin-top:4px}
     @media(max-width:480px){
       .hero-v2 .wrap{width:calc(100% - 32px);max-width:none}
       .hero-v2{padding:108px 0 48px}
