@@ -245,6 +245,15 @@
     .hero-mini-label{font-size:10px;letter-spacing:.34em;color:rgba(174,239,255,.72);margin-bottom:17px}
     .hero-v2 h1{text-transform:uppercase}
     .hero-v2 h1 span{display:block;color:#eafcff;font-weight:850;text-shadow:0 0 55px rgba(174,239,255,.12)}
+    /* Text motion: each headline line moves independently for a living, premium feel */
+    .hero-v2 h1 .hero-word{will-change:translate;animation:textLineFloat 6.8s ease-in-out infinite}
+    .hero-v2 h1 .hero-word-1{animation-delay:-1.2s}
+    .hero-v2 h1 .hero-word-2{animation-duration:7.6s;animation-delay:-3.6s}
+    .hero-v2 h1 .hero-word-3{animation-duration:6.2s;animation-delay:-5s}
+    @keyframes textLineFloat{0%,100%{translate:0 0}50%{translate:var(--text-drift,8px) -5px}}
+    .hero-v2 h1 .hero-word-1{--text-drift:-9px}
+    .hero-v2 h1 .hero-word-2{--text-drift:11px}
+    .hero-v2 h1 .hero-word-3{--text-drift:-7px}
     .hero-v2 h1 strong{display:block;font-weight:850;background:linear-gradient(100deg,#aeefff 0%,#fff 45%,#72dfff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
     .hero-subline{margin-top:30px;font-size:clamp(11px,1.15vw,15px);letter-spacing:.22em;color:rgba(255,255,255,.56);font-weight:700}
     .hero-subline i{font-style:normal;color:#d9f8ff}
@@ -274,6 +283,10 @@
     }
     .hero-floating-left{padding:11px 14px}.hero-floating-left b{font-size:18px}.hero-floating-left span{margin-top:6px}.hero-floating-left small{margin-top:4px}
     @media(max-width:480px){
+      .hero-v2 h1 .hero-word{animation-duration:7.4s}
+      .hero-v2 h1 .hero-word-1{--text-drift:-4px}
+      .hero-v2 h1 .hero-word-2{--text-drift:5px}
+      .hero-v2 h1 .hero-word-3{--text-drift:-3px}
       .hero-v2 .wrap{width:calc(100% - 32px);max-width:none}
       .hero-v2{padding:108px 0 48px}
       .hero-lockup{margin-top:48px}
@@ -328,7 +341,7 @@
     .division:hover,.product-card:hover{transform:none!important;box-shadow:none}
   }
   @media(prefers-reduced-motion:reduce){
-    html{scroll-behavior:auto}.hero::before,.hero::after{animation:none!important}.hero .eyebrow,.hero h1,.hero .hero-copy,.hero .hero-actions,.division,.product,.manifesto,.section-head,.statement,.contact{animation:none!important;transition:none!important;opacity:1!important;transform:none!important}
+    html{scroll-behavior:auto}.hero::before,.hero::after{animation:none!important}.hero .eyebrow,.hero h1,.hero .hero-copy,.hero .hero-actions,.division,.product,.manifesto,.section-head,.statement,.contact,.hero-v2 h1 .hero-word{animation:none!important;transition:none!important;opacity:1!important;transform:none!important;translate:none!important}
   }
   /* V12 · subtle whole-page motion layer */
   .page-ambient{position:fixed;inset:-18%;z-index:0;pointer-events:none;opacity:.42;
@@ -416,7 +429,7 @@
         <div class="hero-index">THAILAND · 2026 / 01</div>
       </div>
       <div class="hero-lockup">
-        <h1>ENTERTAINMENT.<br>CREATING<br>EXPERIENCES.</h1>
+        <h1><span class="hero-word hero-word-1">ENTERTAINMENT.</span><span class="hero-word hero-word-2">CREATING</span><span class="hero-word hero-word-3">EXPERIENCES.</span></h1>
       </div>
       <div class="hero-v2-bottom">
         <p class="hero-copy">
