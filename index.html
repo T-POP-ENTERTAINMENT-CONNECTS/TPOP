@@ -257,8 +257,6 @@
     .hero-floating b{font-size:20px;color:var(--accent);display:block;line-height:1}.hero-floating span{display:block;margin-top:8px;font-size:9px;letter-spacing:.18em;color:#f3ffff}.hero-floating small{display:block;margin-top:5px;font-size:9px;color:rgba(255,255,255,.4)}
     .hero-floating-left{left:0;bottom:21%;transform:rotate(-2deg)}.hero-floating-right{right:0;top:39%;transform:rotate(2deg);animation-delay:-2.5s}
     .hero-scroll{position:absolute;right:0;bottom:-4px;display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.38);font-size:8px;letter-spacing:.2em;writing-mode:vertical-rl}.hero-scroll i{width:1px;height:55px;background:linear-gradient(var(--accent),transparent);animation:scrollPulse 2s ease-in-out infinite}
-    .ticker{overflow:hidden;border-top:1px solid rgba(174,239,255,.12);border-bottom:1px solid rgba(174,239,255,.12);background:#091522;color:#dffaff;white-space:nowrap}
-    .ticker-track{display:inline-flex;align-items:center;gap:27px;min-width:max-content;padding:13px 0;font-size:10px;letter-spacing:.23em;font-weight:800;animation:tickerMove 28s linear infinite}.ticker b{color:var(--accent);font-size:8px}
     @keyframes gridDrift{from{transform:perspective(800px) rotateX(62deg) translateY(28%) translateX(0)}to{transform:perspective(800px) rotateX(62deg) translateY(28%) translateX(-72px)}}
     @keyframes glowPulse{0%,100%{opacity:.55;transform:scale(.95)}50%{opacity:1;transform:scale(1.08)}}
     @keyframes ringSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes ringSpinReverse{to{transform:translate(-50%,-50%) rotate(-360deg)}}
@@ -266,13 +264,31 @@
     @keyframes dotPulse{0%,100%{box-shadow:0 0 0 5px rgba(174,239,255,.08),0 0 20px rgba(174,239,255,.55)}50%{box-shadow:0 0 0 9px rgba(174,239,255,.03),0 0 30px rgba(174,239,255,.85)}}
     @keyframes floatCard{0%,100%{translate:0 0}50%{translate:0 -10px}}
     @keyframes scrollPulse{0%,100%{opacity:.35;transform:scaleY(.7);transform-origin:top}50%{opacity:1;transform:scaleY(1)}}
-    @keyframes tickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
     @media(max-width:850px){
       .hero-v2{padding:125px 0 70px}.hero-v2-inner{min-height:calc(100svh - 195px)}.hero-v2-top{align-items:flex-start}.hero-index{display:none}
       .hero-lockup{margin-top:65px}.hero-v2 h1{font-size:clamp(65px,19vw,125px);line-height:.8}.hero-mini-label{font-size:8px;letter-spacing:.25em}.hero-subline{font-size:9px;line-height:1.7;letter-spacing:.14em;max-width:330px}.hero-v2-bottom{display:block;margin-top:55px}.hero-v2 .hero-copy{font-size:14px;max-width:430px}.hero-v2 .hero-actions{margin-top:24px}.hero-floating{display:none}.hero-scroll{right:8px}.hero-ring-a{width:110vw;height:110vw}.hero-ring-b{width:75vw;height:75vw}.hero-glow-a{width:350px;height:350px;left:calc(50% - 175px)}
     }
-    @media(max-width:480px){.hero-v2 h1{font-size:20vw}.hero-v2 .btn{width:100%;justify-content:center}.hero-v2 .hero-actions{width:100%}.hero-grid{background-size:45px 45px}.ticker-track{gap:18px;font-size:8px}}
-    @media(prefers-reduced-motion:reduce){.hero-grid,.hero-glow,.hero-ring,.hero-scan,.pulse-dot,.hero-floating,.hero-scroll i,.ticker-track{animation:none!important}.hero-grid{transform:perspective(800px) rotateX(62deg) translateY(28%)}}
+    @media(max-width:480px){.hero-v2 h1{font-size:20vw}.hero-v2 .btn{width:100%;justify-content:center}.hero-v2 .hero-actions{width:100%}.hero-grid{background-size:45px 45px}}
+    @media(prefers-reduced-motion:reduce){.hero-grid,.hero-glow,.hero-ring,.hero-scan,.pulse-dot,.hero-floating,.hero-scroll i{animation:none!important}.hero-grid{transform:perspective(800px) rotateX(62deg) translateY(28%)}}
+
+    /* V11 · Dimensional warp transition */
+    .warp-portal{position:relative;height:310px;overflow:hidden;isolation:isolate;background:linear-gradient(180deg,#06101e 0%,#02060c 48%,#070707 100%);border-top:1px solid rgba(174,239,255,.10);border-bottom:1px solid rgba(174,239,255,.08);perspective:900px}
+    .warp-portal::before{content:"";position:absolute;inset:-45%;background:conic-gradient(from 0deg,transparent 0 8%,rgba(174,239,255,.08) 10%,transparent 12% 28%,rgba(255,255,255,.05) 30%,transparent 32% 48%,rgba(114,223,255,.08) 50%,transparent 52% 68%,rgba(255,255,255,.04) 70%,transparent 72%);filter:blur(10px);animation:warpSpin 16s linear infinite;z-index:-2}
+    .warp-portal::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0) 0 8%,rgba(0,0,0,.08) 20%,rgba(0,0,0,.72) 75%,#070707 100%);z-index:3;pointer-events:none}
+    .warp-tunnel{position:absolute;left:50%;top:50%;width:190px;height:190px;transform:translate(-50%,-50%) rotateX(62deg);transform-style:preserve-3d;z-index:1}
+    .warp-tunnel span{position:absolute;inset:0;border:1px solid rgba(174,239,255,.22);border-radius:50%;box-shadow:0 0 28px rgba(24,199,255,.10),inset 0 0 28px rgba(24,199,255,.04);animation:warpTunnel 4.8s cubic-bezier(.25,.65,.25,1) infinite}
+    .warp-tunnel span:nth-child(1){animation-delay:0s}.warp-tunnel span:nth-child(2){animation-delay:-.96s}.warp-tunnel span:nth-child(3){animation-delay:-1.92s}.warp-tunnel span:nth-child(4){animation-delay:-2.88s}.warp-tunnel span:nth-child(5){animation-delay:-3.84s}
+    .warp-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#eaffff 0 2%,#7fe6ff 5%,#0b4f68 20%,#02060c 62%,transparent 70%);box-shadow:0 0 35px rgba(114,223,255,.55),0 0 100px rgba(24,199,255,.28);z-index:2;animation:corePulse 3.2s ease-in-out infinite}
+    .warp-core b{position:absolute;top:27px;font-size:7px;letter-spacing:.22em;color:rgba(255,255,255,.55)}.warp-core strong{font-size:38px;line-height:1;color:#eaffff;font-weight:300;text-shadow:0 0 18px rgba(174,239,255,.9)}
+    .warp-stars{position:absolute;inset:0;z-index:0;overflow:hidden}
+    .warp-stars i{position:absolute;left:50%;top:50%;width:2px;height:calc(16px + (var(--i) * 4px));transform-origin:50% 0;transform:rotate(calc(var(--i) * 15deg)) translateY(-20px);background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(174,239,255,.7),rgba(255,255,255,0));filter:blur(.3px);opacity:.15;animation:warpStreak 1.8s linear infinite;animation-delay:calc(var(--i) * -.075s)}
+    .warp-caption{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:4;font-size:8px;letter-spacing:.42em;color:rgba(174,239,255,.45);white-space:nowrap}
+    @keyframes warpSpin{to{transform:rotate(360deg)}}
+    @keyframes warpTunnel{0%{transform:scale(.25);opacity:0}18%{opacity:.8}70%{opacity:.35}100%{transform:scale(4.2);opacity:0}}
+    @keyframes corePulse{0%,100%{transform:translate(-50%,-50%) scale(.9);filter:brightness(.9)}50%{transform:translate(-50%,-50%) scale(1.12);filter:brightness(1.3)}}
+    @keyframes warpStreak{0%{transform:rotate(calc(var(--i) * 15deg)) translateY(-15px) scaleY(.2);opacity:0}30%{opacity:.8}100%{transform:rotate(calc(var(--i) * 15deg)) translateY(-170px) scaleY(2.6);opacity:0}}
+    @media(max-width:700px){.warp-portal{height:235px}.warp-tunnel{width:135px;height:135px}.warp-core{width:70px;height:70px}.warp-core strong{font-size:29px}.warp-caption{font-size:6px;letter-spacing:.28em;bottom:18px}}
+    @media(prefers-reduced-motion:reduce){.warp-portal::before,.warp-tunnel span,.warp-core,.warp-stars i{animation:none!important}.warp-tunnel span{opacity:.22;transform:scale(1.7)}}
 
 </style>
 
@@ -355,13 +371,15 @@
       <div class="hero-scroll"><span>SCROLL TO EXPLORE</span><i></i></div>
     </div>
   </section>
-  <div class="ticker" aria-label="T POP CONNECTS ecosystem">
-    <div class="ticker-track">
-      <span>T POP CONNECTS</span><b>✦</b><span>ENTERTAINMENT</span><b>✦</b><span>BUSINESS</span><b>✦</b><span>CREATIVE</span><b>✦</b><span>CULTURE</span><b>✦</b><span>KOL IDS™</span><b>✦</b><span>EXPERIENCE</span><b>✦</b>
-      <span>T POP CONNECTS</span><b>✦</b><span>ENTERTAINMENT</span><b>✦</b><span>BUSINESS</span><b>✦</b><span>CREATIVE</span><b>✦</b><span>CULTURE</span><b>✦</b><span>KOL IDS™</span><b>✦</b><span>EXPERIENCE</span><b>✦</b>
-    </div>
-  </div>
 
+  <div class="warp-portal" aria-hidden="true">
+    <div class="warp-stars"><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i><i style="--i:16"></i><i style="--i:17"></i><i style="--i:18"></i><i style="--i:19"></i><i style="--i:20"></i><i style="--i:21"></i><i style="--i:22"></i><i style="--i:23"></i><i style="--i:24"></i></div>
+    <div class="warp-tunnel">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="warp-core"><b>T POP</b><strong>∞</strong></div>
+    <div class="warp-caption">ENTER THE NEXT DIMENSION</div>
+  </div>
   <section id="about">
     <div class="wrap">
       <div class="section-head">
