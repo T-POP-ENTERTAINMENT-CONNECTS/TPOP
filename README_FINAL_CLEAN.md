@@ -1,6 +1,6 @@
 # KOL IDS™ · FINAL CLEAN DEPLOY PACKAGE
 
-This package is the production runtime/deployment source for the current KOL IDS system.
+This package is the production runtime/deployment source for the current KOL IDS system. Final logic/code audit completed 2026-10-02.
 
 ## Included
 - Public website entry point
@@ -12,6 +12,7 @@ This package is the production runtime/deployment source for the current KOL IDS
 - Supabase Edge Functions used by the current system
 - Supabase schema + migrations required for the current database contract
 - GitHub Pages / Cloudflare routing files
+- T POP CONNECTS favicon (`favicon.png`) wired into public/login/workspace routes
 
 ## Deliberately removed
 Historical changelogs, duplicate README files, old versioned release notes, old patch ZIPs, and duplicate manual SQL copies are not runtime dependencies and are intentionally excluded.
@@ -35,3 +36,6 @@ The browser only contains the publishable Supabase key.
 - Export filenames include the KOL IDS report type, campaign name, and export date.
 - UTF-8 BOM is preserved for reliable Thai/Unicode rendering in Excel and Google Sheets.
 - Existing paid-export gating and report calculations are unchanged.
+
+## Final logic audit
+See `AUDIT_20261002_FINAL.md` for the checks and corrections applied to performance evidence validation, prediction-ledger recalculation, pricing, billing email plan labels, and runtime cache-busting.

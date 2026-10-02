@@ -1,6 +1,6 @@
 KOL IDS FINAL CLEAN
-Build: 2026-10-01
-Final audit: frontend routes, creator CRUD/interactions, campaign history CRUD, performance bindings, Supabase migration contract, cache-busting references
+Build: 2026-10-02
+Final audit: frontend routes, creator CRUD/interactions, campaign history CRUD, performance validation + ledger sync, billing/pricing contract, Supabase migration contract, cache-busting references
 Canonical runtime: app.js
 Workflow: Step 01–08
 Step 08: Campaign History
@@ -8,4 +8,4 @@ Approval UI: approval.html
 Backend source: supabase/functions + supabase/migrations + supabase/schema.sql
 Historical changelogs and duplicate patch artifacts: excluded
 
-Enterprise CSV export standard: v2.0; cache build: 20261001-csv-enterprise-01
+Enterprise CSV export standard: v2.0; cache build: 20261002-final-audit-v1

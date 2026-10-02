@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png" sizes="512x512">
+  <link rel="apple-touch-icon" href="/favicon.png">
 <title>KOL IDS™ · Account Review</title>
 <style>
 :root{font-family:Inter,Arial,sans-serif;color:#111;background:#f5f6f7}
@@ -36,7 +38,7 @@ if(!token||!payload||!payload.order_number||!['approve','reject'].includes(paylo
 }else{
   $('order').textContent=payload.order_number;$('action').textContent=payload.action==='approve'?'Approve account':'Reject application';
   $('title').textContent=payload.action==='approve'?'Approve this account':'Reject this application';
-  $('approve').style.display=payload.action==='approve'?'block':'none';$('reject').style.display=payload.action==='reject'?'none':'block';
+  $('approve').style.display=payload.action==='approve'?'block':'none';$('reject').style.display=payload.action==='reject'?'block':'none';
 }
 async function submit(action){
   if(!token||!payload)return;

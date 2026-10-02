@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="icon" type="image/png" href="/favicon.png" sizes="512x512">
+  <link rel="apple-touch-icon" href="/favicon.png">
   <meta name="theme-color" content="#f5fbfd" />
   <meta name="description" content="KOL IDS™ · private creator decision intelligence workspace by T POP CONNECTS." />
   <meta name="robots" content="noindex,nofollow,noarchive" />
@@ -703,7 +705,7 @@ function auth(mode='login', notice=''){
   function openOrderForm(plan){ openSignupModal(plan || 'PLAN_3M'); }
   function planCode(plan){ return plan==='3 Months'?'PLAN_3M':plan==='6 Months'?'PLAN_6M':plan==='12 Months'?'PLAN_12M':'TRIAL_7'; }
   function planLabel(code){ return ({TRIAL_7:'7 Day Trial',PLAN_3M:'3 Months',PLAN_6M:'6 Months',PLAN_12M:'12 Months'})[code]||code; }
-  function planPrice(code){ return ({PLAN_3M:'THB 35,000',PLAN_6M:'THB 65,000',PLAN_12M:'THB 125,000'})[code]||''; }
+  function planPrice(code){ return ({PLAN_3M:'THB 29,900',PLAN_6M:'THB 55,900',PLAN_12M:'THB 105,900'})[code]||''; }
   function openSignupModal(plan){
     closeCommercialModal();
     const code=planCode(plan), label=planLabel(code), isTrial=code==='TRIAL_7';
