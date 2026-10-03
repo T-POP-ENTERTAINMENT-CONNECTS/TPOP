@@ -1,18 +1,23 @@
-KOL IDS · FINAL EVIDENCE STATE PASS · 2026-10-03
+KOL IDS · FINAL COMPLETION + PREMIUM TECH UI · 2026-10-03
 
 Purpose
-Final completion pass focused on evidence-state integrity and report trustworthiness.
+Final completion pass focused on evidence-state integrity, report trustworthiness and premium technology presentation.
 
 Fixed
 - Pending performance records no longer appear as 0/100 in Top 3 Performance.
-- Business Impact score only uses recorded actual outcome scores; missing scores remain Not yet scored.
+- Business Impact score only uses recorded actual outcome scores; missing scores remain Not scored.
 - Missing numeric evidence is not rendered as a factual zero in observed-effect summaries.
+- Performance evidence tables distinguish null / unrecorded values from explicit zero values.
+- E-commerce blank GMV, orders, paid orders, discounts, refunds and commission fields remain null instead of being silently coerced to zero.
+- Digital derived engagement remains null when no engagement inputs were supplied.
 - Conversion rate is calculated only when both click and conversion evidence are actually recorded.
 - Learning no longer claims conversion friction from an unrecorded conversion field.
 - ROI / ROAS remain Not calculable unless required evidence is present.
-- Report / PDF business-impact wording distinguishes Not recorded, Not calculable, Pending and Not yet scored.
-- Creator approval remains a user decision and is intentionally separate from the engine decision signal (e.g. REVIEW REQUIRED).
-- Workspace cache-buster updated to the final evidence-state release.
+- Report / PDF business-impact wording distinguishes Not recorded, Not calculable, Pending and Not scored.
+- Creator approval remains a user decision and is intentionally separate from the engine decision signal.
+- Reports show No records for empty outcome types instead of synthetic zero metrics.
+- Added restrained premium / tech UI layer with cyan + muted-gold intelligence accents, refined hierarchy, tables, metrics, cards, controls and responsive mobile treatment.
+- Workspace cache-buster updated to the final completion release.
 
 Database
 No new migration is required for this release. Existing migrations remain canonical.
@@ -20,3 +25,4 @@ No new migration is required for this release. Existing migrations remain canoni
 Validation
 - app.js passed Node syntax check.
 - Release package contains the existing Supabase migrations and Edge Functions.
+- Deployment route aliases remain intact for /KOLIDS and /KOLIDSworkspace.

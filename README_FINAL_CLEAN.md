@@ -1,6 +1,6 @@
-# KOL IDS — Final Evidence State Release
+# KOL IDS — Final Completion + Premium Tech UI Release
 
-This release is the final evidence-state completion pass for the current KOL IDS workflow.
+This release is the final completion pass for the current KOL IDS workflow: evidence-state integrity, report consistency, blank-vs-zero handling, and a premium technology / investment-intelligence visual layer.
 
 ## Core rule
 KOL IDS distinguishes:
