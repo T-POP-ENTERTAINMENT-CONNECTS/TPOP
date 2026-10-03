@@ -2645,3 +2645,22 @@ tbody tr:hover td{background:#fbfdfe}
 `;
   document.head.appendChild(s);
 })();
+
+/* KOL IDS · REMOVE LATE CYAN/GOLD ACCENT LINES · 20261003 */
+(function(){
+  const id='kol-ids-remove-cyan-gold-accent-lines-20261003';
+  if(document.getElementById(id)) return;
+  const s=document.createElement('style');
+  s.id=id;
+  s.textContent=`
+    .kol-brand:after,
+    .kol-top:after,
+    .hero:after,
+    .card:before,
+    .metric:before,
+    .creator-registry-card:before{display:none!important;content:none!important}
+    [data-kol-business-impact="1"] > .grid.g4:first-of-type .metric:first-child,
+    [data-kol-business-impact="1"] > .grid.g4:first-of-type .metric:nth-child(3){border-top:1px solid #e0e6e9!important}
+  `;
+  document.head.appendChild(s);
+})();
