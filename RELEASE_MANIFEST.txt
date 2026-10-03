@@ -1,11 +1,22 @@
-KOL IDS FINAL CLEAN
-Build: 2026-10-03
-Final audit: frontend routes, creator CRUD/interactions, campaign history CRUD, performance validation + ledger sync, billing/pricing contract, Supabase migration contract, cache-busting references
-Canonical runtime: app.js
-Workflow: Step 01–08
-Step 08: Campaign History
-Approval UI: approval.html
-Backend source: supabase/functions + supabase/migrations + supabase/schema.sql
-Historical changelogs and duplicate patch artifacts: excluded
+KOL IDS · FINAL EVIDENCE STATE PASS · 2026-10-03
 
-Enterprise CSV export standard: v2.0; cache build: 20261003-completion-pass-v2
+Purpose
+Final completion pass focused on evidence-state integrity and report trustworthiness.
+
+Fixed
+- Pending performance records no longer appear as 0/100 in Top 3 Performance.
+- Business Impact score only uses recorded actual outcome scores; missing scores remain Not yet scored.
+- Missing numeric evidence is not rendered as a factual zero in observed-effect summaries.
+- Conversion rate is calculated only when both click and conversion evidence are actually recorded.
+- Learning no longer claims conversion friction from an unrecorded conversion field.
+- ROI / ROAS remain Not calculable unless required evidence is present.
+- Report / PDF business-impact wording distinguishes Not recorded, Not calculable, Pending and Not yet scored.
+- Creator approval remains a user decision and is intentionally separate from the engine decision signal (e.g. REVIEW REQUIRED).
+- Workspace cache-buster updated to the final evidence-state release.
+
+Database
+No new migration is required for this release. Existing migrations remain canonical.
+
+Validation
+- app.js passed Node syntax check.
+- Release package contains the existing Supabase migrations and Edge Functions.
