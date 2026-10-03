@@ -1,6 +1,6 @@
 # KOL IDS™ · FINAL CLEAN DEPLOY PACKAGE
 
-This package is the production runtime/deployment source for the current KOL IDS system. Final logic/code audit completed 2026-10-02.
+This package is the production runtime/deployment source for the current KOL IDS system. Final logic/code audit completed 2026-10-02; completion pass 2026-10-03.
 
 ## Included
 - Public website entry point
@@ -38,4 +38,4 @@ The browser only contains the publishable Supabase key.
 - Existing paid-export gating and report calculations are unchanged.
 
 ## Final logic audit
-See `AUDIT_20261002_FINAL.md` for the checks and corrections applied to performance evidence validation, prediction-ledger recalculation, pricing, billing email plan labels, and runtime cache-busting.
+See `AUDIT_20261002_FINAL.md` for the checks and corrections applied to performance evidence validation, prediction-ledger recalculation, pricing, billing email plan labels, runtime cache-busting, decision scoring, outcome scoring and report consistency.
