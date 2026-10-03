@@ -2010,7 +2010,7 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
   s.textContent=`
     .kol-report-page{max-width:1320px!important;margin:0 auto!important}
     .kol-report-page>.hero{
-      padding:24px 26px!important;
+      padding:28px 32px!important;
       margin-bottom:18px!important;
       border:1px solid #e3e6ea!important;
       border-radius:18px!important;
