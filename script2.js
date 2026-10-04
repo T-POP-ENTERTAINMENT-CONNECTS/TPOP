@@ -246,17 +246,27 @@ function auth(mode='login', notice=''){
       if(!email||!name||password.length<8){set('Please enter your email, name and an 8+ character password.','bad');return}
       submit.disabled=true;set(isTrial?'Creating your secure KOL IDS account…':'Creating your secure account and payment application…','busy');
       try{
-        let orderNo=createdOrderNo;
         let session=existingAccount ? (S.session||createdSession) : createdSession;
         if(existingAccount){
           if(!session?.access_token) throw new Error('Your secure session has expired. Please sign in again.');
           set('Saving your password and continuing with this plan…','busy');
           const passwordUpdate=await sb.auth.updateUser({password});
           if(passwordUpdate.error) throw new Error(passwordUpdate.error.message||'We could not save your new password. Please try again.');
-          S.session=passwordUpdate.data?.user ? (S.session||session) : session;
+          const fresh=await sb.auth.getSession();
+          if(fresh.error||!fresh.data?.session?.access_token) throw new Error('Your secure session could not be refreshed. Please sign in again.');
+          session=fresh.data.session;
+          S.session=session;
+          if(!isTrial){
+            set('Preparing your renewal…','busy');
+            const renewal=await signupApprovalCall_('renewal_order',{email,name,organization_name:company,plan:code,billing},session);
+            orderNo=String(renewal.order?.order_number||'');
+            if(!orderNo) throw new Error('We could not create the renewal order. Please try again.');
+            createdOrderNo=orderNo;
+            createdSession=session;
+          }
         }
         if(!isTrial && orderNo && session){
-          set(`Resubmitting payment proof for ${orderNo}…`,'busy');
+          set(`Preparing payment submission for ${orderNo}…`,'busy');
         }else{
           const endpoint=String(C.CLIENT_SIGNUP_URL||'').trim();
           if(!endpoint) throw new Error('Account service is not configured yet.');
@@ -276,14 +286,7 @@ function auth(mode='login', notice=''){
             // An existing account is expected when a customer returns after an expired trial.
             // For paid plans, authenticate that existing account and retry the same provisioning
             // request with the authenticated session so a new organization/account is never created.
-            if(!isTrial && r.status===409 && data.code==='ACCOUNT_EXISTS'){
-              // Existing-account paid continuation must never send the customer back
-              // through logout/login. The modal is already authenticated and should
-              // finish the selected upgrade directly.
-              throw new Error('We could not continue this upgrade with the signed-in account. Please refresh the page and try again.');
-            }else{
-              throw new Error(data.error||`Account creation failed (${r.status||'unknown'}). Please try again.`);
-            }
+            throw new Error(data.error||`Account creation failed (${r.status||'unknown'}). Please try again.`);
           }else{
             orderNo=String(data.order?.order_number||'');
             if(!isTrial&&!orderNo) throw new Error('Account was created but no order number was returned. Please contact support before paying again.');
@@ -425,7 +428,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='/app.js?v=20261004-existing-account-upgrade-v1';
+    script.src='/app.js?v=20261004-existing-account-renewal-v2';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);
