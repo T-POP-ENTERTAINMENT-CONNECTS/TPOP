@@ -32,3 +32,7 @@ Upload the package contents to the same deployment root and keep the existing Su
 - Deploy `supabase/functions/subscription-expiry-reminders` and set `KOL_IDS_EXPIRY_REMINDER_SECRET`.
 - Schedule the Edge Function once per day using Supabase Cron / scheduled functions. Send header `x-kol-ids-expiry-secret: <KOL_IDS_EXPIRY_REMINDER_SECRET>`.
 - Do not hard-code the service-role key into SQL or frontend files.
+
+
+## Existing-account paid upgrade
+If a customer previously used or expired a 7-day trial, they can select a paid plan with the same email. The signup flow signs into the existing Auth account and provisions the paid order under the existing organization. No second Auth account or organization is created. A pending order for the same plan is reused.

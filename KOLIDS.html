@@ -878,13 +878,41 @@ function auth(mode='login', notice=''){
             throw new Error('Unable to reach the account service. Please check your connection and try again.');
           }finally{clearTimeout(timer)}
           const raw=await r.text();let data={};try{data=raw?JSON.parse(raw):{}}catch(_){data={}}
-          if(!r.ok||!data.ok) throw new Error(data.error||`Account creation failed (${r.status||'unknown'}). Please try again.`);
-          orderNo=String(data.order?.order_number||'');
-          if(!isTrial&&!orderNo) throw new Error('Account was created but no order number was returned. Please contact support before paying again.');
-          const login=await sb.auth.signInWithPassword({email,password});
-          if(login.error) throw login.error;
-          session=login.data?.session||null;
-          createdOrderNo=orderNo;createdSession=session;
+          if(!r.ok||!data.ok){
+            // An existing account is expected when a customer returns after an expired trial.
+            // For paid plans, authenticate that existing account and retry the same provisioning
+            // request with the authenticated session so a new organization/account is never created.
+            if(!isTrial && r.status===409 && data.code==='ACCOUNT_EXISTS'){
+              set('This account already exists. Signing in and continuing with your selected plan…','busy');
+              const existingLogin=await sb.auth.signInWithPassword({email,password});
+              if(existingLogin.error) throw new Error(existingLogin.error.message||'This account already exists. Please sign in with the correct password to continue.');
+              session=existingLogin.data?.session||null;
+              if(!session?.access_token) throw new Error('Secure sign-in session was not returned. Please try again.');
+              const retryController=new AbortController();
+              const retryTimer=setTimeout(()=>retryController.abort(),20000);
+              let retryResponse;
+              try{
+                retryResponse=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:retryController.signal});
+              }catch(retryErr){
+                if(retryErr?.name==='AbortError') throw new Error('Existing account upgrade timed out. Please try again.');
+                throw new Error('Unable to continue the existing account upgrade. Please check your connection and try again.');
+              }finally{clearTimeout(retryTimer)}
+              const retryRaw=await retryResponse.text();let retryData={};try{retryData=retryRaw?JSON.parse(retryRaw):{}}catch(_){retryData={}}
+              if(!retryResponse.ok||!retryData.ok) throw new Error(retryData.error||`Existing account upgrade failed (${retryResponse.status||'unknown'}).`);
+              orderNo=String(retryData.order?.order_number||'');
+              if(!orderNo) throw new Error('Your existing account was found, but no order number was returned. Please contact support before paying again.');
+              createdOrderNo=orderNo;createdSession=session;
+            }else{
+              throw new Error(data.error||`Account creation failed (${r.status||'unknown'}). Please try again.`);
+            }
+          }else{
+            orderNo=String(data.order?.order_number||'');
+            if(!isTrial&&!orderNo) throw new Error('Account was created but no order number was returned. Please contact support before paying again.');
+            const login=await sb.auth.signInWithPassword({email,password});
+            if(login.error) throw login.error;
+            session=login.data?.session||null;
+            createdOrderNo=orderNo;createdSession=session;
+          }
         }
         if(isTrial){
           set('Account created. Trial activated. Opening your workspace…','good');
@@ -1005,7 +1033,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='/app.js?v=20261003-final-evidence-state-v1';
+    script.src='/app.js?v=20261004-existing-account-upgrade-v1';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);
