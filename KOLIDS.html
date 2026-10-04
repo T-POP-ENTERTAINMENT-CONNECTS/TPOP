@@ -883,25 +883,33 @@ function auth(mode='login', notice=''){
             // For paid plans, authenticate that existing account and retry the same provisioning
             // request with the authenticated session so a new organization/account is never created.
             if(!isTrial && r.status===409 && data.code==='ACCOUNT_EXISTS'){
-              set('This account already exists. Signing in and continuing with your selected plan…','busy');
-              const existingLogin=await sb.auth.signInWithPassword({email,password});
-              if(existingLogin.error) throw new Error(existingLogin.error.message||'This account already exists. Please sign in with the correct password to continue.');
-              session=existingLogin.data?.session||null;
-              if(!session?.access_token) throw new Error('Secure sign-in session was not returned. Please try again.');
-              const retryController=new AbortController();
-              const retryTimer=setTimeout(()=>retryController.abort(),20000);
-              let retryResponse;
+              // Do NOT try the password typed into the signup form against an existing account.
+              // A returning customer may type a new password here, which is not their existing
+              // Supabase password and would incorrectly surface "Invalid login credentials".
+              // Send them through the normal sign-in flow, then reopen this selected paid plan.
               try{
-                retryResponse=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:retryController.signal});
-              }catch(retryErr){
-                if(retryErr?.name==='AbortError') throw new Error('Existing account upgrade timed out. Please try again.');
-                throw new Error('Unable to continue the existing account upgrade. Please check your connection and try again.');
-              }finally{clearTimeout(retryTimer)}
-              const retryRaw=await retryResponse.text();let retryData={};try{retryData=retryRaw?JSON.parse(retryRaw):{}}catch(_){retryData={}}
-              if(!retryResponse.ok||!retryData.ok) throw new Error(retryData.error||`Existing account upgrade failed (${retryResponse.status||'unknown'}).`);
-              orderNo=String(retryData.order?.order_number||'');
-              if(!orderNo) throw new Error('Your existing account was found, but no order number was returned. Please contact support before paying again.');
-              createdOrderNo=orderNo;createdSession=session;
+                sessionStorage.setItem('kolids_pending_paid_plan', code);
+              }catch(_){ }
+              set('This email already has a KOL IDS account. Sign in with your existing password to continue this plan.','bad');
+              submit.disabled=false;
+              submit.textContent='Sign in to continue →';
+              const actions=m.querySelector('.access-actions');
+              if(actions){
+                let loginBtn=actions.querySelector('[data-existing-account-login]');
+                if(!loginBtn){
+                  loginBtn=document.createElement('button');
+                  loginBtn.type='button';
+                  loginBtn.className='entry-ghost';
+                  loginBtn.setAttribute('data-existing-account-login','1');
+                  loginBtn.textContent='Sign in with existing account →';
+                  loginBtn.onclick=()=>{
+                    m.remove();
+                    auth('login','This account already exists. Sign in with your existing password to continue your selected plan.');
+                  };
+                  actions.appendChild(loginBtn);
+                }
+              }
+              return;
             }else{
               throw new Error(data.error||`Account creation failed (${r.status||'unknown'}). Please try again.`);
             }
@@ -987,6 +995,16 @@ function auth(mode='login', notice=''){
       const result=await sb.auth.signInWithPassword({email:userEmail,password:userPassword});
       if(result.error)throw result.error;
       S.session=result.data.session;
+      // If the customer was redirected here because the email already exists,
+      // resume the paid-plan order after successful sign-in instead of opening
+      // the workspace immediately. This keeps the existing account and avoids
+      // creating a duplicate account/order.
+      let pendingPlan='';
+      try{pendingPlan=String(sessionStorage.getItem('kolids_pending_paid_plan')||'').trim();sessionStorage.removeItem('kolids_pending_paid_plan');}catch(_){ }
+      if(pendingPlan && /^PLAN_(3M|6M|12M)$/.test(pendingPlan)){
+        openSignupModal(pendingPlan);
+        return;
+      }
       // Public product page stays at /KOLIDS. After successful sign-in,
       // move the authenticated user into the private 7-Step workspace.
       window.location.assign('/KOLIDSworkspace');
