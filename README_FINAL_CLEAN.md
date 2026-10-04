@@ -36,3 +36,15 @@ Upload the package contents to the same deployment root and keep the existing Su
 
 ## Existing-account paid upgrade
 If a customer previously used or expired a 7-day trial, they can select a paid plan with the same email. The signup flow signs into the existing Auth account and provisions the paid order under the existing organization. No second Auth account or organization is created. A pending order for the same plan is reused.
+
+
+## 2026-10-04 · Existing-account paid renewal flow
+- Existing customers continue a paid plan from the signed-in account without logout/login.
+- The selected paid plan, payment proof and password are submitted in the same flow.
+- Paid payment submission activates the selected subscription immediately for the existing organization.
+- If an active plan still has remaining time, the new plan starts when the current plan ends; expired plans start immediately.
+- Customer and admin confirmation emails use the order plan, recorded amount, duration and exact access dates.
+- No new account is created for an existing signed-in customer.
+- Frontend files: `KOLIDS.html`, `script2.js`.
+- Edge Function that must be deployed: `supabase/functions/signup-approval/index.ts`.
+- No new SQL migration is required for this change.

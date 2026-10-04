@@ -767,7 +767,7 @@ function auth(mode='login', notice=''){
 
     const m=document.createElement('div');m.id='kolIdsSignupModal';m.className='commercial-modal';
     m.innerHTML=`<div class="commercial-modal-card" role="dialog" aria-modal="true" aria-labelledby="signup-title">
-      <div class="commercial-modal-head"><div><span class="modal-kicker">KOL IDS · ${existingAccount?'EXISTING ACCOUNT':'CREATE ACCOUNT'}</span><h2 id="signup-title">${existingAccount?`Continue with ${esc(label)}`:`Create your ${esc(label)} account`}</h2><p>${existingAccount?'You are signed in. Continue with this plan using your existing KOL IDS account. No new account will be created.':(isTrial?'Your 7 day trial is activated immediately after account creation.':'Your account and organization are created now. Paid workspace access is activated after payment confirmation.')}</p></div><button type="button" class="modal-close" aria-label="Close">×</button></div>
+      <div class="commercial-modal-head"><div><span class="modal-kicker">KOL IDS · ${existingAccount?'EXISTING ACCOUNT':'CREATE ACCOUNT'}</span><h2 id="signup-title">${existingAccount?`Continue with ${esc(label)}`:`Create your ${esc(label)} account`}</h2><p>${existingAccount?'Continue with your existing KOL IDS account.':(isTrial?'Your 7 day trial is activated immediately after account creation.':'Your account and organization are created now. Paid workspace access is activated after payment confirmation.')}</p></div><button type="button" class="modal-close" aria-label="Close">×</button></div>
       <form id="kolIdsSignupForm" class="kol-signup-form">
         <label>Work email<input id="signup-email" type="email" required autocomplete="email" placeholder="you@company.com" value="${esc(existingAccount?accountEmail:'')}" ${existingAccount?'readonly':''}></label>
         <label>Full name<input id="signup-name" type="text" ${existingAccount?'':'required'} autocomplete="name" placeholder="Your name" value="${esc(existingAccount?accountName:'')}"></label>
@@ -897,33 +897,10 @@ function auth(mode='login', notice=''){
             // For paid plans, authenticate that existing account and retry the same provisioning
             // request with the authenticated session so a new organization/account is never created.
             if(!isTrial && r.status===409 && data.code==='ACCOUNT_EXISTS'){
-              // Do NOT try the password typed into the signup form against an existing account.
-              // A returning customer may type a new password here, which is not their existing
-              // Supabase password and would incorrectly surface "Invalid login credentials".
-              // Send them through the normal sign-in flow, then reopen this selected paid plan.
-              try{
-                sessionStorage.setItem('kolids_pending_paid_plan', code);
-              }catch(_){ }
-              set('You already have a KOL IDS account with this email. Please sign in with your existing password to continue.','bad');
-              submit.disabled=false;
-              submit.textContent='Sign in to continue →';
-              const actions=m.querySelector('.access-actions');
-              if(actions){
-                let loginBtn=actions.querySelector('[data-existing-account-login]');
-                if(!loginBtn){
-                  loginBtn=document.createElement('button');
-                  loginBtn.type='button';
-                  loginBtn.className='entry-ghost';
-                  loginBtn.setAttribute('data-existing-account-login','1');
-                  loginBtn.textContent='Sign in with existing account →';
-                  loginBtn.onclick=()=>{
-                    m.remove();
-                    auth('login','You already have a KOL IDS account with this email. Please sign in with your existing password to continue.');
-                  };
-                  actions.appendChild(loginBtn);
-                }
-              }
-              return;
+              // Existing-account paid continuation must never send the customer back
+              // through logout/login. The modal is already authenticated and should
+              // finish the selected upgrade directly.
+              throw new Error('We could not continue this upgrade with the signed-in account. Please refresh the page and try again.');
             }else{
               throw new Error(data.error||`Account creation failed (${r.status||'unknown'}). Please try again.`);
             }
@@ -955,14 +932,12 @@ function auth(mode='login', notice=''){
         }else{delete payment.file}
         set('Submitting payment for review…','busy');
         const result=await signupApprovalCall_('submit_payment',{order_number:orderNo,payment},session);
-        set(`Application received. Order ${orderNo} is now pending payment approval. We will email you when your account is active.`,'good');
-        submit.textContent='Application Submitted';
+        set(`Upgrade complete. Your ${planLabel(code)} plan is now active.`,'good');
+        submit.textContent='Upgrade completed ✓';
         submit.disabled=true;
-        const actions=m.querySelector('.access-actions');
-        if(actions){
-          const back=document.createElement('button');back.type='button';back.className='entry-ghost';back.textContent='Go to Login';back.onclick=()=>{m.remove();auth('login',`Order ${orderNo} is pending payment approval.`)};
-          actions.appendChild(back);
-        }
+        // The customer is already authenticated. No logout, no second sign-in,
+        // and no extra confirmation page: open the renewed workspace directly.
+        setTimeout(()=>launchWorkspace(),450);
       }catch(err){
         set(err.message||'Could not submit the account application.','bad');
         submit.disabled=false;

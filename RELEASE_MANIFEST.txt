@@ -34,3 +34,5 @@ SUBSCRIPTION EXPIRY REMINDERS
 - supabase/migrations/20261004_subscription_expiry_reminders.sql
 - Trial reminder: 3 days before expiry
 - Paid reminder: 1 month before expiry
+
+Existing-account paid renewal: direct authenticated upgrade + immediate activation + customer/admin email confirmation. Deploy signup-approval Edge Function.
