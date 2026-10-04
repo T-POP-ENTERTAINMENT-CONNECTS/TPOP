@@ -23,3 +23,12 @@ KOL IDS distinguishes:
 ## Deployment
 Use the existing Supabase database and migrations. This release adds no required database migration.
 Upload the package contents to the same deployment root and keep the existing Supabase configuration.
+
+## Subscription expiry reminders — 2026-10-04
+- `TRIAL_7` sends one customer email in the 2–3 day window before expiry (intended as the 3-day reminder).
+- Every paid plan sends one customer email in the 29–30 day window before expiry (intended as the 1-month reminder).
+- Reminder emails use the live subscription expiry timestamp and the original order amount for paid subscriptions; Trial is always FREE / THB 0.
+- Duplicate reminders are prevented by `subscription_expiry_notifications`.
+- Deploy `supabase/functions/subscription-expiry-reminders` and set `KOL_IDS_EXPIRY_REMINDER_SECRET`.
+- Schedule the Edge Function once per day using Supabase Cron / scheduled functions. Send header `x-kol-ids-expiry-secret: <KOL_IDS_EXPIRY_REMINDER_SECRET>`.
+- Do not hard-code the service-role key into SQL or frontend files.

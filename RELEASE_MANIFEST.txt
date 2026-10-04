@@ -28,3 +28,9 @@ Validation
 - Deployment route aliases remain intact for /KOLIDS and /KOLIDSworkspace.
 
 20261004 access-gate polish: clarified pending paid-account state, improved responsive access page, and bumped app.js cache version. No access-control bypass was added.
+
+SUBSCRIPTION EXPIRY REMINDERS
+- supabase/functions/subscription-expiry-reminders/index.ts
+- supabase/migrations/20261004_subscription_expiry_reminders.sql
+- Trial reminder: 3 days before expiry
+- Paid reminder: 1 month before expiry
