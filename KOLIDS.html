@@ -723,17 +723,34 @@ function auth(mode='login', notice=''){
   document.getElementById('entry-trial')?.addEventListener('click',()=>openCommercialModal('trial'));
   document.querySelectorAll('.plan-card').forEach(btn=>btn.addEventListener('click',()=>openOrderForm(btn.dataset.plan||'')));
 
-  function openOrderForm(plan){ openSignupModal(plan || 'PLAN_3M'); }
+  function openOrderForm(plan){ const selected=plan || 'PLAN_3M'; openSignupModal(selected, S.session?.user ? {existingAccount:true} : {}); }
   function planCode(plan){ const v=String(plan||'').trim(); if(['TRIAL_7','PLAN_3M','PLAN_6M','PLAN_12M'].includes(v)) return v; return v==='3 Months'?'PLAN_3M':v==='6 Months'?'PLAN_6M':v==='12 Months'?'PLAN_12M':'TRIAL_7'; }
   function planLabel(code){ return ({TRIAL_7:'7 Day Trial',PLAN_3M:'3 Months',PLAN_6M:'6 Months',PLAN_12M:'12 Months'})[code]||code; }
   function planPrice(code){ return ({PLAN_3M:'THB 29,900',PLAN_6M:'THB 55,900',PLAN_12M:'THB 105,900'})[code]||''; }
-  function openSignupModal(plan, options={}){
+  async function openSignupModal(plan, options={}){
     closeCommercialModal();
     const existingAccount=Boolean(options?.existingAccount);
     const code=planCode(plan), label=planLabel(code), isTrial=code==='TRIAL_7';
     if(existingAccount && isTrial){ options.existingAccount=false; }
     const accountEmail=String(S.session?.user?.email||'').trim().toLowerCase();
-    const accountName=String(S.session?.user?.user_metadata?.name||S.session?.user?.user_metadata?.full_name||'').trim();
+    let accountName=String(S.session?.user?.user_metadata?.name||S.session?.user?.user_metadata?.full_name||'').trim();
+    let accountCompany='';
+    if(existingAccount && sb && S.session?.user?.id){
+      try{
+        const [{data:profile},{data:membership}]=await Promise.all([
+          sb.from('profiles').select('display_name,company_name').eq('user_id',S.session.user.id).maybeSingle(),
+          sb.from('organization_memberships').select('organization_id').eq('user_id',S.session.user.id).eq('status','active').limit(1).maybeSingle()
+        ]);
+        if(profile){
+          accountName=String(profile.display_name||accountName).trim();
+          accountCompany=String(profile.company_name||'').trim();
+        }
+        if(membership?.organization_id){
+          const {data:org}=await sb.from('organizations').select('name').eq('id',membership.organization_id).maybeSingle();
+          if(org?.name) accountCompany=String(org.name).trim();
+        }
+      }catch(_){ }
+    }
     const billingFields=isTrial?'':`<section class="signup-billing" id="signup-billing-section">
       <div class="signup-billing-head"><div><span>BILLING / DOCUMENT REQUEST</span><b>Do you need a quotation, tax invoice or receipt?</b></div><small>We collect these details before payment so your billing document can be prepared correctly.</small></div>
       <div class="signup-billing-docs">
@@ -770,7 +787,7 @@ function auth(mode='login', notice=''){
       <form id="kolIdsSignupForm" class="kol-signup-form">
         <label>Work email<input id="signup-email" type="email" required autocomplete="email" placeholder="you@company.com" value="${esc(existingAccount?accountEmail:'')}" ${existingAccount?'readonly':''}></label>
         <label>Full name<input id="signup-name" type="text" ${existingAccount?'':'required'} autocomplete="name" placeholder="Your name" value="${esc(existingAccount?accountName:'')}"></label>
-        <label>Organization / company<input id="signup-company" type="text" autocomplete="organization" placeholder="Company name"></label>
+        <label>Organization / company<input id="signup-company" type="text" autocomplete="organization" placeholder="Company name" value="${esc(existingAccount?accountCompany:'')}"></label>
         ${existingAccount?'':'<label>Password<div class="signup-password-wrap"><input id="signup-password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="signup-password-toggle" id="signup-view-password" aria-pressed="false">Show</button></div></label>'}
         <div class="signup-plan"><span>SELECTED PLAN</span><b>${esc(label)}</b><strong class="signup-plan-price">${esc(planPrice(code))}</strong><small>${isTrial?'7 days · 1 seat · FREE':'Organization workspace · payment required before activation'}</small></div>
         ${billingFields}
@@ -863,6 +880,7 @@ function auth(mode='login', notice=''){
         payment.file=paymentFile;
       }
       if(!email||(!existingAccount&&(!name||password.length<8))){set(existingAccount?'Please confirm your account email and continue.':'Please complete email, name and an 8+ character password.','bad');return}
+      if(existingAccount&&!S.session?.access_token){set('Your secure sign-in session has expired. Please sign in again.','bad');return}
       submit.disabled=true;set(isTrial?'Creating your secure KOL IDS account…':'Creating your secure account and payment application…','busy');
       try{
         let orderNo=createdOrderNo;
@@ -1044,7 +1062,7 @@ async function boot(){
     if(!ctx.access_granted){
       const reason=String(ctx.access_reason||'NO_ACTIVE_SUBSCRIPTION');
       root.innerHTML=`<div class="entry-page"><div class="entry-shell"><div class="entry-heading"><span class="entry-eyebrow">KOL IDS™ · ACCESS CONTROL</span><h1>Account verified · workspace access is not active yet</h1><p>${esc(reason==='PAYMENT_PENDING'?'Your account is ready. Complete payment and wait for payment approval; your same account and organization will then open the workspace.':reason==='SUBSCRIPTION_EXPIRED'?'Your subscription has expired. Renew the organization plan to continue analysis.':'Your account does not currently have an active KOL IDS subscription.')}</p><div class="access-actions"><button class="entry-primary" id="go-login" type="button">Back to Login</button><button class="entry-ghost" id="go-home" type="button">T POP Connects</button></div></div></div></div>`;
-      document.getElementById('go-login')?.addEventListener('click',()=>{sb.auth.signOut();auth()});
+      document.getElementById('go-login')?.addEventListener('click',()=>{auth('login','Your subscription has expired. Choose a paid plan to continue with your existing KOL IDS account.')});
       document.getElementById('go-home')?.addEventListener('click',()=>window.location.href='https://tpopconnects.com/');
       return;
     }
