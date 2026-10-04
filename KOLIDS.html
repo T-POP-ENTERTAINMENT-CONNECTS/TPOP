@@ -1009,6 +1009,19 @@ function auth(mode='login', notice=''){
   const calcExposure=()=>{const b=Math.max(0,Number(document.getElementById('entry-budget')?.value||0));const r=Math.max(0,Math.min(100,Number(document.getElementById('entry-risk')?.value||0)));const e=b*r/100;const f=new Intl.NumberFormat('en-US',{maximumFractionDigits:0});const out=document.getElementById('entry-exposure');const ass=document.getElementById('entry-assumption');if(out)out.textContent='THB '+f.format(e);if(ass)ass.textContent=r.toFixed(0)+'%';};
   ['entry-budget','entry-risk'].forEach(id=>document.getElementById(id)?.addEventListener('input',calcExposure)); calcExposure(); renderEntryDemo();
 
+  // Expired-workspace renewal entry: keep the existing authenticated account and
+  // open the same 3 / 6 / 12 month plan picker used by the public pricing flow.
+  // The session is preserved, so the customer does not need to sign out or create
+  // another account.
+  try{
+    const renewalParams=new URLSearchParams(window.location.search);
+    if(renewalParams.get('renew')==='1' && S.session?.user){
+      // Every expired subscription uses the same renewal flow, regardless of the previous paid term.
+      // Keep the existing authenticated account/session and let the customer choose 3 / 6 / 12 months.
+      requestAnimationFrame(()=>openCommercialModal('plans'));
+    }
+  }catch(_){ }
+
   document.getElementById('auth').onsubmit=async e=>{
     e.preventDefault();
     if(!sb){setStatus('Supabase is not configured.','bad');return;}

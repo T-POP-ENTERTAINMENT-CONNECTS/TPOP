@@ -1624,8 +1624,8 @@ function accessGate(){
  const reason=S.accessReason||'NO_ACTIVE_SUBSCRIPTION';
  const pending=reason==='PAYMENT_PENDING';
  const expired=reason==='SUBSCRIPTION_EXPIRED';
- const title=pending?'Payment approval is still pending':expired?'Your subscription has expired':'Workspace access is not active';
- const body=pending?'Your account was created successfully, but the paid workspace is not active yet. The previous application is still stored on this account, so KOL IDS will not create a second workspace just because you sign in again.':expired?'Your account is valid, but the current subscription period has ended. Renew the organization plan to continue.':'Your account is authenticated, but this organization does not currently have an active KOL IDS plan.';
+ const title=pending?'Payment approval is still pending':expired?'Renew your KOL IDS subscription':'Workspace access is not active';
+ const body=pending?'Your account was created successfully, but the paid workspace is not active yet. The previous application is still stored on this account, so KOL IDS will not create a second workspace just because you sign in again.':expired?'Your account is still valid, but your subscription has ended. Choose any available plan to renew the same KOL IDS account and organization. The renewal flow is the same for every expired paid plan.':'Your account is authenticated, but this organization does not currently have an active KOL IDS plan.';
  const plan=S.plan?.name||S.subscription?.plan_code||'';
  const price=Number(S.plan?.price_thb);
  const priceLabel=Number.isFinite(price)&&price>0?`THB ${price.toLocaleString('en-US',{maximumFractionDigits:2})}`:'';
@@ -1647,14 +1647,18 @@ function accessGate(){
        ${expired&&expiresAt?`<div><span>ACCESS ENDED</span><b>${esc(new Date(expiresAt).toLocaleString('en-GB',{dateStyle:'medium',timeZone:'Asia/Bangkok'}))}</b></div>`:''}
      </div>
      <div class="access-gate-actions">
-       <button id="gate-refresh" class="btn primary">Check Access Again</button>
+       ${expired?`<button id="gate-renew" class="btn primary">Renew subscription →</button>`:`<button id="gate-refresh" class="btn primary">Check Access Again</button>`}
        <button id="gate-home" class="btn">Back to KOL IDS</button>
        <button id="gate-signout" class="btn ghost">Sign out</button>
      </div>
      <div class="access-gate-foot">Access changes automatically after the account status is updated.</div>
    </main>
  </div></div>`;
- document.getElementById('gate-refresh').onclick=boot;
+ if(expired){
+   document.getElementById('gate-renew').onclick=()=>window.location.assign('/KOLIDS?renew=1');
+ }else{
+   document.getElementById('gate-refresh').onclick=boot;
+ }
  document.getElementById('gate-home').onclick=()=>window.location.assign('/KOLIDS');
  document.getElementById('gate-signout').onclick=()=>sb.auth.signOut();
 }
