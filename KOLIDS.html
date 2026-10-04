@@ -869,28 +869,49 @@ function auth(mode='login', notice=''){
         let orderNo=createdOrderNo;
         let session=existingAccount ? (S.session||createdSession) : createdSession;
         if(existingAccount){
+          // The customer is already authenticated. Create/resume the renewal first,
+          // then save the password entered in this form. This avoids invalidating a
+          // fresh sign-in session before the renewal order is created.
+          if(!session?.access_token){
+            const fresh0=await sb.auth.getSession();
+            session=fresh0.data?.session||null;
+            S.session=session;
+          }
           if(!session?.access_token) throw new Error('Your secure session has expired. Please sign in again.');
-          set('Saving your password and continuing with this plan…','busy');
-          const passwordUpdate=await sb.auth.updateUser({password});
-          if(passwordUpdate.error) throw new Error(passwordUpdate.error.message||'We could not save your new password. Please try again.');
-          const fresh=await sb.auth.getSession();
-          if(fresh.error||!fresh.data?.session?.access_token) throw new Error('Your secure session could not be refreshed. Please sign in again.');
-          session=fresh.data.session;
-          S.session=session;
-          // Existing accounts must never go back through client-sign-up.
-          // Create/resume the paid renewal directly against this authenticated account.
+
           if(!isTrial){
             set('Preparing your renewal…','busy');
-            const renewal=await signupApprovalCall_('renewal_order',{
-              email,
-              name,
-              organization_name:company,
-              plan:code,
-              billing
-            },session);
+            let renewal;
+            try{
+              renewal=await signupApprovalCall_('renewal_order',{email,name,organization_name:company,plan:code,billing},session);
+            }catch(firstErr){
+              // A just-refreshed Supabase session can occasionally leave an older
+              // access token in memory. Refresh once and retry the same renewal.
+              const freshRetry=await sb.auth.getSession();
+              const retrySession=freshRetry.data?.session||null;
+              if(!retrySession?.access_token) throw firstErr;
+              session=retrySession;
+              S.session=session;
+              renewal=await signupApprovalCall_('renewal_order',{email,name,organization_name:company,plan:code,billing},session);
+            }
             orderNo=String(renewal.order?.order_number||'');
             if(!orderNo) throw new Error('We could not create the renewal order. Please try again.');
             createdOrderNo=orderNo;
+            createdSession=session;
+          }
+
+          // Keep the simple 8+ character password field. If the customer enters
+          // the same password they already use, Supabase may reject the update;
+          // that is harmless because the existing password is already valid.
+          set('Saving your password…','busy');
+          const passwordUpdate=await sb.auth.updateUser({password});
+          if(passwordUpdate.error && !/same password|different from.*old password|new password.*old password/i.test(passwordUpdate.error.message||'')){
+            throw new Error(passwordUpdate.error.message||'We could not save your password. Please try again.');
+          }
+          const fresh=await sb.auth.getSession();
+          if(fresh.data?.session?.access_token){
+            session=fresh.data.session;
+            S.session=session;
             createdSession=session;
           }
         }
@@ -1109,7 +1130,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='/app.js?v=20261004-existing-account-renewal-v2';
+    script.src='/app.js?v=20261004-existing-account-renewal-v3';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);
