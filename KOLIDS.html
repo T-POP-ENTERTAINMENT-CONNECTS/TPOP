@@ -573,6 +573,24 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .analysis-toolbar,.report-actions{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:18px}.analysis-toolbar label{min-width:260px}.report-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.report-summary{margin-top:18px;padding:18px;border:1px solid var(--line,#ddd);border-radius:16px}.plan-buy:disabled{opacity:.55;cursor:not-allowed}@media(max-width:800px){.report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.report-grid{grid-template-columns:1fr}.analysis-toolbar label{min-width:100%}}@media print{.sidebar,.topbar,.report-actions{display:none!important}.main{margin:0!important}.content{padding:0!important}.section-card{box-shadow:none!important;border:0!important}}
 
 
+<style id="KOL_IDS_EXISTING_ORDER_V1">
+.existing-order-modal .commercial-modal-card{width:min(760px,100%)}
+.existing-order-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0}
+.existing-order-summary>div{border:1px solid #e7e8ea;border-radius:12px;padding:12px;background:#fafafa}
+.existing-order-summary span{display:block;color:#92949a;font-size:8px;letter-spacing:.12em;font-weight:900;margin-bottom:5px}
+.existing-order-summary b{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.existing-order-note{margin:0 0 16px;padding:13px 14px;border:1px solid #dfeef2;border-radius:12px;background:#f5fcfe;color:#4d6269;font-size:10px;line-height:1.55}
+.existing-order-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.existing-order-form label{display:grid;gap:6px;font-size:10px;font-weight:800;color:#4d4f55}
+.existing-order-form input,.existing-order-form select{width:100%;box-sizing:border-box;border:1px solid #dedfe2;border-radius:10px;padding:11px 12px;background:#fff;outline:0;font-size:11px}
+.existing-order-form input:focus,.existing-order-form select:focus{border-color:#9adff0;box-shadow:0 0 0 3px rgba(174,239,255,.15)}
+.existing-order-form .full{grid-column:1/-1}
+.existing-order-form small{font-size:8px;color:#92949a;font-weight:500}
+.existing-order-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:16px}
+.existing-order-status{min-height:18px;margin-top:12px;font-size:10px;color:#6d7077}
+.existing-order-status.good{color:#277153}.existing-order-status.bad{color:#9b3948}
+@media(max-width:620px){.existing-order-summary{grid-template-columns:1fr}.existing-order-form{grid-template-columns:1fr}.existing-order-form .full{grid-column:auto}.existing-order-actions{display:grid;grid-template-columns:1fr}.existing-order-actions button{width:100%}}
+</style>
 <style id="KOL_IDS_MOTION_V12">
   .kol-motion-stage{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;isolation:isolate}
   .kol-motion-stage::before{content:"";position:absolute;inset:-35%;background:linear-gradient(rgba(174,239,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(174,239,255,.045) 1px,transparent 1px);background-size:46px 46px;transform:perspective(700px) rotateX(60deg) translateY(20%);transform-origin:center bottom;opacity:.42;animation:kolGridDrift 12s linear infinite}
@@ -969,6 +987,67 @@ function auth(mode='login', notice=''){
     }
   };
 }
+function openExistingOrderModal(order){
+  if(!order||String(order.status||'').toLowerCase()!=='pending'){toast('This order is no longer pending payment.','error');return}
+  document.getElementById('kolIdsExistingOrderModal')?.remove();
+  const plan=String(order.plan_code||'').replace('PLAN_','').replace('_',' ');
+  const price=order.amount_thb!=null?`THB ${Number(order.amount_thb).toLocaleString('en-US',{maximumFractionDigits:2})}`:'·';
+  const m=document.createElement('div');m.id='kolIdsExistingOrderModal';m.className='commercial-modal existing-order-modal';
+  m.innerHTML=`<div class="commercial-modal-card" role="dialog" aria-modal="true" aria-labelledby="existing-order-title">
+    <div class="commercial-modal-head"><div><span class="modal-kicker">KOL IDS · EXISTING ORDER</span><h2 id="existing-order-title">Complete your existing order</h2><p>Your account is already created. Continue with this order to submit or update the payment proof. No new account or order will be created.</p></div><button type="button" class="modal-close" aria-label="Close">×</button></div>
+    <div class="existing-order-note"><b>Order already exists.</b> This form updates the same pending order. After submission, your payment will be reviewed and workspace access will open after approval.</div>
+    <div class="existing-order-summary"><div><span>ORDER</span><b>${esc(order.order_number||order.id||'·')}</b></div><div><span>PLAN</span><b>${esc(plan)}</b></div><div><span>AMOUNT</span><b>${esc(price)}</b></div></div>
+    <form id="existingOrderForm" class="existing-order-form">
+      <label>Payment method / วิธีชำระ<select id="existing-payment-method"><option value="BANK_TRANSFER_KBANK">Bank Transfer · KBank</option><option value="CHEQUE">Cheque</option></select></label>
+      <label>Payment date / วันที่ชำระ<input id="existing-payment-date" type="date" required></label>
+      <label>Payment reference / เลขที่อ้างอิง<input id="existing-payment-reference" type="text" placeholder="Optional"></label>
+      <label>Payment proof / หลักฐานการชำระ<input id="existing-payment-proof" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"><small>Upload JPG, PNG, WEBP or PDF · max 8 MB.</small></label>
+      <label class="full">Payment proof URL / ลิงก์หลักฐาน<input id="existing-payment-proof-url" type="url" placeholder="https://…"><small>Use this only if the proof is hosted elsewhere.</small></label>
+      <div id="existing-order-status" class="existing-order-status full" aria-live="polite"></div>
+      <div class="existing-order-actions full"><button type="button" class="entry-ghost" id="existing-order-cancel">Cancel</button><button type="submit" class="entry-primary" id="existing-order-submit">Submit payment for this order →</button></div>
+    </form>
+  </div>`;
+  document.body.appendChild(m);requestAnimationFrame(()=>m.classList.add('show'));
+  const close=()=>m.remove();
+  m.querySelector('.modal-close')?.addEventListener('click',close);
+  m.querySelector('#existing-order-cancel')?.addEventListener('click',close);
+  const form=m.querySelector('#existingOrderForm'),status=m.querySelector('#existing-order-status'),submit=m.querySelector('#existing-order-submit');
+  const set=(msg,type='')=>{status.className='existing-order-status full '+type;status.textContent=msg};
+  form?.addEventListener('submit',async e=>{
+    e.preventDefault(); if(submit.disabled)return;
+    const date=String(m.querySelector('#existing-payment-date')?.value||'').trim();
+    const method=String(m.querySelector('#existing-payment-method')?.value||'BANK_TRANSFER_KBANK').trim();
+    const reference=String(m.querySelector('#existing-payment-reference')?.value||'').trim();
+    const proofUrl=String(m.querySelector('#existing-payment-proof-url')?.value||'').trim();
+    const proofFile=m.querySelector('#existing-payment-proof')?.files?.[0]||null;
+    if(!date){set('Please enter the payment date.','bad');return}
+    if(!proofFile&&!proofUrl){set('Please upload payment proof or provide a proof URL.','bad');return}
+    const session=sb?.auth?.getSession?await sb.auth.getSession():null;
+    const accessToken=session?.data?.session?.access_token;
+    if(!accessToken){set('Your secure session has expired. Please sign in again.','bad');return}
+    const call=async(action,payload)=>{
+      const r=await fetch(String(C.SIGNUP_APPROVAL_URL||''),{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${accessToken}`},body:JSON.stringify(Object.assign({action},payload||{}))});
+      const raw=await r.text();let data={};try{data=raw?JSON.parse(raw):{}}catch(_){data={}};
+      if(!r.ok||!data.ok)throw new Error(data.error||`Payment service failed (${r.status||'unknown'})`);return data;
+    };
+    try{
+      submit.disabled=true;set('Preparing your existing order…');
+      let proof_path='';
+      if(proofFile){
+        if(proofFile.size>8*1024*1024)throw new Error('Payment proof must be 8 MB or smaller.');
+        const prepared=await call('prepare_upload',{order_number:order.order_number,file_name:proofFile.name,content_type:proofFile.type||'application/octet-stream'});
+        const up=await sb.storage.from('payment-proofs').uploadToSignedUrl(prepared.path,prepared.token,proofFile);
+        if(up.error)throw new Error(up.error.message||'Payment proof upload failed.');
+        proof_path=prepared.path;
+      }
+      set('Submitting payment for the existing order…');
+      await call('submit_payment',{order_number:order.order_number,payment:{method,date,reference,proof_path,proof_url:proofUrl}});
+      set(`Order ${order.order_number} has been submitted for payment approval. You do not need to create another account.`,'good');
+      submit.textContent='Payment Submitted';
+      setTimeout(()=>{close();window.location.assign('/KOLIDS');},900);
+    }catch(err){set(err?.message||'Could not submit payment. Please try again.','bad');submit.disabled=false}
+  });
+}
 function renderEntryDemo(){const host=document.getElementById('demo-result');if(!host)return;const data=[['Creator A',92,88,94,'STRONG CONSIDER','High campaign fit + strong commercial efficiency + high evidence confidence.'],['Creator B',87,73,82,'CONSIDER','Strong audience/content alignment, but efficiency evidence is less certain.'],['Creator C',76,91,68,'REVIEW','Commercially attractive, but fit evidence needs additional validation.'],['Creator D',61,59,74,'NOT PRIORITY','Lower campaign fit and weaker efficiency signal.']];host.innerHTML=`<div class="demo-logic"><div><span>DECISION SIGNAL</span><b>Fit + Efficiency</b></div><div><span>EVIDENCE</span><b>Weighted</b></div><div><span>CONFIDENCE</span><b>Separate</b></div><div><span>OUTPUT</span><b>Action</b></div></div><p class="demo-explain">The score is not the recommendation by itself. KOL IDS combines decision signals, evidence quality, confidence and risk to explain what should happen next.</p>${data.map(x=>`<div class="demo-row"><strong>${x[0]}</strong><span>${x[1]} Fit</span><span>${x[2]} Eff.</span><span>${x[3]} Conf.</span><b>${x[4]}</b></div><div class="demo-why">${x[5]}</div>`).join('')}<div class="demo-point"><b>The point:</b>&nbsp; KOL IDS does not only rank creators. It explains the decision.</div>`;}
 
 async function boot(){
@@ -979,6 +1058,20 @@ async function boot(){
   // Never redirect to the workspace just because a session already exists.
   // The workspace opens only after the user explicitly completes Sign in.
   auth();
+  const resumeId=new URLSearchParams(window.location.search).get('resume_order_id');
+  if(resumeId){
+    (async()=>{
+      try{
+        const {data:{session}}=await sb.auth.getSession();
+        if(!session){return}
+        const {data,error}=await sb.from('customer_orders').select('*').eq('id',resumeId).eq('requested_by',session.user.id).maybeSingle();
+        if(error)throw error;
+        if(!data){toast('The existing order could not be found for this account.','error');return}
+        openExistingOrderModal(data);
+        const clean=new URL(window.location.href);clean.searchParams.delete('resume_order_id');window.history.replaceState({},'',clean.pathname);
+      }catch(err){toast(err?.message||'Could not open the existing order.','error')}
+    })();
+  }
   return;
   try{
     const r=await sb.rpc('bootstrap_workspace',{p_name:null});

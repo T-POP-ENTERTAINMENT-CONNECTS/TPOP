@@ -1642,13 +1642,19 @@ function accessGate(){
        ${order?`<div><span>ORDER</span><b>${esc(order)}</b></div>`:''}
      </div>
      <div class="access-gate-actions">
-       <button id="gate-refresh" class="btn primary">Check Access Again</button>
+       ${pending&&order?`<button id="gate-order" class="btn primary">Continue with existing order →</button>`:''}
+       <button id="gate-refresh" class="btn${pending&&order?'':' primary'}">Check Access Again</button>
        <button id="gate-home" class="btn">Back to KOL IDS</button>
        <button id="gate-signout" class="btn ghost">Sign out</button>
      </div>
      <div class="access-gate-foot">Access changes automatically after the account status is updated.</div>
    </main>
  </div></div>`;
+ document.getElementById('gate-order')?.addEventListener('click',()=>{
+   const q=new URLSearchParams();
+   if(order) q.set('resume_order_id',order);
+   window.location.assign('/KOLIDS?'+q.toString());
+ });
  document.getElementById('gate-refresh').onclick=boot;
  document.getElementById('gate-home').onclick=()=>window.location.assign('/KOLIDS');
  document.getElementById('gate-signout').onclick=()=>sb.auth.signOut();
