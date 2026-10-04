@@ -463,6 +463,23 @@ th,td{padding:13px 12px}
 @media(max-width:760px){.creator-fit-list-head{display:none}.creator-fit-main{grid-template-columns:1fr 80px 80px;gap:10px}.creator-read{grid-column:1/-1}.creator-actions-v3{grid-column:1/-1;justify-content:flex-start}.creator-fit-details{padding-left:16px}.creator-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.creator-detail-bottom{grid-template-columns:1fr}.creator-registry-v3 .creator-registry-head{flex-direction:column}}
 
 .gen-code-individual-table th,.gen-code-individual-table td{font-size:9px;padding:8px 9px;vertical-align:middle}.gen-code-individual-table input,.gen-code-individual-table select{min-height:34px!important;padding:7px 8px!important;font-size:10px!important}.performance-type-picker{border:1px solid #dcecef;background:#f8fcfd;border-radius:12px;padding:14px;margin-top:14px}.performance-type-picker .type-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.performance-type-option{display:flex;align-items:center;gap:8px;border:1px solid #dfe5e8;border-radius:9px;background:#fff;padding:10px 11px;cursor:pointer}.performance-type-option input{margin:0;accent-color:#1479b7}.performance-type-option b{font-size:10px}.performance-type-option small{display:block;font-size:8px;color:#7b858d;margin-top:2px}@media(max-width:760px){.performance-type-picker .type-grid{grid-template-columns:1fr}.performance-type-option{min-height:42px}}.ecommerce-panel{border-color:#dcecef!important}.ecommerce-panel .signal-box{background:#f8fcfd;border-color:#dcecef}.ecommerce-panel .hint{font-size:8px;color:#7b858d}.ecommerce-panel .actions{margin-top:14px}.creator-ecommerce-box{grid-column:1/-1;border:1px solid #dcecef;background:#f8fcfd;border-radius:12px;padding:13px}.creator-ecommerce-box .label{color:#46717d}.ecom-channel-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:9px}.ecom-channel-option{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:7px!important;min-height:36px;padding:7px 9px;border:1px solid #dfe5e8;border-radius:8px;background:#fff;cursor:pointer}.ecom-channel-option input{width:13px!important;min-height:13px!important;margin:0!important;accent-color:#1479b7}.ecom-channel-option span{font-size:10px!important;font-weight:750!important}.ecom-channel-selected{font-size:9px;color:#61717a;margin-top:8px}.ecom-linked-note{font-size:9px;color:#6f7b82;line-height:1.5;margin-top:8px}@media(max-width:900px){.ecom-channel-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:760px){.gen-code-individual-table{min-width:640px}.ecommerce-panel .form-grid{grid-template-columns:1fr!important}.ecommerce-panel .actions .btn{width:100%}.ecom-channel-grid{grid-template-columns:1fr 1fr}.creator-ecommerce-box{padding:11px}.ecom-channel-option span{font-size:9px!important}}
+/* KOL IDS · ACCESS GATE · 20261004
+   Clear commercial state without pretending a pending paid account is active. */
+.access-gate{min-height:100vh;display:grid;place-items:center;padding:32px 20px;background:radial-gradient(900px 520px at 50% -20%,rgba(255,255,255,.95),transparent 62%),linear-gradient(180deg,#f8f9fa,#eef0f2);color:#17171b}
+.access-gate-shell{width:min(720px,100%)}
+.access-gate-brand{display:flex;align-items:center;gap:11px;margin:0 0 16px 4px}
+.access-gate-mark{width:34px;height:34px;border-radius:10px;background:#17171b;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:950;box-shadow:0 8px 24px rgba(20,20,24,.14)}
+.access-gate-brand b{display:block;font-size:14px;letter-spacing:-.02em}.access-gate-brand span{display:block;margin-top:2px;color:#8a8b92;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:800}
+.access-gate-card{background:rgba(255,255,255,.97);border:1px solid #e1e3e6;border-radius:24px;padding:38px;box-shadow:0 26px 80px rgba(20,22,28,.09)}
+.access-gate-status{display:inline-flex;align-items:center;gap:8px;border:1px solid #e4e5e8;border-radius:999px;padding:7px 10px;font-size:8px;font-weight:950;letter-spacing:.13em;color:#666870;background:#fafafa}
+.access-gate-status span{width:6px;height:6px;border-radius:50%;background:#8a8b91}.access-gate-status.pending span{background:#b67a1d}.access-gate-status.expired span{background:#b94d58}
+.access-gate-kicker{margin-top:26px;color:#96979d;font-size:8px;font-weight:950;letter-spacing:.18em}
+.access-gate-card h1{margin:7px 0 10px;font-size:34px;line-height:1.08;letter-spacing:-.045em}
+.access-gate-copy{max-width:610px;margin:0;color:#666870;font-size:13px;line-height:1.7}
+.access-gate-note{margin-top:22px;padding:15px 16px;border:1px solid #e8e8e9;border-radius:14px;background:#f8f8f8}.access-gate-note b{display:block;font-size:11px}.access-gate-note span{display:block;margin-top:4px;color:#777980;font-size:10px;line-height:1.55}
+.access-gate-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:18px}.access-gate-meta>div{min-width:0;border:1px solid #e7e8ea;border-radius:12px;padding:11px 12px;background:#fff}.access-gate-meta span{display:block;color:#999aa1;font-size:7px;letter-spacing:.14em;font-weight:900;margin-bottom:5px}.access-gate-meta b{display:block;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.access-gate-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:22px}.access-gate-actions .btn{min-height:42px;padding:10px 15px}.access-gate-actions .btn.ghost{border-color:transparent;color:#777980}.access-gate-foot{margin-top:18px;color:#a0a1a7;font-size:8px;line-height:1.5}
+@media(max-width:620px){.access-gate{padding:18px 12px;place-items:start center}.access-gate-shell{margin-top:10vh}.access-gate-card{padding:26px 20px;border-radius:20px}.access-gate-card h1{font-size:28px}.access-gate-meta{grid-template-columns:1fr}.access-gate-actions{display:grid;grid-template-columns:1fr}.access-gate-actions .btn{width:100%}.access-gate-brand{margin-left:2px}}
 ` ;document.head.appendChild(s)}
 function initials(){const s=S.session?.user?.email||S.org?.name||'KOL';return s.split(/[^A-Za-z0-9]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'K'}
 async function loadContext(){const {data,error}=await sb.rpc('bootstrap_workspace');if(error)throw error;S.org=data.organization;S.membership=data.membership;S.plan=data.plan;S.subscription=data.subscription;S.access=Boolean(data.access_granted);S.accessReason=data.access_reason||null;return data}
@@ -1602,7 +1619,40 @@ function downloadFullPDF(){
  add('Learning · What worked',learning.worked);add('Learning · Friction',learning.friction);add('Learning · Next hypothesis',learning.hypothesis);add('Learning · Next actions',(learning.nextActions||[]).map((x,i)=>`${i+1}. ${x}`).join('\\n'));
  doc.save(`KOL-IDS-Full-Report-${String(S.selectedCampaign?.name||'Campaign').replace(/[^A-Za-z0-9-_]+/g,'-')}.pdf`);
 }
-function accessGate(){const reason=S.accessReason||'NO_ACTIVE_SUBSCRIPTION';const msg=reason==='PAYMENT_PENDING'?'Your account is ready. Complete payment and wait for approval.':reason==='SUBSCRIPTION_EXPIRED'?'Your subscription has expired. Renew your KOL IDS plan to continue.':'Your account is authenticated, but there is no active KOL IDS plan for this organization.';root.innerHTML=`<div class="auth"><div class="auth-card"><b>KOL IDS™</b><h1>Account verified</h1><p>${esc(msg)}</p><div class="actions"><button id="gate-refresh" class="btn primary">Check Access Again</button><button id="gate-signout" class="btn">Sign out</button></div></div></div>`;document.getElementById('gate-refresh').onclick=boot;document.getElementById('gate-signout').onclick=()=>sb.auth.signOut()}
+
+function accessGate(){
+ const reason=S.accessReason||'NO_ACTIVE_SUBSCRIPTION';
+ const pending=reason==='PAYMENT_PENDING';
+ const expired=reason==='SUBSCRIPTION_EXPIRED';
+ const title=pending?'Payment approval is still pending':expired?'Your subscription has expired':'Workspace access is not active';
+ const body=pending?'Your account was created successfully, but the paid workspace is not active yet. The previous application is still stored on this account, so KOL IDS will not create a second workspace just because you sign in again.':expired?'Your account is valid, but the current subscription period has ended. Renew the organization plan to continue.':'Your account is authenticated, but this organization does not currently have an active KOL IDS plan.';
+ const plan=S.plan?.name||S.subscription?.plan_code||'';
+ const order=S.subscription?.order_id||'';
+ root.innerHTML=`<div class="access-gate"><div class="access-gate-shell">
+   <div class="access-gate-brand"><div class="access-gate-mark">K</div><div><b>KOL IDS™</b><span>Investment Decision Intelligence</span></div></div>
+   <main class="access-gate-card">
+     <div class="access-gate-status ${pending?'pending':expired?'expired':'neutral'}"><span></span>${pending?'PAYMENT PENDING':expired?'SUBSCRIPTION EXPIRED':'ACCESS CHECK'}</div>
+     <div class="access-gate-kicker">ACCOUNT VERIFIED</div>
+     <h1>${esc(title)}</h1>
+     <p class="access-gate-copy">${esc(body)}</p>
+     ${pending?`<div class="access-gate-note"><b>No new account was created.</b><span>Your existing account and organization are being kept safely in place while payment approval is pending.</span></div>`:''}
+     <div class="access-gate-meta">
+       <div><span>ACCOUNT</span><b>${esc(S.session?.user?.email||'Verified account')}</b></div>
+       ${plan?`<div><span>PLAN</span><b>${esc(plan)}</b></div>`:''}
+       ${order?`<div><span>ORDER</span><b>${esc(order)}</b></div>`:''}
+     </div>
+     <div class="access-gate-actions">
+       <button id="gate-refresh" class="btn primary">Check Access Again</button>
+       <button id="gate-home" class="btn">Back to KOL IDS</button>
+       <button id="gate-signout" class="btn ghost">Sign out</button>
+     </div>
+     <div class="access-gate-foot">Access changes automatically after the account status is updated.</div>
+   </main>
+ </div></div>`;
+ document.getElementById('gate-refresh').onclick=boot;
+ document.getElementById('gate-home').onclick=()=>window.location.assign('/KOLIDS');
+ document.getElementById('gate-signout').onclick=()=>sb.auth.signOut();
+}
 async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}const {data:{session}}=await sb.auth.getSession();S.session=session;if(!session){window.location.assign('/KOLIDS');return}try{await loadContext();if(!S.access){accessGate();return}await refresh();if(window.location.pathname!=='/KOLIDSworkspace'){window.history.replaceState({},'', '/KOLIDSworkspace');}shell()}catch(e){window.location.assign('/KOLIDS')}}if(sb)sb.auth.onAuthStateChange(e=>{if(e==='SIGNED_OUT'){S.session=null;window.location.assign('/KOLIDS')}});boot();
 })();
 /* V4 · warm Next-step treatment for creator fit action summaries */

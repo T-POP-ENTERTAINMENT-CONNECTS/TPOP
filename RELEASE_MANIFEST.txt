@@ -26,3 +26,5 @@ Validation
 - app.js passed Node syntax check.
 - Release package contains the existing Supabase migrations and Edge Functions.
 - Deployment route aliases remain intact for /KOLIDS and /KOLIDSworkspace.
+
+20261004 access-gate polish: clarified pending paid-account state, improved responsive access page, and bumped app.js cache version. No access-control bypass was added.
