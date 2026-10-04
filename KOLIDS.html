@@ -591,6 +591,47 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .existing-order-status.good{color:#277153}.existing-order-status.bad{color:#9b3948}
 @media(max-width:620px){.existing-order-summary{grid-template-columns:1fr}.existing-order-form{grid-template-columns:1fr}.existing-order-form .full{grid-column:auto}.existing-order-actions{display:grid;grid-template-columns:1fr}.existing-order-actions button{width:100%}}
 </style>
+<style id="KOL_IDS_EXISTING_ORDER_READABILITY_V2">
+/* Existing-order modal readability: high contrast, comfortable type, no layout change. */
+.existing-order-modal .commercial-modal-card{
+  width:min(820px,100%) !important;
+  background:#151515 !important;
+  color:#fff !important;
+  border:1px solid #303030 !important;
+  border-radius:22px !important;
+  padding:32px !important;
+  box-shadow:0 30px 90px rgba(0,0,0,.42) !important;
+}
+.existing-order-modal .commercial-modal-head{gap:22px !important;margin-bottom:20px !important}
+.existing-order-modal .modal-kicker{color:#AEEFFF !important;font-size:11px !important;letter-spacing:.16em !important}
+.existing-order-modal .commercial-modal-head h2{color:#fff !important;font-size:34px !important;line-height:1.08 !important;margin:8px 0 10px !important;letter-spacing:-.035em !important}
+.existing-order-modal .commercial-modal-head p{color:#c5c8cc !important;font-size:13px !important;line-height:1.65 !important;max-width:760px !important}
+.existing-order-modal .modal-close{width:42px !important;height:42px !important;background:#1d1d1d !important;color:#fff !important;border-color:#3a3a3a !important;font-size:25px !important}
+.existing-order-note{margin:0 0 18px !important;padding:15px 16px !important;background:#eafaff !important;border:1px solid #b9e9f4 !important;color:#24383f !important;font-size:12px !important;line-height:1.6 !important}
+.existing-order-note b{color:#111 !important;font-weight:900 !important}
+.existing-order-summary{gap:10px !important;margin:18px 0 20px !important}
+.existing-order-summary>div{background:#202020 !important;border:1px solid #353535 !important;border-radius:13px !important;padding:14px !important;min-width:0}
+.existing-order-summary span{color:#9ea4aa !important;font-size:10px !important;letter-spacing:.14em !important;margin-bottom:7px !important}
+.existing-order-summary b{color:#fff !important;font-size:13px !important;line-height:1.35 !important}
+.existing-order-form{gap:14px !important}
+.existing-order-form label{color:#f1f2f3 !important;font-size:12px !important;font-weight:800 !important;gap:7px !important;line-height:1.3 !important}
+.existing-order-form input,.existing-order-form select{min-height:48px !important;background:#fff !important;color:#111 !important;border:1px solid #d8dadd !important;border-radius:11px !important;padding:12px 13px !important;font-size:13px !important;font-weight:600 !important}
+.existing-order-form input::placeholder{color:#7b8085 !important;opacity:1 !important}
+.existing-order-form input[type="file"]{font-weight:600 !important}
+.existing-order-form small{color:#aeb3b8 !important;font-size:10px !important;line-height:1.45 !important}
+.existing-order-status{color:#c5c8cc !important;font-size:12px !important;line-height:1.5 !important}
+.existing-order-status.good{color:#8ee0bd !important}.existing-order-status.bad{color:#ff9da9 !important}
+.existing-order-actions{gap:10px !important;margin-top:18px !important}
+.existing-order-actions .entry-ghost{min-height:46px !important;color:#fff !important;background:#202020 !important;border-color:#444 !important}
+.existing-order-actions .entry-primary{min-height:46px !important;font-size:12px !important}
+@media(max-width:620px){
+  .existing-order-modal .commercial-modal-card{padding:22px 17px !important;border-radius:18px !important}
+  .existing-order-modal .commercial-modal-head h2{font-size:27px !important}
+  .existing-order-modal .commercial-modal-head p{font-size:12px !important}
+  .existing-order-summary{grid-template-columns:1fr !important}
+  .existing-order-form{grid-template-columns:1fr !important}
+}
+</style>
 <style id="KOL_IDS_MOTION_V12">
   .kol-motion-stage{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;isolation:isolate}
   .kol-motion-stage::before{content:"";position:absolute;inset:-35%;background:linear-gradient(rgba(174,239,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(174,239,255,.045) 1px,transparent 1px);background-size:46px 46px;transform:perspective(700px) rotateX(60deg) translateY(20%);transform-origin:center bottom;opacity:.42;animation:kolGridDrift 12s linear infinite}
