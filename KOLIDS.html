@@ -724,12 +724,16 @@ function auth(mode='login', notice=''){
   document.querySelectorAll('.plan-card').forEach(btn=>btn.addEventListener('click',()=>openOrderForm(btn.dataset.plan||'')));
 
   function openOrderForm(plan){ openSignupModal(plan || 'PLAN_3M'); }
-  function planCode(plan){ return plan==='3 Months'?'PLAN_3M':plan==='6 Months'?'PLAN_6M':plan==='12 Months'?'PLAN_12M':'TRIAL_7'; }
+  function planCode(plan){ const v=String(plan||'').trim(); if(['TRIAL_7','PLAN_3M','PLAN_6M','PLAN_12M'].includes(v)) return v; return v==='3 Months'?'PLAN_3M':v==='6 Months'?'PLAN_6M':v==='12 Months'?'PLAN_12M':'TRIAL_7'; }
   function planLabel(code){ return ({TRIAL_7:'7 Day Trial',PLAN_3M:'3 Months',PLAN_6M:'6 Months',PLAN_12M:'12 Months'})[code]||code; }
   function planPrice(code){ return ({PLAN_3M:'THB 29,900',PLAN_6M:'THB 55,900',PLAN_12M:'THB 105,900'})[code]||''; }
-  function openSignupModal(plan){
+  function openSignupModal(plan, options={}){
     closeCommercialModal();
+    const existingAccount=Boolean(options?.existingAccount);
     const code=planCode(plan), label=planLabel(code), isTrial=code==='TRIAL_7';
+    if(existingAccount && isTrial){ options.existingAccount=false; }
+    const accountEmail=String(S.session?.user?.email||'').trim().toLowerCase();
+    const accountName=String(S.session?.user?.user_metadata?.name||S.session?.user?.user_metadata?.full_name||'').trim();
     const billingFields=isTrial?'':`<section class="signup-billing" id="signup-billing-section">
       <div class="signup-billing-head"><div><span>BILLING / DOCUMENT REQUEST</span><b>Do you need a quotation, tax invoice or receipt?</b></div><small>We collect these details before payment so your billing document can be prepared correctly.</small></div>
       <div class="signup-billing-docs">
@@ -762,17 +766,17 @@ function auth(mode='login', notice=''){
 
     const m=document.createElement('div');m.id='kolIdsSignupModal';m.className='commercial-modal';
     m.innerHTML=`<div class="commercial-modal-card" role="dialog" aria-modal="true" aria-labelledby="signup-title">
-      <div class="commercial-modal-head"><div><span class="modal-kicker">KOL IDS · CREATE ACCOUNT</span><h2 id="signup-title">Create your ${esc(label)} account</h2><p>${isTrial?'Your 7 day trial is activated immediately after account creation.':'Your account and organization are created now. Paid workspace access is activated after payment confirmation.'}</p></div><button type="button" class="modal-close" aria-label="Close">×</button></div>
+      <div class="commercial-modal-head"><div><span class="modal-kicker">KOL IDS · ${existingAccount?'EXISTING ACCOUNT':'CREATE ACCOUNT'}</span><h2 id="signup-title">${existingAccount?`Continue with ${esc(label)}`:`Create your ${esc(label)} account`}</h2><p>${existingAccount?'You are signed in. Continue with this plan using your existing KOL IDS account. No new account will be created.':(isTrial?'Your 7 day trial is activated immediately after account creation.':'Your account and organization are created now. Paid workspace access is activated after payment confirmation.')}</p></div><button type="button" class="modal-close" aria-label="Close">×</button></div>
       <form id="kolIdsSignupForm" class="kol-signup-form">
-        <label>Work email<input id="signup-email" type="email" required autocomplete="email" placeholder="you@company.com"></label>
-        <label>Full name<input id="signup-name" type="text" required autocomplete="name" placeholder="Your name"></label>
+        <label>Work email<input id="signup-email" type="email" required autocomplete="email" placeholder="you@company.com" value="${esc(existingAccount?accountEmail:'')}" ${existingAccount?'readonly':''}></label>
+        <label>Full name<input id="signup-name" type="text" ${existingAccount?'':'required'} autocomplete="name" placeholder="Your name" value="${esc(existingAccount?accountName:'')}"></label>
         <label>Organization / company<input id="signup-company" type="text" autocomplete="organization" placeholder="Company name"></label>
-        <label>Password<div class="signup-password-wrap"><input id="signup-password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="signup-password-toggle" id="signup-view-password" aria-pressed="false">Show</button></div></label>
+        ${existingAccount?'':'<label>Password<div class="signup-password-wrap"><input id="signup-password" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="signup-password-toggle" id="signup-view-password" aria-pressed="false">Show</button></div></label>'}
         <div class="signup-plan"><span>SELECTED PLAN</span><b>${esc(label)}</b><strong class="signup-plan-price">${esc(planPrice(code))}</strong><small>${isTrial?'7 days · 1 seat · FREE':'Organization workspace · payment required before activation'}</small></div>
         ${billingFields}
         ${paymentFields}
         <div id="signup-status" class="entry-status" aria-live="polite"></div>
-        <div class="access-actions"><button class="entry-primary" id="signup-submit" type="submit">${isTrial?'Create Account →':'Create Account & Submit Payment →'}</button><button class="entry-ghost" type="button" id="signup-back">Back</button></div>
+        <div class="access-actions"><button class="entry-primary" id="signup-submit" type="submit">${existingAccount?'Continue with this plan →':(isTrial?'Create Account →':'Create Account & Submit Payment →')}</button><button class="entry-ghost" type="button" id="signup-back">Back</button></div>
       </form>
     </div>`;
     document.body.appendChild(m);requestAnimationFrame(()=>m.classList.add('show'));
@@ -858,7 +862,7 @@ function auth(mode='login', notice=''){
         payment={method:paymentMethod,date:paymentDate,reference:paymentReference,proof_url:paymentProofUrl};
         payment.file=paymentFile;
       }
-      if(!email||!name||password.length<8){set('Please complete email, name and an 8+ character password.','bad');return}
+      if(!email||(!existingAccount&&(!name||password.length<8))){set(existingAccount?'Please confirm your account email and continue.':'Please complete email, name and an 8+ character password.','bad');return}
       submit.disabled=true;set(isTrial?'Creating your secure KOL IDS account…':'Creating your secure account and payment application…','busy');
       try{
         let orderNo=createdOrderNo;
@@ -872,7 +876,9 @@ function auth(mode='login', notice=''){
           const timer=setTimeout(()=>controller.abort(),20000);
           let r;
           try{
-            r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:controller.signal});
+            const headers={'Content-Type':'application/json'};
+            if(existingAccount && session?.access_token) headers.Authorization=`Bearer ${session.access_token}`;
+            r=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify({email,password:existingAccount?'':password,name,organization_name:company,plan:code,billing}),signal:controller.signal});
           }catch(fetchErr){
             if(fetchErr?.name==='AbortError') throw new Error('Account creation timed out. Please try again.');
             throw new Error('Unable to reach the account service. Please check your connection and try again.');
@@ -916,9 +922,14 @@ function auth(mode='login', notice=''){
           }else{
             orderNo=String(data.order?.order_number||'');
             if(!isTrial&&!orderNo) throw new Error('Account was created but no order number was returned. Please contact support before paying again.');
-            const login=await sb.auth.signInWithPassword({email,password});
-            if(login.error) throw login.error;
-            session=login.data?.session||null;
+            if(existingAccount){
+              session=S.session||session;
+              if(!session?.access_token) throw new Error('Your secure session has expired. Please sign in again.');
+            }else{
+              const login=await sb.auth.signInWithPassword({email,password});
+              if(login.error) throw login.error;
+              session=login.data?.session||null;
+            }
             createdOrderNo=orderNo;createdSession=session;
           }
         }
@@ -1002,7 +1013,7 @@ function auth(mode='login', notice=''){
       let pendingPlan='';
       try{pendingPlan=String(sessionStorage.getItem('kolids_pending_paid_plan')||'').trim();sessionStorage.removeItem('kolids_pending_paid_plan');}catch(_){ }
       if(pendingPlan && /^PLAN_(3M|6M|12M)$/.test(pendingPlan)){
-        openSignupModal(pendingPlan);
+        openSignupModal(pendingPlan,{existingAccount:true});
         return;
       }
       // Public product page stays at /KOLIDS. After successful sign-in,
