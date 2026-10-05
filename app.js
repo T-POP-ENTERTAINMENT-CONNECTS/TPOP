@@ -582,16 +582,24 @@ async function removeCampaignFromHistory(id){
 }
 async function markCampaignComplete(){
  const campaign=S.selectedCampaign;
- if(!campaign?.id||!S.org?.id)return;
- if(String(campaign.status||'draft').toLowerCase()==='complete')return;
+ if(!campaign?.id||!S.org?.id)return false;
+ if(String(campaign.status||'draft').toLowerCase()==='complete')return true;
  try{
-   const q=await sb.from('campaigns').update({status:'complete',updated_at:new Date().toISOString()}).eq('id',campaign.id).eq('organization_id',S.org.id).select().single();
+   // Complete is an explicit user action from Step 07. Do not silently complete
+   // a campaign just because the report renderer was opened.
+   const q=await sb.from('campaigns')
+     .update({status:'complete',updated_at:new Date().toISOString()})
+     .eq('id',campaign.id)
+     .eq('organization_id',S.org.id);
    if(q.error)throw q.error;
-   S.selectedCampaign=q.data;
-   const idx=S.campaigns.findIndex(x=>String(x.id)===String(q.data.id));
-   if(idx>=0)S.campaigns[idx]=q.data;
+   await refresh();
+   const fresh=S.campaigns.find(x=>String(x.id)===String(campaign.id));
+   if(!fresh||String(fresh.status||'').toLowerCase()!=='complete')throw new Error('Campaign status could not be confirmed.');
+   S.selectedCampaign=fresh;
+   return true;
  }catch(err){
    console.warn('Could not mark campaign complete:',err?.message||err);
+   return false;
  }
 }
 
@@ -1605,13 +1613,12 @@ function reports(c){
    return;
  }
 
- // Reaching the finished report marks this campaign complete. Editing the campaign later returns it to DRAFT.
- markCampaignComplete();
+ // Opening Step 07 only prepares the report. Completion is explicit via the button below.
  const snap=reportLiveSnapshot(),{p,perf,digital,ecommerce,offline,decisionRows,impact,learning}=snap;
  const active=p.selectedCreatorIds||[],selected=decisionRows;
  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
  const topByCreator=(()=>{const by={};perf.forEach(x=>{if(x?.actual_score==null)return;const score=Number(x.actual_score);if(Number.isFinite(score))((by[String(x.creator_id)]??=[]).push(score));});return Object.entries(by).map(([id,v])=>({id,name:creatorName(id),score:v.reduce((a,b)=>a+b,0)/v.length,n:v.length})).sort((a,b)=>b.score-a.score).slice(0,3)})();
- c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><span class="pill cyan">${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'COMPLETE':'REPORT READY'}</span>${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'<span class="pill good">CAMPAIGN SAVED</span>':'<button class="btn primary" id="complete-campaign">Complete this campaign →</button>'}<button class="btn primary" id="report-campaign-intelligence-csv">Campaign Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Business impact CSV</button></div></div>
+ c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><span class="pill cyan">${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'COMPLETE':'REPORT READY'}</span>${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'<span class="pill good">CAMPAIGN SAVED</span>':'<button class="btn primary" id="complete-campaign">Complete this campaign →</button>'}<button class="btn" id="report-campaign-intelligence-csv">Campaign Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Business impact CSV</button></div></div>
  <div class="grid g4"><div class="metric"><span class="label">Creators approved</span><strong>${active.length}</strong><small>User-approved for performance tracking</small></div><div class="metric"><span class="label">Performance records</span><strong>${perf.length}</strong><small>All outcome types</small></div><div class="metric"><span class="label">Impact score</span><strong>${impact.score==null?'Not scored':Math.round(impact.score)}</strong><small>Recorded outcome score</small></div><div class="metric"><span class="label">ROAS</span><strong>${impact.roas==null?'Not calculable':Number(impact.roas).toFixed(2)+'x'}</strong><small>(Revenue ÷ Spend)</small></div></div>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">01 · Campaign & Audience</div><h2>Strategic context</h2></div></div><div class="grid g2"><div class="signal-box"><h4>Campaign</h4><p><b>${esc(S.selectedCampaign?.name||'·')}</b></p><p>${esc((p.objectives||[]).join(' · ')||p.objective||p.goal||'·')}</p><p>${esc((p.brandPersonalities||[]).join(' · ')||'·')}</p></div><div class="signal-box"><h4>Audience</h4><p><b>${esc(S.selectedAudience?.payload?.audienceType||'·')}</b></p><p>${esc(S.selectedAudience?.payload?.audiencePersona||'·')}</p></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">02 · Creator Decision</div><h2>Creator Decision Evidence</h2><p class="sub">Approval is the user decision. The decision signal below is the intelligence engine recommendation and evidence state.</p></div></div>${selected.length?`<div class="table-wrap"><table><thead><tr><th>Creator</th><th>Decision signal</th><th>Overall</th><th>Audience</th><th>Content</th><th>Brand</th><th>Performance</th><th>Commercial</th><th>Risk</th></tr></thead><tbody>${selected.map(x=>{const e=x.decision.evidence||{};return `<tr><td><b>${esc(x.creator.name)}</b></td><td>${esc(x.decision.decision||'·')}</td><td>${x.decision.score==null?'·':Math.round(x.decision.score)}</td><td>${Math.round(e.audienceFit??50)}</td><td>${Math.round(e.contentFit??50)}</td><td>${Math.round(e.brandFit??50)}</td><td>${Math.round(e.performance??0)}</td><td>${Math.round(e.commercial??50)}</td><td>${Math.round(e.risk??50)}</td></tr>`}).join('')}</tbody></table></div>` :'<div class="empty">No creators have been approved for performance tracking yet.</div>'}</section>
@@ -1622,10 +1629,13 @@ function reports(c){
  document.getElementById('report-campaign-intelligence-csv').onclick=downloadReportCSV;document.getElementById('report-performance-csv').onclick=downloadPerformanceCSV;document.getElementById('report-decision-csv').onclick=downloadDecisionCSV;document.getElementById('report-impact-csv').onclick=downloadImpactCSV;
  const completeBtn=document.getElementById('complete-campaign');
  if(completeBtn){completeBtn.onclick=async()=>{
-   completeBtn.disabled=true; completeBtn.textContent='Completing…';
-   await markCampaignComplete();
-   if(String(S.selectedCampaign?.status||'').toLowerCase()==='complete'){toast('Campaign completed and saved to Campaign History.','good');renderPage();}
-   else {completeBtn.disabled=false;completeBtn.textContent='Complete this campaign →';toast('Could not complete this campaign. Please try again.','error');}
+   if(completeBtn.dataset.busy==='1')return;
+   completeBtn.dataset.busy='1';
+   completeBtn.disabled=true;
+   completeBtn.textContent='Completing…';
+   const ok=await markCampaignComplete();
+   if(ok){toast('Campaign completed and saved to Campaign History.','good');S.page=7;renderPage();}
+   else {completeBtn.disabled=false;completeBtn.dataset.busy='0';completeBtn.textContent='Complete this campaign →';toast('Could not complete this campaign. Please try again.','error');}
  }};
 }
 function downloadFullPDF(){
@@ -2091,7 +2101,7 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
   s.textContent=`
     .kol-report-page{max-width:1320px!important;margin:0 auto!important}
     .kol-report-page>.hero{
-      padding:28px 32px!important;
+      padding:34px 40px!important;
       margin-bottom:18px!important;
       border:1px solid #e3e6ea!important;
       border-radius:18px!important;
@@ -2099,17 +2109,17 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
       box-shadow:0 12px 36px rgba(20,22,30,.055)!important;
       align-items:center!important;
     }
-    .kol-report-page>.hero>div:first-child{min-width:0!important;max-width:760px!important}
+    .kol-report-page>.hero>div:first-child{min-width:0!important;max-width:780px!important;padding-right:14px!important}
     .kol-report-page>.hero .kicker{font-size:8px!important;letter-spacing:.18em!important;font-weight:950!important;color:#5d7a84!important}
     .kol-report-page>.hero h2{font-size:30px!important;line-height:1.05!important;margin:6px 0 8px!important;letter-spacing:-.055em!important}
-    .kol-report-page>.hero p{font-size:11px!important;line-height:1.6!important;color:#68727b!important;max-width:720px!important}
+    .kol-report-page>.hero p{font-size:11px!important;line-height:1.7!important;color:#68727b!important;max-width:740px!important;margin:0!important;padding-right:8px!important}
     .kol-report-page>.hero .hero-actions{
       display:grid!important;
       grid-template-columns:repeat(2,minmax(150px,1fr))!important;
       gap:8px!important;
       min-width:330px!important;
       max-width:390px!important;
-      padding:7px!important;
+      padding:8px!important;
       border:1px solid #e3e6ea!important;
       border-radius:14px!important;
       background:#f7f8fa!important;
@@ -2129,6 +2139,16 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
       background:#17171b!important;
       border-color:#17171b!important;
       box-shadow:0 8px 18px rgba(20,20,25,.14)!important;
+    }
+
+    .kol-report-page>.hero .hero-actions .btn:not(.primary){
+      background:#fff!important;
+      color:#15171b!important;
+      border-color:#dce2e6!important;
+    }
+    .kol-report-page>.hero .hero-actions .btn:not(.primary):hover{
+      border-color:#9fe9f4!important;
+      box-shadow:0 6px 18px rgba(40,80,90,.07)!important;
     }
     .kol-report-page>.card{
       position:relative!important;
@@ -2557,7 +2577,14 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
     [data-kol-business-impact="1"] .business-learning-cards .signal-box{background:linear-gradient(180deg,#fffaf0,#fff7e7)!important;border-color:#ead9b7!important}
     [data-kol-business-impact="1"] > .grid.g4:first-of-type .metric:first-child{border-top:2px solid rgba(200,169,107,.58)!important}
     [data-kol-business-impact="1"] > .grid.g4:first-of-type .metric:nth-child(3){border-top:2px solid rgba(79,215,232,.5)!important}
-    [data-kol-report-page="1"] .hero{padding:4px 2px 2px!important}
+    [data-kol-report-page="1"] .hero{padding:34px 40px!important;margin-bottom:18px!important}
+    .workflow-page > .card{margin-bottom:14px}
+    .workflow-page > .card:last-child{margin-bottom:0}
+    .workflow-page .section-head{align-items:flex-start}
+    .workflow-page .section-head h2{line-height:1.2}
+    .workflow-page .section-head .sub{max-width:920px}
+    [data-kol-report-page="1"] .metric{min-height:128px}
+    [data-kol-report-page="1"] .metric small{line-height:1.45}
     [data-kol-report-page="1"] .metric strong{font-size:29px!important}
     [data-kol-report-page="1"] .card{scroll-margin-top:100px}
     .performance-type-option{background:linear-gradient(180deg,#fff,#f8fafb)!important}
