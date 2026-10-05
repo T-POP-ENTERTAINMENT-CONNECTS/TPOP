@@ -37,14 +37,10 @@ Upload the package contents to the same deployment root and keep the existing Su
 ## Existing-account paid upgrade
 If a customer previously used or expired a 7-day trial, they can select a paid plan with the same email. The signup flow signs into the existing Auth account and provisions the paid order under the existing organization. No second Auth account or organization is created. A pending order for the same plan is reused.
 
-
-## 2026-10-04 · Existing-account paid renewal flow
-- Existing customers continue a paid plan from the signed-in account without logout/login.
-- The selected paid plan, payment proof and password are submitted in the same flow.
-- Paid payment submission activates the selected subscription immediately for the existing organization.
-- If an active plan still has remaining time, the new plan starts when the current plan ends; expired plans start immediately.
-- Customer and admin confirmation emails use the order plan, recorded amount, duration and exact access dates.
-- No new account is created for an existing signed-in customer.
-- Frontend files: `KOLIDS.html`, `script2.js`.
-- Edge Function that must be deployed: `supabase/functions/signup-approval/index.ts`.
-- No new SQL migration is required for this change.
+## Campaign lifecycle — 2026-10-05
+- One active subscription can contain multiple independent campaigns during the subscription period.
+- Each campaign keeps its own campaign context, audience, creator decisions, performance, business impact and report.
+- Campaign History now treats `DRAFT` as an unfinished campaign and `COMPLETE` as a campaign whose Step 07 report has been reached successfully.
+- Opening Step 07 automatically records the selected campaign as `COMPLETE`. If a completed campaign is edited and saved again, it returns to `DRAFT` until the report is reached again.
+- ROI and ROAS UI now shows the calculation formula beside the result for clarity.
+- No database migration is required for this lifecycle change; the existing `campaigns.status` field is used.
