@@ -1004,7 +1004,9 @@ function auth(mode='login', notice=''){
   }
 
   function renderRenewalRequired(ctx={}){
-    const plan=String(ctx.plan_label||ctx.plan_name||ctx.plan||'Current plan').trim() || 'Current plan';
+    const rawPlan=ctx.plan_label??ctx.plan_name??ctx.plan??ctx.subscription_plan??ctx.current_plan??'';
+    const planValue=rawPlan && typeof rawPlan==='object' ? (rawPlan.label??rawPlan.name??rawPlan.plan_label??rawPlan.plan_name??rawPlan.code??rawPlan.plan_code??'') : rawPlan;
+    const plan=String(planValue||'Current plan').trim() || 'Current plan';
     const expiresAt=ctx.expires_at||ctx.subscription_ends_at||ctx.access_ended_at||ctx.ends_at||'';
     const emailNow=String(S.session?.user?.email||email?.value||'').trim();
     let ended='';
@@ -1311,6 +1313,9 @@ boot();
 #kolIdsSignupModal .signup-password-help{display:block;margin-top:7px;color:#8d9aa6;font-size:11px;line-height:1.55;max-width:760px}
 #kolIdsSignupModal .signup-password-wrap input{padding-right:78px!important}
 </style>
+
+
+
 </body>
 
 <style id="KOL_IDS_REFERENCE_SIZE_ONLY_V2">
@@ -2262,3 +2267,16 @@ button,input,textarea,select{line-height:1.35;vertical-align:middle}
   font-weight:700!important;
 }
 </style>
+<style id="KOL_IDS_RENEWAL_READABILITY_FINAL">
+/* Expired-subscription panel: high-contrast text on the light information card. */
+.renewal-required-panel{background:#f0f0eb!important;color:#070707!important;border-color:#cfcfc8!important}
+.renewal-required-panel .renewal-status{color:#9b3040!important;font-weight:950!important}
+.renewal-required-panel .renewal-grid>div{background:#fff!important;border-color:#c9c9c2!important}
+.renewal-required-panel .renewal-grid span{color:#555!important;font-size:9px!important}
+.renewal-required-panel .renewal-grid strong{color:#070707!important;font-size:15px!important;font-weight:900!important}
+.renewal-required-panel .renewal-copy{background:#f8f8f5!important;border-color:#c9c9c2!important}
+.renewal-required-panel .renewal-copy b{color:#070707!important;font-size:13px!important}
+.renewal-required-panel .renewal-copy span{color:#555!important;font-size:12px!important}
+.renewal-required-panel .entry-primary{background:#070707!important;color:#f5f5f2!important;border-color:#070707!important}
+</style>
+

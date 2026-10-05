@@ -36,3 +36,8 @@ SUBSCRIPTION EXPIRY REMINDERS
 - Paid reminder: 1 month before expiry
 
 Existing-account paid renewal: direct authenticated upgrade + immediate activation + customer/admin email confirmation. Deploy signup-approval Edge Function.
+
+FINAL PATCH 2026-10-05
+- Fixed expired-subscription renewal card text contrast so account/plan/date/copy are clearly readable on the light card.
+- Fixed CURRENT PLAN rendering when bootstrap_workspace returns a plan object; now resolves label/name/code instead of showing [object Object].
+- No database schema change or new migration required.
