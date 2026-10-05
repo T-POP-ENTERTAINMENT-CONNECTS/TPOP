@@ -6,3 +6,6 @@ REPORT UI / DEPLOY CACHE FIX
 - Step 07 report hero has increased horizontal padding and text spacing.
 - Complete this campaign remains an explicit action and only marks the campaign COMPLETE after the database update is confirmed.
 - Campaign History continues to retain completed campaigns for later review.
+
+- Campaign completion now uses the authenticated `complete_campaign` RPC with explicit membership + active-subscription checks.
+- All workspace entry points use the same cache-buster so /KOLIDS and /KOLIDSworkspace cannot load different app.js revisions.

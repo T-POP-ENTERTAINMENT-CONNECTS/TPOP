@@ -585,16 +585,16 @@ async function markCampaignComplete(){
  if(!campaign?.id||!S.org?.id)return false;
  if(String(campaign.status||'draft').toLowerCase()==='complete')return true;
  try{
-   // Complete is an explicit user action from Step 07. Do not silently complete
-   // a campaign just because the report renderer was opened.
-   const q=await sb.from('campaigns')
-     .update({status:'complete',updated_at:new Date().toISOString()})
-     .eq('id',campaign.id)
-     .eq('organization_id',S.org.id);
-   if(q.error)throw q.error;
+   // Completion is an explicit Step 07 action. Use a security-definer RPC so
+   // RLS cannot silently turn a successful-looking UPDATE into a no-op.
+   const rpc=await sb.rpc('complete_campaign',{p_campaign_id:campaign.id});
+   if(rpc.error)throw rpc.error;
+
    await refresh();
    const fresh=S.campaigns.find(x=>String(x.id)===String(campaign.id));
-   if(!fresh||String(fresh.status||'').toLowerCase()!=='complete')throw new Error('Campaign status could not be confirmed.');
+   if(!fresh||String(fresh.status||'').toLowerCase()!=='complete'){
+     throw new Error('Campaign completion could not be confirmed.');
+   }
    S.selectedCampaign=fresh;
    return true;
  }catch(err){
