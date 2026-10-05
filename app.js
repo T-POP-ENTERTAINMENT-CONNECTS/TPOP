@@ -2101,7 +2101,7 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
   s.textContent=`
     .kol-report-page{max-width:1320px!important;margin:0 auto!important}
     .kol-report-page>.hero{
-      padding:34px 40px!important;
+      padding:38px 46px!important;
       margin-bottom:18px!important;
       border:1px solid #e3e6ea!important;
       border-radius:18px!important;
@@ -2109,7 +2109,7 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
       box-shadow:0 12px 36px rgba(20,22,30,.055)!important;
       align-items:center!important;
     }
-    .kol-report-page>.hero>div:first-child{min-width:0!important;max-width:780px!important;padding-right:14px!important}
+    .kol-report-page>.hero>div:first-child{min-width:0!important;max-width:780px!important;padding-right:18px!important;padding-left:2px!important}
     .kol-report-page>.hero .kicker{font-size:8px!important;letter-spacing:.18em!important;font-weight:950!important;color:#5d7a84!important}
     .kol-report-page>.hero h2{font-size:30px!important;line-height:1.05!important;margin:6px 0 8px!important;letter-spacing:-.055em!important}
     .kol-report-page>.hero p{font-size:11px!important;line-height:1.7!important;color:#68727b!important;max-width:740px!important;margin:0!important;padding-right:8px!important}
@@ -2146,6 +2146,7 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
       color:#15171b!important;
       border-color:#dce2e6!important;
     }
+    #report-campaign-intelligence-csv{background:#fff!important;color:#15171b!important;border-color:#dce2e6!important}
     .kol-report-page>.hero .hero-actions .btn:not(.primary):hover{
       border-color:#9fe9f4!important;
       box-shadow:0 6px 18px rgba(40,80,90,.07)!important;

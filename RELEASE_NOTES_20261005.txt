@@ -1,23 +1,8 @@
-KOL IDS™ · CAMPAIGN LIFECYCLE + ROI CLARITY · 2026-10-05
+KOL IDS™ release · 2026-10-05
 
-1. Multiple campaigns per subscription
-- A customer can create and retain multiple independent campaigns under the same active subscription.
-- Campaign History remains the archive for all campaigns in the organization.
-- Each campaign keeps its own downstream records and report context.
-
-2. Campaign completion
-- DRAFT = campaign is still being worked on.
-- COMPLETE = Step 07 Campaign Intelligence Report has been reached successfully.
-- Opening Step 07 marks the selected campaign COMPLETE automatically.
-- Editing and saving a completed campaign returns it to DRAFT so the updated analysis must reach the report again.
-- Campaign History uses distinct COMPLETE / DRAFT status treatments.
-
-3. ROI / ROAS clarity
-- ROAS is shown with: (Revenue ÷ Spend)
-- ROI is shown with: ((Revenue − Spend) ÷ Spend × 100)
-- Existing calculation logic is unchanged.
-
-4. Deployment
-- No new Supabase migration is required.
-- app.js cache-buster updated to 20261005-campaign-complete-v1.
-- Node syntax check passed for app.js.
+REPORT UI / DEPLOY CACHE FIX
+- /KOLIDS now loads the latest report UI cache-buster.
+- Campaign Intelligence CSV is explicitly styled as a white secondary export button.
+- Step 07 report hero has increased horizontal padding and text spacing.
+- Complete this campaign remains an explicit action and only marks the campaign COMPLETE after the database update is confirmed.
+- Campaign History continues to retain completed campaigns for later review.
