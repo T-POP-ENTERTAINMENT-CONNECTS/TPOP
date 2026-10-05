@@ -9,3 +9,8 @@ REPORT UI / DEPLOY CACHE FIX
 
 - Campaign completion now uses the authenticated `complete_campaign` RPC with explicit membership + active-subscription checks.
 - All workspace entry points use the same cache-buster so /KOLIDS and /KOLIDSworkspace cannot load different app.js revisions.
+
+STATUS CONSTRAINT HOTFIX
+- Added 20261005_campaign_completion_status_constraint.sql.
+- Fixes the live campaigns_status_check constraint that rejected the frontend's `complete` state.
+- Keeps Campaign History states limited to draft / complete and normalizes legacy COMPLETED rows.

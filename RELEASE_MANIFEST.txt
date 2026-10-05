@@ -34,3 +34,4 @@ SUBSCRIPTION EXPIRY REMINDERS
 - supabase/migrations/20261004_subscription_expiry_reminders.sql
 - Trial reminder: 3 days before expiry
 - Paid reminder: 1 month before expiry
+- supabase/migrations/20261005_campaign_completion_status_constraint.sql
