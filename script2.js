@@ -463,7 +463,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='/app.js?v=20261004-existing-account-renewal-v3';
+    script.src='/app.js?v=20261005-existing-account-renewal-v4';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);

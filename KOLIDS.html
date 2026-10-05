@@ -1036,7 +1036,7 @@ function auth(mode='login', notice=''){
             ${ended?`<div><span>ACCESS ENDED</span><strong>${esc(ended)}</strong></div>`:''}
           </div>
           <div class="renewal-copy"><b>Ready to continue?</b><span>Choose a plan below. After you submit your payment, we’ll continue this same account and workspace.</span></div>
-          <div class="access-actions"><button class="entry-primary" id="renew-plan" type="button">ต่ออายุแพลน →</button></div>
+          <div class="access-actions"><button class="entry-primary" id="renew-plan" type="button">Renew Plan →</button></div>
         </section>
       </div>
     </div>`;
@@ -1151,7 +1151,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='/app.js?v=20261004-existing-account-renewal-v3';
+    script.src='/app.js?v=20261005-existing-account-renewal-v4';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);
