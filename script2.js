@@ -379,7 +379,13 @@ function auth(mode='login', notice=''){
     m.querySelector('.modal-close')?.addEventListener('click',closeCommercialModal);
     m.addEventListener('click',e=>{if(e.target===m)closeCommercialModal()});
     m.querySelector('[data-trial]')?.addEventListener('click',()=>openSignupModal('TRIAL_7'));
-    m.querySelectorAll('[data-order]').forEach(b=>b.addEventListener('click',()=>openOrderForm(b.dataset.order||'')));
+    m.querySelectorAll('[data-order]').forEach(b=>b.addEventListener('click',()=>{
+      const chosen=b.dataset.order||'';
+      const hasSignedInAccount=Boolean(S.session?.access_token&&S.session?.user?.email);
+      // Renewal is always tied to the already-authenticated account. Do not send an
+      // expired customer back through the new-account / duplicate-email flow.
+      openSignupModal(chosen,{existingAccount:hasSignedInAccount});
+    }));
   }
 
   document.getElementById('run-demo')?.addEventListener('click',()=>renderEntryDemo());

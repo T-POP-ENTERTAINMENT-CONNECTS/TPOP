@@ -1000,7 +1000,13 @@ function auth(mode='login', notice=''){
     m.querySelector('.modal-close')?.addEventListener('click',closeCommercialModal);
     m.addEventListener('click',e=>{if(e.target===m)closeCommercialModal()});
     m.querySelector('[data-trial]')?.addEventListener('click',()=>openSignupModal('TRIAL_7'));
-    m.querySelectorAll('[data-order]').forEach(b=>b.addEventListener('click',()=>openOrderForm(b.dataset.order||'')));
+    m.querySelectorAll('[data-order]').forEach(b=>b.addEventListener('click',()=>{
+      const chosen=b.dataset.order||'';
+      const hasSignedInAccount=Boolean(S.session?.access_token&&S.session?.user?.email);
+      // Renewal is always tied to the already-authenticated account. Do not send an
+      // expired customer back through the new-account / duplicate-email flow.
+      openSignupModal(chosen,{existingAccount:hasSignedInAccount});
+    }));
   }
 
   function renderRenewalRequired(ctx={}){
@@ -1034,7 +1040,20 @@ function auth(mode='login', notice=''){
         </section>
       </div>
     </div>`;
-    document.getElementById('renew-plan')?.addEventListener('click',()=>openCommercialModal('renewal'));
+    document.getElementById('renew-plan')?.addEventListener('click',async()=>{
+      try{
+        const fresh=await sb?.auth?.getSession?.();
+        if(fresh?.data?.session){ S.session=fresh.data.session; }
+      }catch(_){}
+      if(!S.session?.access_token){
+        // The expired screen is an authenticated state. If the browser session really
+        // disappeared, return to the normal sign-in page instead of opening a
+        // misleading Create Account form for an existing email.
+        auth('Your session has expired. Please sign in to continue your renewal.');
+        return;
+      }
+      openCommercialModal('renewal');
+    });
   }
   function renderPaymentPendingAfterLogin(ctx={}){
     const emailNow=String(S.session?.user?.email||email?.value||'').trim();
