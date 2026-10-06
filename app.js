@@ -3549,3 +3549,76 @@ tbody tr:hover td{background:#fbfdfe}
   `;
   document.head.appendChild(s);
 })();
+
+
+/* V7 · CI palette · translucent chart color + oversized readable type */
+(function(){
+  const styleId='kol-ids-ci-chart-readability-v7';
+  if(document.getElementById(styleId)) return;
+  const s=document.createElement('style');
+  s.id=styleId;
+  s.textContent=`
+    /* KOL IDS CI: cyan #4FD7E8 · violet #8067E8 · gold #B29A6B */
+    .report-chart-card{
+      background:rgba(255,255,255,.78)!important;
+      border-color:rgba(79,215,232,.16)!important;
+      backdrop-filter:blur(8px)!important;
+      -webkit-backdrop-filter:blur(8px)!important;
+    }
+    .report-chart-head b{font-size:17px!important;font-weight:850!important;color:#17171b!important}
+    .report-chart-head span{font-size:12px!important;color:#77777f!important}
+    .report-chart-svg{min-height:340px!important}
+    .rchart-title{font-size:15px!important;fill:#34343b!important;font-weight:820!important}
+    .rchart-value{font-size:16px!important;fill:#17171b!important;font-weight:900!important}
+    .rchart-share{font-size:14px!important;fill:#8067e8!important;font-weight:850!important}
+    .rchart-label{font-size:13px!important;fill:#4f5961!important}
+    .rchart-label-strong{font-size:14px!important;fill:#252b30!important;font-weight:800!important}
+    .rchart-axis{font-size:12px!important;fill:#69747b!important;font-weight:700!important}
+    .rchart-axis-heading{font-size:12px!important;fill:#34343b!important;font-weight:850!important}
+    .rchart-legend{font-size:13px!important;fill:#34343b!important;font-weight:750!important}
+    .rchart-point-value{font-size:14px!important;font-weight:900!important}
+
+    /* CI chart ink: light translucent fills, never heavy blocks */
+    .rchart-dot-a{fill:#8067e8!important;opacity:.78!important}
+    .rchart-dot-b{fill:#4fd7e8!important;opacity:.82!important}
+    .rchart-dot-a-text{fill:#8067e8!important}
+    .rchart-dot-b-text{fill:#4fd7e8!important}
+    .rchart-line-a{stroke:#8067e8!important;stroke-width:2.2!important;opacity:.72!important}
+    .rchart-line-b{stroke:#4fd7e8!important;stroke-width:2.2!important;opacity:.78!important}
+    .rchart-bar{fill:#4fd7e8!important;opacity:.46!important}
+    .rchart-bar-track{fill:rgba(79,215,232,.07)!important;stroke:rgba(79,215,232,.16)!important;stroke-width:1!important}
+    .rchart-gridline{stroke:rgba(23,23,27,.075)!important;stroke-width:.65!important}
+    .rchart-footnote{font-size:11px!important;fill:#8a949a!important;font-weight:650!important}
+    .rchart-date-label{font-size:13px!important;fill:#4f5961!important;font-weight:750!important}
+
+    /* Revenue contribution uses all three CI accents to distinguish ranked records. */
+    .report-chart-revenue .rchart-bar{fill:#8067e8!important;opacity:.48!important}
+    .report-chart-revenue .rchart-bar-track{fill:rgba(128,103,232,.065)!important;stroke:rgba(128,103,232,.15)!important}
+    .report-chart-revenue .rchart-share{fill:#b29a6b!important;font-size:14px!important;font-weight:900!important}
+
+    .report-chart-empty{
+      height:290px!important;font-size:15px!important;color:#77777f!important;
+      background:rgba(255,255,255,.52)!important;
+      border:1px dashed rgba(79,215,232,.20)!important;
+    }
+
+    /* Donut / evidence mix: CI palette, soft transparency, larger typography. */
+    .report-donut-wrap{min-height:300px!important;gap:44px!important}
+    .report-donut{width:190px!important;height:190px!important;flex-basis:190px!important;opacity:.95!important}
+    .report-donut>div{width:142px!important;height:142px!important;background:rgba(255,255,255,.92)!important}
+    .report-donut strong{font-size:32px!important;font-weight:900!important;color:#17171b!important}
+    .report-donut span{font-size:12px!important;color:#69747b!important;font-weight:750!important}
+    .report-legend{gap:18px!important;min-width:225px!important}
+    .report-legend>div{font-size:14px!important;grid-template-columns:11px 1fr auto!important;gap:11px!important}
+    .report-legend i{width:10px!important;height:10px!important}
+    .report-legend span{color:#4f5961!important;font-weight:700!important}
+    .report-legend b{font-size:14px!important;color:#17171b!important;font-weight:900!important}
+
+    @media(max-width:900px){
+      .report-chart-svg{min-height:310px!important}
+      .report-chart-head b{font-size:16px!important}
+      .report-chart-card{padding:18px!important}
+    }
+  `;
+  document.head.appendChild(s);
+})();
