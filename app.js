@@ -1479,13 +1479,13 @@ function pdfPageBreak(doc,ctx,needed=18){const H=doc.internal.pageSize.getHeight
 function pdfSection(doc,ctx,title,kicker=''){
  pdfPageBreak(doc,ctx,18);ctx.y+=5;doc.setTextColor(120,126,132);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text(String(kicker||'SECTION').toUpperCase(),14,ctx.y);ctx.y+=6;doc.setTextColor(25,29,33);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(title,14,ctx.y);ctx.y+=7;doc.setDrawColor(215,220,223);doc.setLineWidth(.18);doc.line(14,ctx.y,ctx.W-14,ctx.y);ctx.y+=6;
 }
-function pdfMetricGrid(doc,ctx,items){const gap=4;const w=(ctx.W-28-gap*3)/4;let x=14;const h=20;items.forEach((it,i)=>{if(i&&i%4===0){ctx.y+=h+4;x=14}if(pdfPageBreak(doc,ctx,h+2))x=14;doc.setDrawColor(226,230,232);doc.setLineWidth(.2);doc.roundedRect(x,ctx.y,w,h,2,2,'S');doc.setFont('helvetica','normal');doc.setTextColor(115,121,127);doc.setFontSize(6.8);doc.text(String(it.label||'').toUpperCase(),x+4,ctx.y+6);doc.setFont('helvetica','bold');doc.setTextColor(24,28,32);doc.setFontSize(11);doc.text(pdfSafeText(it.value),x+4,ctx.y+14);x+=w+gap});ctx.y+=h+6}
+function pdfMetricGrid(doc,ctx,items){const gap=4;const w=(ctx.W-28-gap*3)/4;let x=14;const h=20;items.forEach((it,i)=>{if(i&&i%4===0){ctx.y+=h+4;x=14}if(pdfPageBreak(doc,ctx,h+2))x=14;doc.setDrawColor(226,230,232);doc.setLineWidth(.2);doc.roundedRect(x,ctx.y,w,h,2,2,'S');doc.setFont('helvetica','normal');doc.setTextColor(115,121,127);doc.setFontSize(7.5);doc.text(String(it.label||'').toUpperCase(),x+4,ctx.y+6);doc.setFont('helvetica','bold');doc.setTextColor(24,28,32);doc.setFontSize(11);doc.text(pdfSafeText(it.value),x+4,ctx.y+14);x+=w+gap});ctx.y+=h+6}
 function pdfRows(doc,ctx,headers,rows,widths){
  const startX=14;const totalW=ctx.W-28;const ws=widths||headers.map(()=>totalW/headers.length);const lineH=5.2;const headH=8;
- const drawHead=()=>{doc.setFillColor(247,248,249);doc.setDrawColor(224,228,230);doc.setLineWidth(.18);let x=startX;headers.forEach((h,i)=>{doc.rect(x,ctx.y,ws[i],headH,'FD');doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(70,77,83);const lines=doc.splitTextToSize(pdfSafeText(h),ws[i]-4);doc.text(lines.slice(0,2),x+2,ctx.y+4);x+=ws[i]});ctx.y+=headH};
- drawHead();rows.forEach(row=>{const cells=row.map((v,i)=>doc.splitTextToSize(pdfSafeText(v),ws[i]-4).slice(0,3));const rh=Math.max(7,...cells.map(a=>a.length*lineH+2));if(ctx.y+rh>ctx.H-20){doc.addPage();ctx.header();ctx.footer();ctx.y=22;drawHead()}let x=startX;row.forEach((v,i)=>{doc.setDrawColor(235,237,239);doc.setLineWidth(.15);doc.rect(x,ctx.y,ws[i],rh,'S');doc.setFont('helvetica',i===0?'bold':'normal');doc.setFontSize(6.5);doc.setTextColor(38,43,48);doc.text(cells[i],x+2,ctx.y+4);x+=ws[i]});ctx.y+=rh});ctx.y+=5;
+ const drawHead=()=>{doc.setFillColor(247,248,249);doc.setDrawColor(224,228,230);doc.setLineWidth(.18);let x=startX;headers.forEach((h,i)=>{doc.rect(x,ctx.y,ws[i],headH,'FD');doc.setFont('helvetica','bold');doc.setFontSize(7.6);doc.setTextColor(70,77,83);const lines=doc.splitTextToSize(pdfSafeText(h),ws[i]-4);doc.text(lines.slice(0,2),x+2,ctx.y+4);x+=ws[i]});ctx.y+=headH};
+ drawHead();rows.forEach(row=>{const cells=row.map((v,i)=>doc.splitTextToSize(pdfSafeText(v),ws[i]-4).slice(0,3));const rh=Math.max(7,...cells.map(a=>a.length*lineH+2));if(ctx.y+rh>ctx.H-20){doc.addPage();ctx.header();ctx.footer();ctx.y=22;drawHead()}let x=startX;row.forEach((v,i)=>{doc.setDrawColor(235,237,239);doc.setLineWidth(.15);doc.rect(x,ctx.y,ws[i],rh,'S');doc.setFont('helvetica',i===0?'bold':'normal');doc.setFontSize(7.4);doc.setTextColor(38,43,48);doc.text(cells[i],x+2,ctx.y+4);x+=ws[i]});ctx.y+=rh});ctx.y+=5;
 }
-function pdfNarrative(doc,ctx,label,text){pdfPageBreak(doc,ctx,20);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(103,110,116);doc.text(String(label).toUpperCase(),14,ctx.y);ctx.y+=5;doc.setFont('helvetica','normal');doc.setFontSize(8.2);doc.setTextColor(43,48,53);const lines=doc.splitTextToSize(pdfSafeText(text),ctx.W-28);doc.text(lines,14,ctx.y);ctx.y+=Math.max(8,lines.length*4.2+4)}
+function pdfNarrative(doc,ctx,label,text){pdfPageBreak(doc,ctx,20);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(103,110,116);doc.text(String(label).toUpperCase(),14,ctx.y);ctx.y+=5;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(43,48,53);const lines=doc.splitTextToSize(pdfSafeText(text),ctx.W-28);doc.text(lines,14,ctx.y);ctx.y+=Math.max(8,lines.length*4.2+4)}
 function pdfSaveName(prefix,name){return `${prefix}_${csvSafeName(name)}_${csvDateStamp()}.pdf`}
 
 function downloadPerformancePDF(){
@@ -1842,7 +1842,7 @@ function reports(c){
  const active=p.selectedCreatorIds||[],selected=decisionRows;
  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
  const topByCreator=(()=>{const by={};perf.forEach(x=>{if(x?.actual_score==null)return;const score=Number(x.actual_score);if(Number.isFinite(score))((by[String(x.creator_id)]??=[]).push(score));});return Object.entries(by).map(([id,v])=>({id,name:creatorName(id),score:v.reduce((a,b)=>a+b,0)/v.length,n:v.length})).sort((a,b)=>b.score-a.score).slice(0,3)})();
- c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><span class="pill ${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'good':'cyan'}">${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'COMPLETE':'REPORT READY'}</span>${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'<span class="pill good">CAMPAIGN SAVED</span>':'<button class="btn primary" id="complete-campaign">Complete this campaign →</button>'}<button class="btn" id="report-campaign-intelligence-csv">Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Impact CSV</button><button class="btn" id="report-performance-pdf">Performance PDF</button><button class="btn" id="report-decision-pdf">Decision PDF</button><button class="btn" id="report-impact-pdf">Impact PDF</button><button class="btn primary" id="report-full-pdf">Full Decision PDF</button></div></div>
+ c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><span class="pill ${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'good':'cyan'}">${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'COMPLETE':'REPORT READY'}</span>${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'<span class="pill good">CAMPAIGN SAVED</span>':'<button class="btn primary" id="complete-campaign">Complete this campaign →</button>'}<button class="btn" id="report-campaign-intelligence-csv">Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Impact CSV</button><button class="btn primary" id="report-full-pdf">Download Complete Report PDF</button></div></div>
  <div class="grid g4"><div class="metric"><span class="label">Creators approved</span><strong>${active.length}</strong><small>User-approved for performance tracking</small></div><div class="metric"><span class="label">Performance records</span><strong>${perf.length}</strong><small>All outcome types</small></div><div class="metric"><span class="label">Impact score</span><strong>${impact.score==null?'Not scored':Math.round(impact.score)}</strong><small>Recorded outcome score</small></div><div class="metric"><span class="label">ROAS</span><strong>${impact.roas==null?'Not calculable':Number(impact.roas).toFixed(2)+'x'}</strong><small>(Revenue ÷ Spend)</small></div></div>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">01 · Campaign & Audience</div><h2>Strategic context</h2></div></div><div class="grid g2"><div class="signal-box"><h4>Campaign</h4><p><b>${esc(S.selectedCampaign?.name||'·')}</b></p><p>${esc((p.objectives||[]).join(' · ')||p.objective||p.goal||'·')}</p><p>${esc((p.brandPersonalities||[]).join(' · ')||'·')}</p></div><div class="signal-box"><h4>Audience</h4><p><b>${esc(S.selectedAudience?.payload?.audienceType||'·')}</b></p><p>${esc(S.selectedAudience?.payload?.audiencePersona||'·')}</p></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">02 · Creator Decision</div><h2>Creator Decision Evidence</h2><p class="sub">Approval is the user decision. The decision signal below is the intelligence engine recommendation and evidence state.</p></div></div>${selected.length?`<div class="table-wrap"><table><thead><tr><th>Creator</th><th>Decision signal</th><th>Overall</th><th>Audience</th><th>Content</th><th>Brand</th><th>Performance</th><th>Commercial</th><th>Risk</th></tr></thead><tbody>${selected.map(x=>{const e=x.decision.evidence||{};return `<tr><td><b>${esc(x.creator.name)}</b></td><td>${esc(x.decision.decision||'·')}</td><td>${x.decision.score==null?'·':Math.round(x.decision.score)}</td><td>${Math.round(e.audienceFit??50)}</td><td>${Math.round(e.contentFit??50)}</td><td>${Math.round(e.brandFit??50)}</td><td>${Math.round(e.performance??0)}</td><td>${Math.round(e.commercial??50)}</td><td>${Math.round(e.risk??50)}</td></tr>`}).join('')}</tbody></table></div>` :'<div class="empty">No creators have been approved for performance tracking yet.</div>'}</section>
@@ -1852,7 +1852,7 @@ function reports(c){
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">06 · Business Impact</div><h2>Observed business effect</h2><p class="sub">Calculated live from the linked performance records.</p></div></div><div class="grid g4"><div><span class="label">Revenue</span><div class="mini-stat">${perf.some(x=>x?.revenue_thb!=null||x?.metadata?.netSales!=null||x?.metadata?.gmv!=null)?money(impact.revenue):'Not recorded'}</div></div><div><span class="label">Spend</span><div class="mini-stat">${perf.some(x=>x?.spend_thb!=null)?money(impact.spend):'Not recorded'}</div></div><div><span class="label">ROI</span><div class="mini-stat">${impact.roi==null?'Not calculable':Math.round(impact.roi)+'%'}</div><small class="formula-note">((Revenue − Spend) ÷ Spend × 100)</small></div><div><span class="label">Conversions</span><div class="mini-stat">${perf.some(x=>x?.conversions!=null||x?.metadata?.paidOrders!=null)?money(impact.conversions):'Not recorded'}</div></div></div><div class="grid g4" style="margin-top:12px"><div><span class="label">Reach</span><div class="mini-stat">${money(impact.reach)}</div></div><div><span class="label">Views</span><div class="mini-stat">${money(impact.views)}</div></div><div><span class="label">Clicks</span><div class="mini-stat">${money(impact.clicks)}</div></div><div><span class="label">Event attendance</span><div class="mini-stat">${money(impact.attendance)}</div></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">06B · PERFORMANCE LEADERBOARD</div><h2>Top 3 Performance</h2><p class="sub">Shows only creators with a completed observed outcome score. Pending records stay out of the ranking until an actual score is recorded.</p></div></div>${topByCreator.length?`<div class="grid g3">${topByCreator.map((x,i)=>`<div class="signal-box"><div style="display:flex;justify-content:space-between;gap:12px"><b>#${i+1} ${esc(x.name)}</b><strong>${Math.round(x.score)}/100</strong></div><p>${x.n} observed record${x.n===1?'':'s'}</p></div>`).join('')}</div>`:'<div class="empty">No completed performance outcomes yet.</div>'}</section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">07 · Learning & Next Actions</div><h2>What should happen next?</h2><p class="sub">Generated from the same live evidence chain; stored text is used only when you explicitly saved an edited version.</p></div></div><div class="grid g2 reports-next-cards"><div class="signal-box"><h4>What worked</h4><p>${esc(learning.worked||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Friction / what did not work</h4><p>${esc(learning.friction||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Next hypothesis</h4><p>${esc(learning.hypothesis||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Calculated next actions</h4><p>${(learning.nextActions||[]).map((x,i)=>`${i+1}. ${esc(x)}`).join('<br>')||'No saved next actions; Step 06 can calculate them.'}</p></div></div></section></div>`;
- document.getElementById('report-campaign-intelligence-csv').onclick=downloadReportCSV;document.getElementById('report-performance-csv').onclick=downloadPerformanceCSV;document.getElementById('report-decision-csv').onclick=downloadDecisionCSV;document.getElementById('report-impact-csv').onclick=downloadImpactCSV;document.getElementById('report-performance-pdf').onclick=downloadPerformancePDF;document.getElementById('report-decision-pdf').onclick=downloadDecisionPDF;document.getElementById('report-impact-pdf').onclick=downloadImpactPDF;document.getElementById('report-full-pdf').onclick=downloadFullPDF;
+ document.getElementById('report-campaign-intelligence-csv').onclick=downloadReportCSV;document.getElementById('report-performance-csv').onclick=downloadPerformanceCSV;document.getElementById('report-decision-csv').onclick=downloadDecisionCSV;document.getElementById('report-impact-csv').onclick=downloadImpactCSV;document.getElementById('report-full-pdf').onclick=downloadFullPDF;
  const completeBtn=document.getElementById('complete-campaign');
  if(completeBtn){completeBtn.onclick=async()=>{
    if(completeBtn.dataset.busy==='1')return;
@@ -4415,5 +4415,66 @@ function downloadImpactCSV(){exportGateOr(()=>{
   .kol-report-page .report-legend b{color:#20272B!important;font-weight:750!important}
   .kol-report-page .report-chart-empty{border-color:#E1EAED!important;background:#FCFEFF!important;color:#71818A!important;border-radius:10px!important}
   @media(max-width:900px){.kol-report-page .report-chart-card{padding:16px!important}}
+ `;document.head.appendChild(s);
+})();
+
+
+/* REPORT POLISH V2 · readable charts + one complete PDF export · 20261006 */
+(function(){
+ const styleId='kol-ids-report-polish-v2-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  .kol-report-page .report-chart-grid{gap:22px!important;align-items:stretch!important}
+  .kol-report-page .report-chart-card{padding:23px 23px 21px!important;border-color:#E5EDF0!important;box-shadow:0 5px 20px rgba(32,65,74,.025)!important;overflow:visible!important}
+  .kol-report-page .report-chart-head{gap:12px!important;align-items:center!important;margin-bottom:17px!important;padding-bottom:15px!important}
+  .kol-report-page .report-chart-head b{font-size:16px!important;line-height:1.35!important;letter-spacing:0!important}
+  .kol-report-page .report-chart-head span{font-size:11px!important;letter-spacing:.045em!important}
+  /* Make only the two requested charts more legible on desktop and mobile. */
+  .kol-report-page .report-chart-card:nth-child(1) .rchart-label,
+  .kol-report-page .report-chart-card:nth-child(1) .rchart-date-label,
+  .kol-report-page .report-chart-card:nth-child(1) .rchart-axis,
+  .kol-report-page .report-chart-card:nth-child(1) .rchart-legend,
+  .kol-report-page .report-chart-card:nth-child(1) .rchart-point-value,
+  .kol-report-page .report-chart-card:nth-child(1) .rchart-value,
+  .kol-report-page .report-chart-card:nth-child(1) .rchart-title,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-label,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-date-label,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-axis,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-legend,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-point-value,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-value,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-share,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-title{font-size:15px!important}
+  .kol-report-page .report-chart-card:nth-child(1) .rchart-axis,
+  .kol-report-page .report-chart-card:nth-child(3) .rchart-axis{font-size:13px!important}
+  /* A quieter soft-cyan palette across every chart. */
+  .kol-report-page .rchart-line-a{stroke:#79BDCA!important;stroke-width:2.4!important;opacity:.82!important}
+  .kol-report-page .rchart-line-b{stroke:#C0E4E9!important;stroke-width:2.2!important;opacity:.9!important}
+  .kol-report-page .rchart-dot-a{fill:#79BDCA!important;opacity:.82!important}
+  .kol-report-page .rchart-dot-b{fill:#C0E4E9!important;opacity:.92!important}
+  .kol-report-page .rchart-dot-a-text{fill:#5F9EAA!important}
+  .kol-report-page .rchart-dot-b-text{fill:#7FAAB2!important}
+  .kol-report-page .rchart-bar{fill:#A9DDE4!important;opacity:.82!important}
+  .kol-report-page .rchart-revenue-bar-0{fill:#83C9D4!important}
+  .kol-report-page .rchart-revenue-bar-1{fill:#A5D9E1!important}
+  .kol-report-page .rchart-revenue-bar-2{fill:#C3E7EB!important}
+  .kol-report-page .rchart-revenue-bar-3{fill:#DDEFF1!important}
+  .kol-report-page .rchart-gridline{stroke:#EFF4F5!important;stroke-width:.9!important}
+  .kol-report-page .rchart-bar-track{fill:#FAFDFD!important;stroke:#E8F1F3!important}
+  .kol-report-page .report-chart-head span{color:#81939A!important}
+  @media(max-width:900px){
+    .kol-report-page .report-chart-grid{gap:16px!important}
+    .kol-report-page .report-chart-card{padding:18px 17px 17px!important}
+    .kol-report-page .report-chart-head b{font-size:16px!important}
+    .kol-report-page .report-chart-card:nth-child(1) .rchart-label,
+    .kol-report-page .report-chart-card:nth-child(1) .rchart-date-label,
+    .kol-report-page .report-chart-card:nth-child(1) .rchart-legend,
+    .kol-report-page .report-chart-card:nth-child(1) .rchart-value,
+    .kol-report-page .report-chart-card:nth-child(3) .rchart-label,
+    .kol-report-page .report-chart-card:nth-child(3) .rchart-date-label,
+    .kol-report-page .report-chart-card:nth-child(3) .rchart-legend,
+    .kol-report-page .report-chart-card:nth-child(3) .rchart-value,
+    .kol-report-page .report-chart-card:nth-child(3) .rchart-share{font-size:14px!important}
+  }
  `;document.head.appendChild(s);
 })();
