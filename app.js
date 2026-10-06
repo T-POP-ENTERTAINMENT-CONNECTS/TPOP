@@ -1794,7 +1794,7 @@ function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  let offset=0;
- const colors=['#39AFC4','#78CDDA','#A7E2E9','#D6F2F5'];
+ const colors=['#AEEFFF','#C8F4FF','#DDF8FF','#EEF BFF'.replace(' ', '')];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -4516,5 +4516,27 @@ function downloadImpactCSV(){exportGateOr(()=>{
  .kol-report-page #complete-campaign{min-height:42px!important;padding:10px 16px!important;font-size:12px!important;letter-spacing:.015em!important}
  @media(max-width:900px){.kol-report-page .report-chart-grid{grid-template-columns:1fr!important;gap:16px!important}.kol-report-page .report-chart-card{padding:20px!important}.kol-report-page .report-chart-head b{font-size:18px!important}.kol-report-page .report-chart-head span{font-size:12px!important}}
  @media(max-width:560px){.kol-report-page .report-chart-card{padding:16px!important;border-radius:15px!important}.kol-report-page .report-chart-head{align-items:flex-start!important;flex-direction:column!important;gap:3px!important;margin-bottom:12px!important;padding-bottom:10px!important}.kol-report-page .report-chart-head b{font-size:17px!important}.kol-report-page .report-chart-svg .rchart-label,.kol-report-page .report-chart-svg .rchart-label-strong{font-size:16px!important}.kol-report-page .report-chart-svg .rchart-axis{font-size:14px!important}.kol-report-page .report-chart-svg .rchart-value,.kol-report-page .report-chart-svg .rchart-share{font-size:17px!important}.kol-report-page .report-donut-wrap{flex-wrap:wrap;gap:16px!important}.kol-report-page .report-legend{width:100%!important}}
+ `;document.head.appendChild(st);
+})();
+
+
+/* FINAL REPORT PALETTE · #AEEFFF IS THE STRONGEST TONE, THEN PROGRESSIVELY LIGHTER */
+(function(){
+ const styleId='kol-ids-report-aeefff-tiered-palette-20261006';
+ if(document.getElementById(styleId)) return;
+ const st=document.createElement('style'); st.id=styleId; st.textContent=`
+  .kol-report-page .report-chart-svg .rchart-line-a{stroke:#AEEFFF!important;opacity:1!important;stroke-width:3!important}
+  .kol-report-page .report-chart-svg .rchart-line-b{stroke:#DDF8FF!important;opacity:1!important;stroke-width:3!important;stroke-dasharray:6 5!important}
+  .kol-report-page .report-chart-svg .rchart-dot-a{fill:#AEEFFF!important;opacity:1!important;stroke:#83CFE3!important;stroke-width:1.2!important}
+  .kol-report-page .report-chart-svg .rchart-dot-b{fill:#DDF8FF!important;opacity:1!important;stroke:#B8EAF5!important;stroke-width:1.2!important}
+  .kol-report-page .report-chart-svg .rchart-dot-a-text,.kol-report-page .report-chart-svg .rchart-dot-b-text{fill:#527985!important}
+  .kol-report-page .report-chart-svg .rchart-bar{fill:#AEEFFF!important;opacity:1!important}
+  .kol-report-page .report-chart-svg .rchart-revenue-bar-0{fill:#AEEFFF!important}
+  .kol-report-page .report-chart-svg .rchart-revenue-bar-1{fill:#C8F4FF!important}
+  .kol-report-page .report-chart-svg .rchart-revenue-bar-2{fill:#DDF8FF!important}
+  .kol-report-page .report-chart-svg .rchart-revenue-bar-3{fill:#EEFBFF!important}
+  .kol-report-page .report-chart-svg .rchart-bar-track{fill:#FBFEFF!important;stroke:#E1F7FC!important}
+  .kol-report-page .report-donut{box-shadow:inset 0 0 0 1px rgba(255,255,255,.8)!important}
+  .kol-report-page .report-legend i{border:1px solid rgba(91,157,173,.12)!important}
  `;document.head.appendChild(st);
 })();
