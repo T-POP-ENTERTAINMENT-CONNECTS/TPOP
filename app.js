@@ -1772,7 +1772,7 @@ function reportSvgRevenueContribution(items, opts={}){
 function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- let offset=0,colors=['#AEEFFF','#C8A96B','#B29A6B','#CDF5FF'];
+ let offset=0,colors=['#C8A96B','#D9B77A','#A67C52','#EAD8B8'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -1820,7 +1820,7 @@ function reports(c){
  const active=p.selectedCreatorIds||[],selected=decisionRows;
  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
  const topByCreator=(()=>{const by={};perf.forEach(x=>{if(x?.actual_score==null)return;const score=Number(x.actual_score);if(Number.isFinite(score))((by[String(x.creator_id)]??=[]).push(score));});return Object.entries(by).map(([id,v])=>({id,name:creatorName(id),score:v.reduce((a,b)=>a+b,0)/v.length,n:v.length})).sort((a,b)=>b.score-a.score).slice(0,3)})();
- c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><span class="pill cyan">${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'COMPLETE':'REPORT READY'}</span>${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'<span class="pill good">CAMPAIGN SAVED</span>':'<button class="btn primary" id="complete-campaign">Complete this campaign →</button>'}<button class="btn" id="report-campaign-intelligence-csv">Campaign Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Business impact CSV</button><button class="btn" id="report-full-pdf">Download Full PDF</button></div></div>
+ c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><span class="pill ${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'good':'cyan'}">${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'COMPLETE':'REPORT READY'}</span>${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'<span class="pill good">CAMPAIGN SAVED</span>':'<button class="btn primary" id="complete-campaign">Complete this campaign →</button>'}<button class="btn" id="report-campaign-intelligence-csv">Campaign Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Business impact CSV</button><button class="btn" id="report-full-pdf">Download Full PDF</button></div></div>
  <div class="grid g4"><div class="metric"><span class="label">Creators approved</span><strong>${active.length}</strong><small>User-approved for performance tracking</small></div><div class="metric"><span class="label">Performance records</span><strong>${perf.length}</strong><small>All outcome types</small></div><div class="metric"><span class="label">Impact score</span><strong>${impact.score==null?'Not scored':Math.round(impact.score)}</strong><small>Recorded outcome score</small></div><div class="metric"><span class="label">ROAS</span><strong>${impact.roas==null?'Not calculable':Number(impact.roas).toFixed(2)+'x'}</strong><small>(Revenue ÷ Spend)</small></div></div>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">01 · Campaign & Audience</div><h2>Strategic context</h2></div></div><div class="grid g2"><div class="signal-box"><h4>Campaign</h4><p><b>${esc(S.selectedCampaign?.name||'·')}</b></p><p>${esc((p.objectives||[]).join(' · ')||p.objective||p.goal||'·')}</p><p>${esc((p.brandPersonalities||[]).join(' · ')||'·')}</p></div><div class="signal-box"><h4>Audience</h4><p><b>${esc(S.selectedAudience?.payload?.audienceType||'·')}</b></p><p>${esc(S.selectedAudience?.payload?.audiencePersona||'·')}</p></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">02 · Creator Decision</div><h2>Creator Decision Evidence</h2><p class="sub">Approval is the user decision. The decision signal below is the intelligence engine recommendation and evidence state.</p></div></div>${selected.length?`<div class="table-wrap"><table><thead><tr><th>Creator</th><th>Decision signal</th><th>Overall</th><th>Audience</th><th>Content</th><th>Brand</th><th>Performance</th><th>Commercial</th><th>Risk</th></tr></thead><tbody>${selected.map(x=>{const e=x.decision.evidence||{};return `<tr><td><b>${esc(x.creator.name)}</b></td><td>${esc(x.decision.decision||'·')}</td><td>${x.decision.score==null?'·':Math.round(x.decision.score)}</td><td>${Math.round(e.audienceFit??50)}</td><td>${Math.round(e.contentFit??50)}</td><td>${Math.round(e.brandFit??50)}</td><td>${Math.round(e.performance??0)}</td><td>${Math.round(e.commercial??50)}</td><td>${Math.round(e.risk??50)}</td></tr>`}).join('')}</tbody></table></div>` :'<div class="empty">No creators have been approved for performance tracking yet.</div>'}</section>
@@ -1929,47 +1929,47 @@ function accessGate(){
   .kol-report-page .btn.cyan,.kol-report-page .pill.cyan{background:#AEEFFF!important;border-color:#AEEFFF!important;color:#111!important}
   .kol-report-page>.card{background:#fff!important;border:1px solid #e5e5e5!important;box-shadow:0 14px 40px rgba(0,0,0,.035)!important}
   .report-chart-grid{gap:18px!important}
-  .report-chart-card{background:#fff!important;border:1px solid #dedede!important;border-radius:12px!important;padding:22px 22px 20px!important;box-shadow:0 10px 30px rgba(0,0,0,.035)!important}
-  .report-chart-head{padding-bottom:14px!important;margin-bottom:14px!important;border-bottom:1px solid #ededed!important}
-  .report-chart-head b{font-size:15px!important;font-weight:800!important;color:#171717!important;letter-spacing:-.02em!important}
-  .report-chart-head span{font-size:11px!important;color:#777!important}
+  .report-chart-card{background:#FFF8E8!important;border:1px solid #F0DFBD!important;border-radius:16px!important;padding:22px 22px 20px!important;box-shadow:0 10px 30px rgba(107,79,40,.055)!important}
+  .report-chart-head{padding-bottom:14px!important;margin-bottom:14px!important;border-bottom:1px solid #EAD9B9!important}
+  .report-chart-head b{font-size:15px!important;font-weight:800!important;color:#6B4F28!important;letter-spacing:-.02em!important}
+  .report-chart-head span{font-size:11px!important;color:#92744A!important}
   .report-chart-svg{min-height:340px!important;height:auto!important;overflow:visible!important}
-  .rchart-title{font-size:13px!important;fill:#171717!important;font-weight:800!important}
-  .rchart-value{font-size:16px!important;fill:#171717!important;font-weight:900!important}
-  .rchart-share{font-size:15px!important;fill:#171717!important;font-weight:900!important}
-  .rchart-label{font-size:13px!important;fill:#555!important}
-  .rchart-label-strong{font-size:15px!important;fill:#171717!important;font-weight:850!important}
-  .rchart-axis{font-size:13px!important;fill:#777!important;font-weight:650!important}
-  .rchart-axis-heading{font-size:11px!important;fill:#555!important;font-weight:700!important}
-  .rchart-legend{font-size:13px!important;fill:#333!important;font-weight:750!important}
-  .rchart-gridline{stroke:#E5E8EA!important;stroke-width:1!important}
-  .rchart-bar{fill:#AEEFFF!important}
-  .rchart-bar-track{fill:#CDF5FF!important}
-  .rchart-line-a{stroke:#171717!important;stroke-width:4!important}
-  .rchart-line-b{stroke:#C8A96B!important;stroke-width:4!important;stroke-dasharray:9 7!important}
-  .rchart-dot-a{fill:#171717!important}
-  .rchart-dot-b{fill:#C8A96B!important;stroke:#fff!important;stroke-width:3!important}
+  .rchart-title{font-size:13px!important;fill:#6B4F28!important;font-weight:800!important}
+  .rchart-value{font-size:16px!important;fill:#6B4F28!important;font-weight:900!important}
+  .rchart-share{font-size:15px!important;fill:#7A5C2E!important;font-weight:900!important}
+  .rchart-label{font-size:13px!important;fill:#8A704D!important}
+  .rchart-label-strong{font-size:15px!important;fill:#6B4F28!important;font-weight:850!important}
+  .rchart-axis{font-size:13px!important;fill:#9A805B!important;font-weight:650!important}
+  .rchart-axis-heading{font-size:11px!important;fill:#8A704D!important;font-weight:700!important}
+  .rchart-legend{font-size:13px!important;fill:#6B4F28!important;font-weight:750!important}
+  .rchart-gridline{stroke:#EADDC5!important;stroke-width:1!important}
+  .rchart-bar{fill:#C8A96B!important}
+  .rchart-bar-track{fill:#F1E3C7!important}
+  .rchart-line-a{stroke:#7A5C2E!important;stroke-width:4!important}
+  .rchart-line-b{stroke:#D9B77A!important;stroke-width:4!important;stroke-dasharray:9 7!important}
+  .rchart-dot-a{fill:#7A5C2E!important}
+  .rchart-dot-b{fill:#D9B77A!important;stroke:#FFF8E8!important;stroke-width:3!important}
   .rchart-point-value{font-size:14px!important;font-weight:900!important}
-  .rchart-dot-a-text{fill:#171717!important}.rchart-dot-b-text{fill:#171717!important}
-  .rchart-footnote{font-size:10px!important;fill:#777!important}
+  .rchart-dot-a-text{fill:#7A5C2E!important}.rchart-dot-b-text{fill:#7A5C2E!important}
+  .rchart-footnote{font-size:10px!important;fill:#92744A!important}
   .report-donut-wrap{min-height:320px!important;gap:48px!important}
-  .report-donut{width:218px!important;height:218px!important;flex-basis:218px!important;box-shadow:0 0 0 1px #EEF0F1!important}
-  .report-donut>div{width:142px!important;height:142px!important;background:#fff!important;box-shadow:0 6px 24px rgba(20,22,30,.06)!important}
-  .report-donut strong{font-size:38px!important;color:#171717!important;font-weight:900!important;letter-spacing:-.04em!important}
-  .report-donut span{font-size:10px!important;color:#777!important;letter-spacing:.12em!important}
+  .report-donut{width:218px!important;height:218px!important;flex-basis:218px!important;box-shadow:0 0 0 1px #EAD9B9!important}
+  .report-donut>div{width:142px!important;height:142px!important;background:#FFFDF8!important;box-shadow:0 6px 24px rgba(107,79,40,.07)!important}
+  .report-donut strong{font-size:38px!important;color:#6B4F28!important;font-weight:900!important;letter-spacing:-.04em!important}
+  .report-donut span{font-size:10px!important;color:#92744A!important;letter-spacing:.12em!important}
   .report-legend{gap:15px!important;min-width:205px!important}
   .report-legend>div{font-size:14px!important;grid-template-columns:12px 1fr auto!important;gap:11px!important}
   .report-legend i{width:12px!important;height:12px!important;border-radius:50%!important}
-  .report-legend span{color:#444!important;font-weight:600!important}
-  .report-legend b{font-size:15px!important;color:#171717!important;font-weight:900!important}
-  .report-chart-empty{min-height:340px!important;height:340px!important;font-size:14px!important;border-color:#ddd!important;color:#777!important}
-  .kol-report-page .report-chart-card{border:1px solid #D9DEE1!important;border-radius:16px!important;padding:26px 26px 24px!important;box-shadow:0 16px 45px rgba(20,22,30,.055)!important}
-  .kol-report-page .report-chart-head b{font-size:17px!important;letter-spacing:-.025em!important}
-  .kol-report-page .report-chart-head span{font-size:12px!important;color:#7A7D80!important}
-  .kol-report-page .report-chart-revenue .rchart-bar{fill:#C8A96B!important}
-  .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#CDF5FF!important}
-  .kol-report-page .report-chart-trend .rchart-dot-b{fill:#C8A96B!important}
-  .kol-report-page .report-chart-trend .rchart-line-b{stroke:#B29A6B!important}
+  .report-legend span{color:#7A6445!important;font-weight:600!important}
+  .report-legend b{font-size:15px!important;color:#6B4F28!important;font-weight:900!important}
+  .report-chart-empty{min-height:340px!important;height:340px!important;font-size:14px!important;border-color:#E8D7B6!important;color:#92744A!important;background:#FFF8E8!important}
+  .kol-report-page .report-chart-card{border:1px solid #F0DFBD!important;border-radius:16px!important;padding:26px 26px 24px!important;box-shadow:0 16px 45px rgba(107,79,40,.06)!important}
+  .kol-report-page .report-chart-head b{font-size:17px!important;letter-spacing:-.025em!important;color:#6B4F28!important}
+  .kol-report-page .report-chart-head span{font-size:12px!important;color:#92744A!important}
+  .kol-report-page .report-chart-revenue .rchart-bar{fill:#B8894E!important}
+  .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#F1E3C7!important}
+  .kol-report-page .report-chart-trend .rchart-dot-b{fill:#D9B77A!important}
+  .kol-report-page .report-chart-trend .rchart-line-b{stroke:#B58B55!important}
   .kol-report-page .report-chart-svg{display:block;width:100%;max-width:100%;overflow:visible}
   @media(max-width:900px){
     .report-chart-grid{grid-template-columns:1fr!important}
@@ -3910,14 +3910,14 @@ tbody tr:hover td{background:#fbfdfe}
   .kol-report-page .rchart-label-strong{font-size:15px!important;fill:#111!important;font-weight:850!important}
   .kol-report-page .rchart-axis{font-size:13px!important;fill:#747D82!important;font-weight:650!important}
   .kol-report-page .rchart-axis-heading{font-size:13px!important;fill:#555!important;font-weight:750!important}
-  .kol-report-page .rchart-legend{font-size:13px!important;fill:#333!important;font-weight:750!important}
+  .kol-report-page .rchart-legend{font-size:13px!important;fill:#6B4F28!important;font-weight:750!important}
   .kol-report-page .rchart-point-value{font-size:15px!important;fill:#111!important;font-weight:900!important}
   .kol-report-page .rchart-date-label{font-size:13px!important;fill:#5D666B!important;font-weight:750!important}
   .kol-report-page .rchart-gridline{stroke:#E4E9EB!important;stroke-width:1!important}
   .kol-report-page .rchart-line-a{stroke:#111!important;stroke-width:4!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
   .kol-report-page .rchart-line-b{stroke:#B29A6B!important;stroke-width:3.5!important;stroke-linecap:round!important;stroke-linejoin:round!important;stroke-dasharray:9 7!important;fill:none!important}
   .kol-report-page .rchart-dot-a{fill:#111!important}
-  .kol-report-page .rchart-dot-b{fill:#C8A96B!important;stroke:#fff!important;stroke-width:3!important}
+  .kol-report-page .rchart-dot-b{fill:#D9B77A!important;stroke:#FFF8E8!important;stroke-width:3!important}
   .kol-report-page .rchart-dot-a-text,.kol-report-page .rchart-dot-b-text{fill:#111!important}
   .kol-report-page .rchart-bar{fill:#AEEFFF!important;opacity:1!important}
   .kol-report-page .rchart-bar-track{fill:#CDF5FF!important;stroke:#DDE7EA!important;stroke-width:1!important}
