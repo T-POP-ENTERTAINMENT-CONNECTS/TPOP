@@ -1745,11 +1745,32 @@ function reportSvgLineChart(items, opts={}){
  const yAt=v=>pad.t+innerH-(Number(v)/max)*innerH;
  const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1000000).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
  const segments=(key,cls)=>{const out=[];let pts=[];items.forEach((x,i)=>{const v=Number(x[key]);if(Number.isFinite(v)){pts.push(`${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`)}else if(pts.length){out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});if(pts.length)out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);return out.join('')};
- const dots=(key,cls,offset)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=yAt(v);return `<circle cx="${cx}" cy="${cy}" r="7" class="${cls}"/><text x="${cx}" y="${cy+offset}" text-anchor="middle" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
+ const pointData=[];
+ ['a','b'].forEach((key,series)=>{
+   items.forEach((x,i)=>{const v=Number(x[key]);if(Number.isFinite(v))pointData.push({key,series,i,cx:xAt(i),cy:yAt(v),v});});
+ });
+ const labelY=(key,i,cy)=>{
+   const same=pointData.filter(p=>p.i===i && p.key!==key);
+   let y=cy+(key==='a'?-17:24);
+   if(same.length){
+     const other=same[0].cy;
+     if(Math.abs(cy-other)<42){
+       y=cy+(cy<=other?-22:24);
+     }
+   }
+   if(y<pad.t+10)y=cy+26;
+   if(y>pad.t+innerH-2)y=cy-18;
+   return y;
+ };
+ const dots=(key,cls)=>items.map((x,i)=>{
+   const v=Number(x[key]);if(!Number.isFinite(v))return '';
+   const cx=xAt(i),cy=yAt(v),ly=labelY(key,i,cy);
+   return `<circle cx="${cx}" cy="${cy}" r="6" class="${cls}"/><text x="${cx}" y="${ly}" text-anchor="middle" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`;
+ }).join('');
  const grid=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4,v=max-(max*i/4);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-16}" y="${y+5}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(v))}</text>`}).join('');
  const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-24}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`).join('');
  const legendX=Math.max(pad.l,width-220);
- return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}">${grid}${segments('a','rchart-line-a')}${segments('b','rchart-line-b')}${dots('a','rchart-dot-a',-16)}${dots('b','rchart-dot-b',25)}${labels}<g transform="translate(${legendX},24)"><circle cx="5" cy="0" r="6" class="rchart-dot-a"/><text x="19" y="5" class="rchart-legend">Revenue</text><circle cx="110" cy="0" r="6" class="rchart-dot-b"/><text x="124" y="5" class="rchart-legend">Spend</text></g></svg>`;
+ return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}">${grid}${segments('a','rchart-line-a')}${segments('b','rchart-line-b')}${dots('a','rchart-dot-a')}${dots('b','rchart-dot-b')}${labels}<g transform="translate(${legendX},24)"><circle cx="5" cy="0" r="6" class="rchart-dot-a"/><text x="19" y="5" class="rchart-legend">Revenue</text><circle cx="110" cy="0" r="6" class="rchart-dot-b"/><text x="124" y="5" class="rchart-legend">Spend</text></g></svg>`;
 }
 function reportSvgRevenueContribution(items, opts={}){
  const valid=items.filter(x=>Number.isFinite(Number(x.value))&&Number(x.value)>0).sort((a,b)=>Number(b.value)-Number(a.value));
@@ -1772,7 +1793,7 @@ function reportSvgRevenueContribution(items, opts={}){
 function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- let offset=0,colors=['#AEEFFF','#8FD6E3','#6DB8C8','#527684'];
+ let offset=0,colors=['#AEEFFF','#8FD6E3','#A9DFC4','#4BAA7A'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -1820,7 +1841,7 @@ function reports(c){
  const active=p.selectedCreatorIds||[],selected=decisionRows;
  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
  const topByCreator=(()=>{const by={};perf.forEach(x=>{if(x?.actual_score==null)return;const score=Number(x.actual_score);if(Number.isFinite(score))((by[String(x.creator_id)]??=[]).push(score));});return Object.entries(by).map(([id,v])=>({id,name:creatorName(id),score:v.reduce((a,b)=>a+b,0)/v.length,n:v.length})).sort((a,b)=>b.score-a.score).slice(0,3)})();
- c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><span class="pill ${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'good':'cyan'}">${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'COMPLETE':'REPORT READY'}</span>${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'<span class="pill good">CAMPAIGN SAVED</span>':'<button class="btn primary" id="complete-campaign">Complete this campaign →</button>'}<button class="btn" id="report-campaign-intelligence-csv">Campaign Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Business impact CSV</button><button class="btn" id="report-full-pdf">Download Full PDF</button></div></div>
+ c.innerHTML=`<div data-kol-report-page="1" class="kol-report-page"><div class="hero"><div><div class="kicker">STEP 07 · REPORTS</div><h2>Campaign Intelligence Report</h2><p>Everything below is calculated live from the same campaign, audience, creator decision and performance records. CSV is the primary export so the data can be filtered, calculated and reused in Excel, Google Sheets or BI tools.</p></div><div class="hero-actions"><span class="pill ${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'good':'cyan'}">${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'COMPLETE':'REPORT READY'}</span>${String(S.selectedCampaign?.status||'draft').toUpperCase()=='COMPLETE'?'<span class="pill good">CAMPAIGN SAVED</span>':'<button class="btn primary" id="complete-campaign">Complete this campaign →</button>'}<button class="btn" id="report-campaign-intelligence-csv">Intelligence CSV</button><button class="btn" id="report-performance-csv">Performance CSV</button><button class="btn" id="report-decision-csv">Decision CSV</button><button class="btn" id="report-impact-csv">Impact CSV</button><button class="btn" id="report-performance-pdf">Performance PDF</button><button class="btn" id="report-decision-pdf">Decision PDF</button><button class="btn" id="report-impact-pdf">Impact PDF</button><button class="btn primary" id="report-full-pdf">Full Decision PDF</button></div></div>
  <div class="grid g4"><div class="metric"><span class="label">Creators approved</span><strong>${active.length}</strong><small>User-approved for performance tracking</small></div><div class="metric"><span class="label">Performance records</span><strong>${perf.length}</strong><small>All outcome types</small></div><div class="metric"><span class="label">Impact score</span><strong>${impact.score==null?'Not scored':Math.round(impact.score)}</strong><small>Recorded outcome score</small></div><div class="metric"><span class="label">ROAS</span><strong>${impact.roas==null?'Not calculable':Number(impact.roas).toFixed(2)+'x'}</strong><small>(Revenue ÷ Spend)</small></div></div>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">01 · Campaign & Audience</div><h2>Strategic context</h2></div></div><div class="grid g2"><div class="signal-box"><h4>Campaign</h4><p><b>${esc(S.selectedCampaign?.name||'·')}</b></p><p>${esc((p.objectives||[]).join(' · ')||p.objective||p.goal||'·')}</p><p>${esc((p.brandPersonalities||[]).join(' · ')||'·')}</p></div><div class="signal-box"><h4>Audience</h4><p><b>${esc(S.selectedAudience?.payload?.audienceType||'·')}</b></p><p>${esc(S.selectedAudience?.payload?.audiencePersona||'·')}</p></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">02 · Creator Decision</div><h2>Creator Decision Evidence</h2><p class="sub">Approval is the user decision. The decision signal below is the intelligence engine recommendation and evidence state.</p></div></div>${selected.length?`<div class="table-wrap"><table><thead><tr><th>Creator</th><th>Decision signal</th><th>Overall</th><th>Audience</th><th>Content</th><th>Brand</th><th>Performance</th><th>Commercial</th><th>Risk</th></tr></thead><tbody>${selected.map(x=>{const e=x.decision.evidence||{};return `<tr><td><b>${esc(x.creator.name)}</b></td><td>${esc(x.decision.decision||'·')}</td><td>${x.decision.score==null?'·':Math.round(x.decision.score)}</td><td>${Math.round(e.audienceFit??50)}</td><td>${Math.round(e.contentFit??50)}</td><td>${Math.round(e.brandFit??50)}</td><td>${Math.round(e.performance??0)}</td><td>${Math.round(e.commercial??50)}</td><td>${Math.round(e.risk??50)}</td></tr>`}).join('')}</tbody></table></div>` :'<div class="empty">No creators have been approved for performance tracking yet.</div>'}</section>
@@ -1830,7 +1851,7 @@ function reports(c){
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">06 · Business Impact</div><h2>Observed business effect</h2><p class="sub">Calculated live from the linked performance records.</p></div></div><div class="grid g4"><div><span class="label">Revenue</span><div class="mini-stat">${perf.some(x=>x?.revenue_thb!=null||x?.metadata?.netSales!=null||x?.metadata?.gmv!=null)?money(impact.revenue):'Not recorded'}</div></div><div><span class="label">Spend</span><div class="mini-stat">${perf.some(x=>x?.spend_thb!=null)?money(impact.spend):'Not recorded'}</div></div><div><span class="label">ROI</span><div class="mini-stat">${impact.roi==null?'Not calculable':Math.round(impact.roi)+'%'}</div><small class="formula-note">((Revenue − Spend) ÷ Spend × 100)</small></div><div><span class="label">Conversions</span><div class="mini-stat">${perf.some(x=>x?.conversions!=null||x?.metadata?.paidOrders!=null)?money(impact.conversions):'Not recorded'}</div></div></div><div class="grid g4" style="margin-top:12px"><div><span class="label">Reach</span><div class="mini-stat">${money(impact.reach)}</div></div><div><span class="label">Views</span><div class="mini-stat">${money(impact.views)}</div></div><div><span class="label">Clicks</span><div class="mini-stat">${money(impact.clicks)}</div></div><div><span class="label">Event attendance</span><div class="mini-stat">${money(impact.attendance)}</div></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">06B · PERFORMANCE LEADERBOARD</div><h2>Top 3 Performance</h2><p class="sub">Shows only creators with a completed observed outcome score. Pending records stay out of the ranking until an actual score is recorded.</p></div></div>${topByCreator.length?`<div class="grid g3">${topByCreator.map((x,i)=>`<div class="signal-box"><div style="display:flex;justify-content:space-between;gap:12px"><b>#${i+1} ${esc(x.name)}</b><strong>${Math.round(x.score)}/100</strong></div><p>${x.n} observed record${x.n===1?'':'s'}</p></div>`).join('')}</div>`:'<div class="empty">No completed performance outcomes yet.</div>'}</section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">07 · Learning & Next Actions</div><h2>What should happen next?</h2><p class="sub">Generated from the same live evidence chain; stored text is used only when you explicitly saved an edited version.</p></div></div><div class="grid g2 reports-next-cards"><div class="signal-box"><h4>What worked</h4><p>${esc(learning.worked||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Friction / what did not work</h4><p>${esc(learning.friction||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Next hypothesis</h4><p>${esc(learning.hypothesis||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Calculated next actions</h4><p>${(learning.nextActions||[]).map((x,i)=>`${i+1}. ${esc(x)}`).join('<br>')||'No saved next actions; Step 06 can calculate them.'}</p></div></div></section></div>`;
- document.getElementById('report-campaign-intelligence-csv').onclick=downloadReportCSV;document.getElementById('report-performance-csv').onclick=downloadPerformanceCSV;document.getElementById('report-decision-csv').onclick=downloadDecisionCSV;document.getElementById('report-impact-csv').onclick=downloadImpactCSV;document.getElementById('report-full-pdf').onclick=downloadFullPDF;
+ document.getElementById('report-campaign-intelligence-csv').onclick=downloadReportCSV;document.getElementById('report-performance-csv').onclick=downloadPerformanceCSV;document.getElementById('report-decision-csv').onclick=downloadDecisionCSV;document.getElementById('report-impact-csv').onclick=downloadImpactCSV;document.getElementById('report-performance-pdf').onclick=downloadPerformancePDF;document.getElementById('report-decision-pdf').onclick=downloadDecisionPDF;document.getElementById('report-impact-pdf').onclick=downloadImpactPDF;document.getElementById('report-full-pdf').onclick=downloadFullPDF;
  const completeBtn=document.getElementById('complete-campaign');
  if(completeBtn){completeBtn.onclick=async()=>{
    if(completeBtn.dataset.busy==='1')return;
@@ -3968,22 +3989,21 @@ tbody tr:hover td{background:#fbfdfe}
   :root{
     --report-cyan-1:#AEEFFF;
     --report-cyan-2:#D7F7FC;
-    --report-cyan-3:#69D2E2;
-    --report-cyan-4:#39B8CC;
-    --report-cyan-ink:#287D8B;
-    --report-cyan-deep:#216A75;
-    --report-cyan-line:#DCEFF3;
-    --report-cyan-track:#EAF9FF;
-    --report-green:#35A879;
-    --report-green-deep:#247653;
-    --report-green-soft:#E8F7F0;
-    --report-green-line:#C7E8D8;
+    --report-cyan-3:#8FD6E3;
+    --report-cyan-4:#46C5DC;
+    --report-cyan-ink:#315D68;
+    --report-cyan-deep:#244B55;
+    --report-cyan-line:#CDEEF4;
+    --report-cyan-track:#F0FBFD;
+    --report-success:#4BAA7A;
+    --report-success-soft:#E8F7F0;
+    --report-success-line:#C7E8D8;
   }
   /* Keep Reports visually consistent with the system's cyan status language. */
   .kol-report-page .report-chart-card{
-    background:#fff!important;
-    border-color:#DCEFF3!important;
-    box-shadow:0 8px 28px rgba(82,118,132,.035)!important;
+    background:linear-gradient(180deg,#FFFFFF 0%,#FBFEFE 100%)!important;
+    border-color:#CDEEF4!important;
+    box-shadow:0 8px 28px rgba(49,93,104,.045)!important;
   }
   .kol-report-page .report-chart-head{border-bottom-color:#E6F3F6!important}
   .kol-report-page .report-chart-head b{color:var(--report-cyan-ink)!important}
@@ -3996,26 +4016,22 @@ tbody tr:hover td{background:#fbfdfe}
   .kol-report-page .rchart-axis-heading{fill:#6F8D96!important}
   .kol-report-page .rchart-legend{fill:#648692!important}
   .kol-report-page .rchart-gridline{stroke:#E3F1F4!important}
-  .kol-report-page .rchart-bar{fill:#AEEFFF!important}
+  .kol-report-page .rchart-bar{fill:#8FD6E3!important}
   .kol-report-page .rchart-bar-track{fill:#EAF9FF!important;stroke:#D8EEF3!important}
-  .kol-report-page .rchart-line-a{stroke:#287D8B!important}
-  .kol-report-page .rchart-line-b{stroke:#35A879!important}
-  .kol-report-page .rchart-dot-a{fill:#287D8B!important}
-  .kol-report-page .rchart-dot-b{fill:#35A879!important;stroke:#fff!important}
-  .kol-report-page .rchart-dot-a-text{fill:#287D8B!important}
+  .kol-report-page .rchart-line-a{stroke:#46BBD1!important}
+  .kol-report-page .rchart-line-b{stroke:#4BAA7A!important}
+  .kol-report-page .rchart-dot-a{fill:#46BBD1!important}
+  .kol-report-page .rchart-dot-b{fill:#4BAA7A!important;stroke:#fff!important}
+  .kol-report-page .rchart-dot-a-text{fill:#315D68!important}
   .kol-report-page .rchart-dot-b-text{fill:#247653!important}
-  .kol-report-page .rchart-share{fill:#287D8B!important}
-  .kol-report-page .report-chart-revenue .rchart-bar{fill:#8FDDB9!important}
-  .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#E8F7F0!important;stroke:#C7E8D8!important}
+  .kol-report-page .rchart-share{fill:#527684!important}
+  .kol-report-page .report-chart-revenue .rchart-bar{fill:#A9DFC4!important}
+  .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#EAF9FF!important;stroke:#D8EEF3!important}
   .kol-report-page .report-chart-empty{
-    border-color:#BFE8F1!important;
-    background:linear-gradient(135deg,#F7FDFF 0%,#F4FCF7 100%)!important;
-    color:#6D8C96!important;
+    border-color:#CDEEF4!important;
+    background:linear-gradient(180deg,#F7FDFE,#FFFFFF)!important;
+    color:#648692!important;
   }
-  /* Cyan + success green palette, matched to the saved/confirmed UI states. */
-  .kol-report-page .report-chart-card{border-color:#DCEFF3!important}
-  .kol-report-page .report-chart-head{border-bottom-color:#E6F3F0!important}
-  .kol-report-page .report-chart-revenue .rchart-share{fill:#247653!important}
   .kol-report-page .report-donut{
     box-shadow:0 0 0 1px #DCEFF3!important;
   }
@@ -4023,11 +4039,12 @@ tbody tr:hover td{background:#fbfdfe}
     background:#fff!important;
     box-shadow:0 7px 24px rgba(82,118,132,.06)!important;
   }
-  .kol-report-page .report-donut strong{color:#3F6875!important}
+  .kol-report-page .report-donut strong{color:#315D68!important}
   .kol-report-page .report-donut span{color:#7898A2!important}
   .kol-report-page .report-legend i{border-color:#DCEFF3!important}
   .kol-report-page .report-legend span{color:#648692!important}
-  .kol-report-page .report-legend b{color:#527684!important}
+  .kol-report-page .report-legend b{color:#315D68!important}
+  .kol-report-page .report-legend i[style*='A9DFC4'],.kol-report-page .report-legend i[style*='4BAA7A']{box-shadow:0 0 0 2px #E8F7F0!important}
 
   /* COMPLETE stays the system success state: green, not cyan. */
   .kol-report-page .pill.good,
@@ -4039,3 +4056,274 @@ tbody tr:hover td{background:#fbfdfe}
  `;
  document.head.appendChild(s);
 })();
+
+
+/* KOL IDS · REPORT DECISION-GRADE POLISH · 20261006 */
+(function(){
+ const styleId='kol-ids-report-decision-grade-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  /* Active navigation: clearer selected state without changing the dark system. */
+  .kol-nav button.active{
+    background:linear-gradient(90deg,rgba(79,215,232,.34),rgba(79,215,232,.13))!important;
+    border-color:rgba(174,239,255,.58)!important;
+    color:#fff!important;
+    box-shadow:inset 3px 0 0 #AEEFFF,0 7px 20px rgba(0,0,0,.18)!important;
+  }
+  .kol-nav button.active .nav-icon{
+    background:#AEEFFF!important;color:#102a30!important;
+    box-shadow:0 0 0 1px rgba(174,239,255,.55),0 5px 16px rgba(79,215,232,.2)!important;
+  }
+  .kol-nav button.active .nav-copy small{color:#D7F7FC!important}
+  /* Report chart system: cyan + green only; no gold/violet. */
+  .kol-report-page .report-chart-card{
+    background:linear-gradient(180deg,#fff 0%,#fbfeff 100%)!important;
+    border-color:#CDEEF4!important;
+  }
+  .kol-report-page .report-chart-head b{color:#315D68!important}
+  .kol-report-page .report-chart-head span{color:#7898A2!important}
+  .kol-report-page .rchart-line-a{stroke:#2F9EB5!important;stroke-width:3.1!important}
+  .kol-report-page .rchart-line-b{stroke:#4BAA7A!important;stroke-width:2.8!important;stroke-dasharray:8 6!important}
+  .kol-report-page .rchart-dot-a{fill:#2F9EB5!important}
+  .kol-report-page .rchart-dot-b{fill:#4BAA7A!important;stroke:#fff!important;stroke-width:2.5!important}
+  .kol-report-page .rchart-dot-a-text{fill:#247F95!important}
+  .kol-report-page .rchart-dot-b-text{fill:#247653!important}
+  .kol-report-page .rchart-point-value{font-size:14px!important;font-weight:900!important}
+  .kol-report-page .rchart-value{fill:#315D68!important}
+  .kol-report-page .rchart-share{fill:#247F95!important}
+  .kol-report-page .report-chart-revenue .rchart-bar{fill:#8FD6E3!important}
+  .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#EAF9FF!important;stroke:#D8EEF3!important}
+  .kol-report-page .rchart-bar{fill:#8FD6E3!important}
+  .kol-report-page .rchart-bar-track{fill:#EAF9FF!important;stroke:#D8EEF3!important}
+  .kol-report-page .rchart-gridline{stroke:#E3F1F4!important}
+  .kol-report-page .rchart-axis{fill:#91AAB2!important}
+  .kol-report-page .rchart-label,.kol-report-page .rchart-date-label{fill:#5F7C86!important}
+  .kol-report-page .rchart-label-strong{fill:#315D68!important}
+  .kol-report-page .rchart-legend{fill:#527684!important}
+  .kol-report-page .report-donut strong{color:#315D68!important}
+  .kol-report-page .report-donut span{color:#7898A2!important}
+  .kol-report-page .report-legend span{color:#527684!important}
+  .kol-report-page .report-legend b{color:#315D68!important}
+  .kol-report-page .hero-actions .btn{white-space:nowrap}
+  @media(max-width:900px){.kol-report-page .hero-actions{gap:6px}.kol-report-page .hero-actions .btn{font-size:9px;padding:9px 10px}}
+ `;
+ document.head.appendChild(s);
+})();
+
+/* DECISION-GRADE EXPORT HELPERS */
+function reportDecisionSignal(snap){
+ const i=snap.impact||{}, rows=snap.decisionRows||[], perf=snap.perf||[];
+ const next=buildNextInvestmentDecision({rows:perf,roi:i.roi,roas:i.roas,ctr:i.ctr,convRate:i.conversionRate})||{};
+ const approved=rows.filter(x=>String(x.decision?.decision||'').toUpperCase().includes('APPROVE')).length;
+ const top=rows.slice().sort((a,b)=>(Number(b.decision?.score)||0)-(Number(a.decision?.score)||0))[0];
+ const verified=perf.filter(x=>String(x.metadata?.evidenceConfidence||x.source||'').toUpperCase().includes('VER')).length;
+ const quality=perf.length?(verified/perf.length*100):0;
+ const action=next.recommendation|| (top?`Prioritize ${top.creator.name}`:'Hold allocation pending stronger evidence');
+ const rationale=next.reason||snap.learning?.friction||'Use observed evidence and add another measurement before scaling.';
+ return {next,approved,top,verified,quality,action,rationale};
+}
+function pdfDecisionSummary(doc,ctx,snap){
+ const d=reportDecisionSignal(snap),i=snap.impact||{};
+ pdfSection(doc,ctx,'Executive decision summary','01 · decision-ready interpretation');
+ pdfNarrative(doc,ctx,'Recommended action',`${d.action}. ${d.rationale}`);
+ pdfRows(doc,ctx,['Signal','Observed','Decision use'],[
+  ['Evidence records',snap.perf.length,d.quality>=70?'Strong enough to use with normal controls':'Treat as directional; increase evidence quality before major allocation changes'],
+  ['Creators approved',d.approved||snap.decisionRows.length,d.top?`Highest observed fit: ${d.top.creator.name} (${Math.round(d.top.decision.score||0)}/100)`:'No clear creator leader yet'],
+  ['Revenue',i.revenue==null?'Not recorded':pdfFmt(i.revenue,'THB'),i.revenue==null?'Do not infer commercial return':'Observed commercial outcome'],
+  ['Spend',i.spend==null?'Not recorded':pdfFmt(i.spend,'THB'),i.spend==null?'Unit economics unavailable':'Compare against revenue / outcome'],
+  ['ROAS',i.roas==null?'Not calculable':pdfFmt(i.roas,'x'),i.roas==null?'Requires revenue + spend':'Use as observed efficiency signal'],
+  ['ROI',i.roi==null?'Not calculable':pdfFmt(i.roi,'%'),i.roi==null?'Requires revenue + spend':'Use as observed return signal'],
+  ['Evidence quality',`${Math.round(d.quality)}% verified`,d.quality>=70?'Higher-confidence operating evidence':'Add verified source records']
+ ],[42,52,74]);
+ if(d.next.threshold) pdfNarrative(doc,ctx,'Success threshold',d.next.threshold);
+ if(Array.isArray(d.next.tests)) d.next.tests.slice(0,3).forEach((x,n)=>pdfNarrative(doc,ctx,`Decision test ${n+1}`,x));
+}
+function pdfEvidenceQuality(doc,ctx,snap){
+ const i=snap.impact||{},p=snap.perf||[];
+ pdfSection(doc,ctx,'Evidence quality & limitations','06 · controls');
+ const verified=p.filter(x=>String(x.metadata?.evidenceConfidence||x.source||'').toUpperCase().includes('VER')).length;
+ const self=p.filter(x=>String(x.source||'').toUpperCase().includes('SELF')).length;
+ const estimated=p.filter(x=>String(x.source||'').toUpperCase().includes('EST')).length;
+ pdfRows(doc,ctx,['Control','Status','Why it matters'],[
+  ['Revenue evidence',i.hasRevenue?'AVAILABLE':'MISSING',i.hasRevenue?'Commercial conclusions can reference observed revenue':'Do not claim ROI / ROAS'],
+  ['Spend evidence',i.hasSpend?'AVAILABLE':'MISSING',i.hasSpend?'Efficiency can be calculated when paired with revenue':'Unit economics remain incomplete'],
+  ['Conversion evidence',i.hasConversionEvidence?'AVAILABLE':'MISSING',i.hasConversionEvidence?'Conversion outcomes are observable':'Do not overstate sales impact'],
+  ['Verified records',verified,verified?'Higher-trust source coverage':'Increase source verification'],
+  ['Self-reported records',self,self?'Useful but should be distinguished from verified evidence':'None recorded'],
+  ['Estimated records',estimated,estimated?'Directional only; avoid treating as actual':'None recorded'],
+  ['Click evidence',i.hasClickEvidence?'AVAILABLE':'MISSING',i.hasClickEvidence?'Traffic response can be assessed':'CTR / CVR may be unavailable']
+ ],[42,32,94]);
+ pdfNarrative(doc,ctx,'Use rule','KOL IDS exports preserve provenance. Decision makers should distinguish observed, self-reported, estimated and missing evidence before changing budget, creator selection or campaign strategy.');
+}
+
+/* Override report PDFs with decision-grade content while preserving the existing data model. */
+function downloadDecisionPDF(){
+ exportGateOr(()=>{
+  const snap=reportLiveSnapshot(),rows=snap.decisionRows||[];
+  if(!rows.length){toast('Run creator fit calculation first.','error');return}
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  const ctx=pdfEnterprise(doc,'Creator Decision Report','Decision-ready creator selection · evidence quality · deployment guidance');ctx.y=39;
+  const d=reportDecisionSignal(snap);
+  pdfMetricGrid(doc,ctx,[{label:'Creators evaluated',value:rows.length},{label:'Approved',value:d.approved},{label:'Average fit',value:(rows.reduce((a,x)=>a+(Number(x.decision.score)||0),0)/rows.length).toFixed(1)},{label:'Evidence quality',value:`${Math.round(d.quality)}% verified`}]);
+  pdfDecisionSummary(doc,ctx,snap);
+  pdfSection(doc,ctx,'Decision register','02 · portfolio view');
+  pdfRows(doc,ctx,['Creator','Decision','Fit','Audience','Content','Brand','Performance','Commercial','Risk','Confidence'],rows.map(({creator:r,decision:x})=>{const e=x.evidence||{};return [r.name,x.decision||'—',x.score==null?'—':Math.round(x.score),Math.round(e.audienceFit??50),Math.round(e.contentFit??50),Math.round(e.brandFit??50),Math.round(e.performance??0),Math.round(e.commercial??50),Math.round(e.risk??50),Math.round(e.confidence??0)]}),[30,24,13,13,13,13,14,14,11,15]);
+  pdfSection(doc,ctx,'Deployment guidance','03 · how to use the decision');
+  rows.slice().sort((a,b)=>(Number(b.decision.score)||0)-(Number(a.decision.score)||0)).forEach(({creator:r,decision:x})=>{
+    const e=x.evidence||{};
+    pdfNarrative(doc,ctx,r.name,`Decision: ${x.decision||'—'} · Fit ${x.score==null?'—':Math.round(x.score)}/100 · Confidence ${Math.round(e.confidence??0)}/100. Best use: ${e.ifSelected||creatorAdaptation(e)||'Use only within the stated campaign objective.'} Campaign move: ${e.campaignMove||creatorAdaptation(e)||'Validate with observed performance before scaling.'}`);
+  });
+  pdfEvidenceQuality(doc,ctx,snap);
+  doc.save(pdfSaveName('KOL-IDS_Creator-Decision',S.selectedCampaign?.name));
+ });
+}
+
+function downloadPerformancePDF(){
+ exportGateOr(()=>{
+  const snap=reportLiveSnapshot(),rows=snap.perf||[],campaign=snap.p||{};
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  const ctx=pdfEnterprise(doc,'Performance Evidence Report','Observed performance · source provenance · efficiency · operational interpretation');ctx.y=39;
+  const i=snap.impact||{},d=reportDecisionSignal(snap);
+  pdfMetricGrid(doc,ctx,[{label:'Records',value:rows.length},{label:'Revenue',value:i.revenue==null?'Not recorded':pdfFmt(i.revenue,'THB')},{label:'Spend',value:i.spend==null?'Not recorded':pdfFmt(i.spend,'THB')},{label:'ROAS',value:i.roas==null?'Not calculable':pdfFmt(i.roas,'x')}]);
+  pdfSection(doc,ctx,'Executive interpretation','01 · what the evidence means');
+  pdfNarrative(doc,ctx,'Operating conclusion',rows.length?`${d.action}. ${d.rationale}`:'No performance evidence is recorded yet; commercial and creator-performance conclusions remain unavailable.');
+  pdfRows(doc,ctx,['Metric','Observed','Interpretation'],[
+    ['Revenue',i.revenue==null?'Not recorded':pdfFmt(i.revenue,'THB'),i.revenue==null?'Missing evidence':'Observed revenue'],
+    ['Spend',i.spend==null?'Not recorded':pdfFmt(i.spend,'THB'),i.spend==null?'Missing evidence':'Observed spend'],
+    ['ROAS',i.roas==null?'Not calculable':pdfFmt(i.roas,'x'),i.roas==null?'Requires revenue + spend':'Observed revenue / spend'],
+    ['ROI',i.roi==null?'Not calculable':pdfFmt(i.roi,'%'),i.roi==null?'Requires revenue + spend':'Observed return after spend'],
+    ['CTR',i.ctr==null?'Not calculable':pdfFmt(i.ctr,'%'),i.ctr==null?'Needs impressions + clicks':'Traffic response'],
+    ['Engagement rate',i.engagementRate==null?'Not calculable':pdfFmt(i.engagementRate,'%'),i.engagementRate==null?'Needs impressions + engagement':'Audience response'],
+    ['Conversion rate',i.conversionRate==null?'Not calculable':pdfFmt(i.conversionRate,'%'),i.conversionRate==null?'Needs clicks + conversions':'Conversion efficiency']
+  ],[42,48,78]);
+  pdfSection(doc,ctx,'Evidence register','02 · all linked observations');
+  if(!rows.length) pdfNarrative(doc,ctx,'Status','No performance records were recorded for this campaign.');
+  else pdfRows(doc,ctx,['Creator','Type','Observed','Channel / Event','Source','Confidence','Outcome','Content / Code'],rows.map(x=>[S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator',String(x.metadata?.channelType||'PERFORMANCE'),x.observed_at||'—',x.metadata?.platform||x.metadata?.eventType||'—',x.source||'—',x.metadata?.evidenceConfidence||x.source||'—',x.actual_score==null?'Pending':`${Math.round(x.actual_score)}/100`,x.metadata?.contentId||x.metadata?.genCode||'—']),[31,20,18,28,19,20,18,22]);
+  pdfSection(doc,ctx,'Operational detail','03 · execution record');
+  rows.forEach((x,n)=>{
+    const m=x.metadata||{},type=String(m.channelType||'PERFORMANCE').toUpperCase();
+    pdfPageBreak(doc,ctx,32);
+    pdfNarrative(doc,ctx,`${n+1}. ${S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator'} · ${type}`,`Observed ${x.observed_at||'—'} · Source ${x.source||'—'} · Confidence ${m.evidenceConfidence||x.source||'—'} · Outcome ${x.actual_score==null?'Pending':Math.round(x.actual_score)+'/100'}.`);
+    let pairs=[];
+    if(type==='DIGITAL') pairs=[['Platform',m.platform],['Content / Post ID',m.contentId],['Spend',pdfFmt(x.spend_thb,'THB')],['Revenue',pdfFmt(x.revenue_thb,'THB')],['Reach',pdfFmt(x.reach)],['Impressions',pdfFmt(x.impressions)],['Views',pdfFmt(x.views)],['Likes',pdfFmt(x.likes)],['Comments',pdfFmt(x.comments)],['Shares',pdfFmt(x.shares)],['Saves',pdfFmt(m.saves)],['Clicks',pdfFmt(x.clicks)],['Landing sessions',pdfFmt(m.landingSessions)],['Leads',pdfFmt(m.leads)],['Conversions',pdfFmt(x.conversions)],['Engagement',pdfFmt(x.engagement)],['Content pieces',pdfFmt(m.contentPieces)]];
+    else if(type==='ECOMMERCE') pairs=[['Shop / platform',m.platform],['Spend / creator fee',pdfFmt(x.spend_thb,'THB')],['GMV',pdfFmt(m.gmv,'THB')],['Discounts',pdfFmt(m.discounts,'THB')],['Refunds',pdfFmt(m.refunds,'THB')],['Net sales',pdfFmt(m.netSales??x.revenue_thb,'THB')],['Orders',pdfFmt(m.orders)],['Paid orders',pdfFmt(m.paidOrders??x.conversions)],['Clicks / sessions',pdfFmt(x.clicks)],['New customers',pdfFmt(m.newCustomers)],['Commission rate',pdfFmt(m.commissionRate,'%')],['Commission amount',pdfFmt(m.commissionAmount,'THB')],['AOV',pdfFmt(m.aov,'THB')]];
+    else pairs=[['Event type',m.eventType],['Spend',pdfFmt(x.spend_thb,'THB')],['Revenue',pdfFmt(x.revenue_thb,'THB')],['Capacity',pdfFmt(m.capacity)],['Attendance',pdfFmt(m.attendance)],['Qualified leads',pdfFmt(m.qualifiedLeads)],['QR scans',pdfFmt(m.qrScans)],['Demos',pdfFmt(m.demos)],['Samples',pdfFmt(m.samples)],['Engagement',pdfFmt(x.engagement)],['Conversions',pdfFmt(x.conversions)],['Notes',m.notes]];
+    pdfRows(doc,ctx,['Metric','Observed value'],pairs,[58,122]);
+  });
+  pdfEvidenceQuality(doc,ctx,snap);
+  doc.save(pdfSaveName('KOL-IDS_Performance',S.selectedCampaign?.name));
+ });
+}
+
+function downloadImpactPDF(){
+ exportGateOr(()=>{
+  const snap=reportLiveSnapshot(),i=snap.impact||{},l=snap.learning||{};
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  const ctx=pdfEnterprise(doc,'Business Impact Report','Observed commercial outcomes · efficiency · learning · next investment decision');ctx.y=39;
+  const d=reportDecisionSignal(snap);
+  pdfMetricGrid(doc,ctx,[{label:'Impact score',value:i.score==null?'Not scored':Math.round(i.score)},{label:'Revenue',value:i.revenue==null?'Not recorded':pdfFmt(i.revenue,'THB')},{label:'Spend',value:i.spend==null?'Not recorded':pdfFmt(i.spend,'THB')},{label:'ROAS',value:i.roas==null?'Not calculable':pdfFmt(i.roas,'x')}]);
+  pdfDecisionSummary(doc,ctx,snap);
+  pdfSection(doc,ctx,'Business impact register','02 · observed outcome metrics');
+  pdfRows(doc,ctx,['Metric','Value','Decision interpretation'],[
+   ['Revenue',i.revenue==null?'Not recorded':pdfFmt(i.revenue,'THB'),i.revenue==null?'No commercial evidence':'Observed revenue'],
+   ['Spend',i.spend==null?'Not recorded':pdfFmt(i.spend,'THB'),i.spend==null?'No cost basis':'Observed spend'],
+   ['ROAS',i.roas==null?'Not calculable':pdfFmt(i.roas,'x'),i.roas==null?'Requires revenue + spend':'Efficiency signal'],
+   ['ROI',i.roi==null?'Not calculable':pdfFmt(i.roi,'%'),i.roi==null?'Requires revenue + spend':'Return signal'],
+   ['Conversions',i.conversions==null?'Not recorded':pdfFmt(i.conversions),'Observed conversions / paid orders'],
+   ['Reach',i.reach==null?'Not recorded':pdfFmt(i.reach),'Observed reach'],
+   ['Views',i.views==null?'Not recorded':pdfFmt(i.views),'Observed views'],
+   ['Clicks',i.clicks==null?'Not recorded':pdfFmt(i.clicks),'Observed clicks / sessions'],
+   ['Engagement',i.engagement==null?'Not recorded':pdfFmt(i.engagement),'Observed engagement'],
+   ['Attendance',i.attendance==null?'Not recorded':pdfFmt(i.attendance),'Observed event attendance'],
+   ['Qualified leads',i.leads==null?'Not recorded':pdfFmt(i.leads),'Observed lead volume']
+  ],[42,48,90]);
+  pdfSection(doc,ctx,'Learning & next action','03 · reusable operating intelligence');
+  pdfNarrative(doc,ctx,'What worked',l.worked||'No learning recorded yet.');
+  pdfNarrative(doc,ctx,'Friction',l.friction||'No friction recorded yet.');
+  pdfNarrative(doc,ctx,'Next hypothesis',l.hypothesis||'No hypothesis recorded yet.');
+  (l.nextActions||[]).slice(0,5).forEach((x,n)=>pdfNarrative(doc,ctx,`Next action ${n+1}`,x));
+  pdfEvidenceQuality(doc,ctx,snap);
+  doc.save(pdfSaveName('KOL-IDS_Business-Impact',S.selectedCampaign?.name));
+ });
+}
+
+function downloadFullPDF(){
+ exportGateOr(()=>{
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const snap=reportLiveSnapshot(),{p,perf,digital,ecommerce,offline,decisionRows,impact,learning}=snap;
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  const ctx=pdfEnterprise(doc,'Campaign Intelligence Report','Executive decision pack · evidence register · creator decisions · performance · business impact');ctx.y=39;
+  const d=reportDecisionSignal(snap);
+  pdfMetricGrid(doc,ctx,[{label:'Creators approved',value:decisionRows.length},{label:'Evidence records',value:perf.length},{label:'Revenue',value:impact.revenue==null?'Not recorded':pdfFmt(impact.revenue,'THB')},{label:'ROAS',value:impact.roas==null?'Not calculable':pdfFmt(impact.roas,'x')}]);
+  pdfDecisionSummary(doc,ctx,snap);
+  pdfSection(doc,ctx,'Campaign context','02 · campaign definition');
+  pdfRows(doc,ctx,['Field','Observed value'],[
+   ['Campaign',S.selectedCampaign?.name||'—'],['Status',S.selectedCampaign?.status||'—'],['Objective',(p.objectives||[]).join(' · ')||p.objective||p.goal||'—'],['Performance model',p.performanceType||'—'],['Budget',pdfFmt(p.budget,'THB')],['Market',p.market||'—'],['Start date',p.startDate||'—'],['End date',p.endDate||'—'],['Audience type',S.selectedAudience?.payload?.audienceType||'—'],['Audience persona',S.selectedAudience?.payload?.audiencePersona||'—']
+  ],[58,122]);
+  pdfSection(doc,ctx,'Creator decision register','03 · decision evidence');
+  if(!decisionRows.length) pdfNarrative(doc,ctx,'Status','No creator decision records were linked to this campaign.');
+  else pdfRows(doc,ctx,['Creator','Decision','Overall','Audience','Content','Brand','Performance','Commercial','Risk','Confidence'],decisionRows.map(({creator:r,decision:x})=>{const e=x.evidence||{};return [r.name,x.decision||'—',x.score==null?'—':Math.round(x.score),Math.round(e.audienceFit??50),Math.round(e.contentFit??50),Math.round(e.brandFit??50),Math.round(e.performance??0),Math.round(e.commercial??50),Math.round(e.risk??50),Math.round(e.confidence??0)]}),[30,24,13,13,13,13,14,13,11,15]);
+  pdfSection(doc,ctx,'Performance evidence','04 · all linked observations');
+  if(!perf.length) pdfNarrative(doc,ctx,'Status','No performance evidence was recorded yet.');
+  else pdfRows(doc,ctx,['Creator','Type','Observed','Source','Confidence','Outcome','Content / Code'],perf.map(x=>[S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator',String(x.metadata?.channelType||'PERFORMANCE'),x.observed_at||'—',x.source||'—',x.metadata?.evidenceConfidence||x.source||'—',x.actual_score==null?'Pending':`${Math.round(x.actual_score)}/100`,x.metadata?.contentId||x.metadata?.genCode||'—']),[34,22,20,22,23,20,37]);
+  pdfSection(doc,ctx,'Business impact','05 · observed commercial effect');
+  pdfRows(doc,ctx,['Metric','Value','Interpretation'],[
+   ['Revenue',impact.revenue==null?'Not recorded':pdfFmt(impact.revenue,'THB'),impact.revenue==null?'Evidence unavailable':'Observed revenue'],
+   ['Spend',impact.spend==null?'Not recorded':pdfFmt(impact.spend,'THB'),impact.spend==null?'Evidence unavailable':'Observed spend'],
+   ['ROAS',impact.roas==null?'Not calculable':pdfFmt(impact.roas,'x'),impact.roas==null?'Requires revenue + spend':'Revenue ÷ spend'],
+   ['ROI',impact.roi==null?'Not calculable':pdfFmt(impact.roi,'%'),impact.roi==null?'Requires revenue + spend':'Observed return'],
+   ['Conversions',impact.conversions==null?'Not recorded':pdfFmt(impact.conversions),'Observed conversion count'],
+   ['Reach',impact.reach==null?'Not recorded':pdfFmt(impact.reach),'Observed reach'],
+   ['Clicks',impact.clicks==null?'Not recorded':pdfFmt(impact.clicks),'Observed clicks / sessions'],
+   ['Engagement',impact.engagement==null?'Not recorded':pdfFmt(impact.engagement),'Observed engagement'],
+   ['Event attendance',impact.attendance==null?'Not recorded':pdfFmt(impact.attendance),'Observed attendance'],
+   ['Qualified leads',impact.leads==null?'Not recorded':pdfFmt(impact.leads),'Observed lead count']
+  ],[48,52,80]);
+  pdfSection(doc,ctx,'Learning & next investment','06 · institutional memory');
+  pdfNarrative(doc,ctx,'What worked',learning.worked);
+  pdfNarrative(doc,ctx,'Friction',learning.friction);
+  pdfNarrative(doc,ctx,'Next hypothesis',learning.hypothesis);
+  const nid=learning.nextInvestmentDecision||d.next||{};
+  if(nid.recommendation) pdfNarrative(doc,ctx,'Next investment decision',`${nid.recommendation} · Confidence ${nid.confidence||'—'} · ${nid.reason||''}`);
+  if(nid.threshold)pdfNarrative(doc,ctx,'Success threshold',nid.threshold);
+  (learning.nextActions||[]).slice(0,5).forEach((x,n)=>pdfNarrative(doc,ctx,`Next action ${n+1}`,x));
+  pdfEvidenceQuality(doc,ctx,snap);
+  pdfSection(doc,ctx,'Decision use note','07 · governance');
+  pdfNarrative(doc,ctx,'How to use this pack','Use the report to approve, hold, reallocate or test investment based on observed evidence. It is designed to support a decision, not to present an unsupported forecast. Where evidence is missing, the report explicitly marks the metric as unavailable rather than filling the gap with an assumption.');
+  doc.save(pdfSaveName('KOL-IDS_Full-Decision-Report',S.selectedCampaign?.name));
+ });
+}
+
+
+
+/* CSV EXPORTS · DECISION-GRADE V3 */
+function downloadDecisionCSV(){exportGateOr(()=>{
+ const snap=reportLiveSnapshot(),rows=snap.decisionRows||[],d=reportDecisionSignal(snap);
+ if(!rows.length){toast('Run creator fit calculation first.','error');return}
+ const headers=['Campaign','Campaign ID','Creator ID','Creator','Channel','Followers','ER','Decision','Overall Fit','Confidence','Audience Fit','Content Fit','Brand Fit','Performance Fit','Commercial Fit','Risk','Why','If Selected','Campaign Move','Decision Use','Evidence Quality'];
+ const out=rows.map(({creator:r,decision:x})=>{const e=x.evidence||{};const q=Number(e.confidence||0)>=70?'Higher':'Directional';return [S.selectedCampaign?.name,S.selectedCampaign?.id,r.id,r.name,r.payload?.channel,r.payload?.followers,r.payload?.engagementRate,x.decision,x.score,e.confidence,e.audienceFit,e.contentFit,e.brandFit,e.performance,e.commercial,e.risk,e.reason,e.ifSelected||creatorAdaptation(e),e.campaignMove||creatorAdaptation(e),String(x.decision||'').toUpperCase().includes('APPROVE')?'Eligible for deployment review':'Hold / review before deployment',q]});
+ downloadEnterpriseCSV(`KOL-IDS_Decision_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,out,'Decision readiness');toast('Decision CSV saved','good')
+})}
+function performanceExportRows(){
+ const snap=reportLiveSnapshot(),perf=snap.perf,creatorName=id=>S.creators.find(c=>String(c.id)===String(id))?.name||'Creator';
+ const headers=['Performance Type','Creator ID','Creator','Observed At','Source','Evidence Confidence','Status','Outcome Score','Gen Code','Attribution Window Days','Spend THB','Revenue THB','ROAS','ROI %','Platform','Reach','Impressions','Views','Likes','Comments','Shares','Saves','Clicks / Sessions','Landing Sessions','Leads','Conversions','Engagement','Engagement Rate %','CTR %','Conversion Rate %','Content Pieces','Orders','Paid Orders','GMV','Discounts','Refunds','Net Sales','New Customers','Commission Rate %','Commission Amount','AOV','Event Type','Capacity','Attendance','Qualified Leads','QR Scans','Demos','Samples','Event Engagement','Event Conversions','Outcome Notes','Decision Relevance'];
+ const rows=perf.map(x=>{
+   const m=x.metadata||{},t=String(m.channelType||'PERFORMANCE').toUpperCase(),sp=num(x.spend_thb),rev=num(x.revenue_thb),imp=num(x.impressions),eng=num(x.engagement),clicks=num(x.clicks),conv=num(x.conversions);
+   const net=m.netSales!=null?num(m.netSales):rev;
+   const roas=sp>0&&net!=null?net/sp:null,roi=sp>0&&net!=null?(net-sp)/sp*100:null,er=imp>0&&eng!=null?eng/imp*100:null,ctr=imp>0&&clicks!=null?clicks/imp*100:null,cvr=clicks>0&&conv!=null?conv/clicks*100:null;
+   const relevance=roas!=null?'Commercial efficiency available':(cvr!=null?'Conversion efficiency available':(er!=null||ctr!=null?'Engagement / traffic signal available':'Operational evidence only'));
+   return [t,x.creator_id,creatorName(x.creator_id),x.observed_at,x.source,m.evidenceConfidence||x.source,x.status,x.actual_score,m.genCode,m.attributionWindowDays,x.spend_thb,x.revenue_thb,roas,roi,m.platform,x.reach,x.impressions,x.views,x.likes,x.comments,x.shares,m.saves,x.clicks,m.landingSessions,m.leads,x.conversions,x.engagement,er,ctr,cvr,m.contentPieces,m.orders,m.paidOrders,m.gmv,m.discounts,m.refunds,m.netSales,m.newCustomers,m.commissionRate,m.commissionAmount,m.aov,m.eventType,m.capacity,m.attendance,m.qualifiedLeads,m.qrScans,m.demos,m.samples,m.engagement,x.conversions,m.notes,relevance];
+ });
+ return {headers,rows}
+}
+function downloadPerformanceCSV(){exportGateOr(()=>{const {headers,rows}=performanceExportRows();if(!rows.length){toast('No performance records to export yet.','error');return}downloadEnterpriseCSV(`KOL-IDS_Performance_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,rows,'Performance observations');toast('Performance CSV saved','good')})}
+function downloadImpactCSV(){exportGateOr(()=>{
+ const {snap}=reportContext(),i=snap.impact||{},d=reportDecisionSignal(snap);
+ const headers=['Campaign','Campaign ID','Metric','Value','Unit','Evidence Status','Decision Interpretation'];
+ const pairs=[['Impact score',i.score,'score','Observed outcome score'],['Revenue',i.revenue,'THB',i.hasRevenue?'AVAILABLE':'MISSING',i.hasRevenue?'Observed commercial output':'Do not infer commercial return'],['Spend',i.spend,'THB',i.hasSpend?'AVAILABLE':'MISSING',i.hasSpend?'Observed investment base':'Unit economics incomplete'],['ROAS',i.roas,'x',i.roas!=null?'CALCULABLE':'MISSING REVENUE OR SPEND',i.roas!=null?'Observed efficiency':'Requires revenue + spend'],['ROI',i.roi,'%',i.roi!=null?'CALCULABLE':'MISSING REVENUE OR SPEND',i.roi!=null?'Observed return':'Requires revenue + spend'],['Conversions',i.conversions,'count',i.hasConversionEvidence?'AVAILABLE':'MISSING',i.hasConversionEvidence?'Observed conversion outcome':'Do not overstate sales impact'],['Reach',i.reach,'count','AVAILABLE','Observed reach'],['Views',i.views,'count','AVAILABLE','Observed views'],['Clicks',i.clicks,'count',i.hasClickEvidence?'AVAILABLE':'MISSING',i.hasClickEvidence?'Observed traffic response':'CTR / CVR may be unavailable'],['Engagement',i.engagement,'count','AVAILABLE','Observed engagement'],['Event attendance',i.attendance,'count',i.attendance!=null?'AVAILABLE':'MISSING',i.attendance!=null?'Observed attendance':'No event evidence'],['Event leads',i.leads,'count',i.leads!=null?'AVAILABLE':'MISSING',i.leads!=null?'Observed qualified leads':'No event lead evidence'],['CTR',i.ctr,'%',i.ctr!=null?'CALCULABLE':'MISSING','Traffic efficiency'],['Engagement rate',i.engagementRate,'%',i.engagementRate!=null?'CALCULABLE':'MISSING','Audience response'],['Conversion rate',i.conversionRate,'%',i.conversionRate!=null?'CALCULABLE':'MISSING','Conversion efficiency']];
+ downloadEnterpriseCSV(`KOL-IDS_Business-Impact_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,pairs.map(x=>[S.selectedCampaign?.name,S.selectedCampaign?.id,...x]),'Business impact');toast(`Impact CSV saved · ${d.action}`,'good')
+})}
+
