@@ -1748,7 +1748,7 @@ function reportSvgLineChart(items, opts={}){
 function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- let offset=0,colors=['#17171b','#63cbd9','#b99b5f','#7b8790'];
+ let offset=0,colors=['#2454c7','#7f92e5','#b9c5ef','#d9e0f5'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -3204,6 +3204,119 @@ tbody tr:hover td{background:#fbfdfe}
   document.head.appendChild(s);
 })();
 
+
+
+/* REPORTS EDITORIAL GLASS / INSTITUTIONAL BLUE PASS · 20261006 */
+(function(){
+ const styleId='kol-ids-reports-editorial-glass-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  :root{
+    --editorial-blue:#2454c7;
+    --editorial-blue-2:#7f92e5;
+    --editorial-blue-soft:rgba(36,84,199,.075);
+    --editorial-ink:#171a1e;
+    --editorial-body:#3f474e;
+    --editorial-muted:#788189;
+    --editorial-line:rgba(32,42,52,.095);
+  }
+  /* Overall report: quiet paper, generous white space, restrained glass surfaces. */
+  .kol-report-page{
+    background:
+      radial-gradient(700px 300px at 92% 0%,rgba(125,146,229,.075),transparent 68%),
+      radial-gradient(620px 300px at 6% 8%,rgba(255,255,255,.95),transparent 72%),
+      linear-gradient(180deg,#f8f9fa 0%,#f3f5f6 100%)!important;
+  }
+  .kol-report-page>.hero{
+    background:rgba(255,255,255,.78)!important;
+    border:1px solid rgba(210,216,222,.82)!important;
+    border-radius:2px!important;
+    box-shadow:0 18px 55px rgba(27,34,42,.045)!important;
+    backdrop-filter:blur(10px)!important;
+    -webkit-backdrop-filter:blur(10px)!important;
+  }
+  .kol-report-page>.hero h2{font-size:35px!important;font-weight:760!important;letter-spacing:-.055em!important;color:var(--editorial-ink)!important}
+  .kol-report-page>.hero p{font-size:12px!important;line-height:1.75!important;color:#586169!important;max-width:720px!important}
+  .kol-report-page>.hero:after{width:48px!important;height:2px!important;background:var(--editorial-blue)!important;opacity:.8}
+
+  .kol-report-page>.card{
+    background:rgba(255,255,255,.78)!important;
+    border:1px solid rgba(214,220,225,.82)!important;
+    border-radius:2px!important;
+    box-shadow:0 16px 45px rgba(28,35,42,.035)!important;
+    backdrop-filter:blur(10px)!important;
+    -webkit-backdrop-filter:blur(10px)!important;
+  }
+  .kol-report-page>.card .section-head{margin-bottom:19px!important}
+  .kol-report-page>.card .section-head h2{font-size:18px!important;font-weight:760!important;color:var(--editorial-ink)!important;letter-spacing:-.025em!important}
+  .kol-report-page>.card .section-head .sub{font-size:10px!important;line-height:1.6!important;color:#737d84!important}
+  .kol-report-page>.card .metric{
+    background:rgba(255,255,255,.60)!important;
+    border:1px solid rgba(220,225,229,.85)!important;
+    border-radius:2px!important;
+    box-shadow:none!important;
+  }
+  .kol-report-page>.card .metric strong{font-size:29px!important;color:#15181c!important;font-weight:780!important}
+  .kol-report-page>.card .metric small{color:#7b858c!important}
+
+  /* Editorial chart cards: thin rules, blue ink, no heavy dashboard chrome. */
+  .report-chart-grid{gap:20px!important}
+  .report-chart-card{
+    border:1px solid rgba(218,223,227,.82)!important;
+    border-radius:2px!important;
+    background:rgba(255,255,255,.54)!important;
+    padding:22px 22px 18px!important;
+    box-shadow:none!important;
+  }
+  .report-chart-head{margin-bottom:11px!important;padding-bottom:11px!important;border-bottom:1px solid rgba(32,42,52,.07)!important}
+  .report-chart-head b{font-size:13px!important;font-weight:720!important;color:#171b20!important}
+  .report-chart-head span{font-size:9px!important;color:#8b949a!important}
+  .rchart-title{font-size:9px!important;fill:#7e878e!important;font-weight:650!important}
+  .rchart-value{font-size:10px!important;fill:#1e2429!important;font-weight:760!important}
+  .rchart-label{font-size:9px!important;fill:#7b858c!important}
+  .rchart-label-strong{font-size:10px!important;fill:#4a545c!important;font-weight:650!important}
+  .rchart-axis{font-size:8px!important;fill:#a0a8ad!important}
+  .rchart-legend{font-size:9px!important;fill:#707a82!important}
+  .rchart-gridline{stroke:rgba(65,76,86,.105)!important;stroke-width:.55!important}
+  .rchart-bar{fill:#2454c7!important;opacity:.92!important}
+  .rchart-line-a{stroke:#2454c7!important;stroke-width:1.45!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
+  .rchart-line-b{stroke:#8a9ae2!important;stroke-width:1.15!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
+  .rchart-dot-a{fill:#2454c7!important}
+  .rchart-dot-b{fill:#8a9ae2!important}
+  .report-chart-empty{height:230px!important;border:1px dashed rgba(170,179,186,.45)!important;background:rgba(255,255,255,.42)!important;color:#8a9399!important}
+
+  /* Thin, quiet donut. The actual segment colors are defined in JS. */
+  .report-donut-wrap{min-height:238px!important;gap:34px!important}
+  .report-donut{width:164px!important;height:164px!important;flex-basis:164px!important;box-shadow:none!important}
+  .report-donut>div{width:134px!important;height:134px!important;background:rgba(255,255,255,.90)!important}
+  .report-donut strong{font-size:24px!important;font-weight:780!important;color:#171b20!important}
+  .report-donut span{font-size:8px!important;color:#899298!important;letter-spacing:.12em!important}
+  .report-legend{gap:13px!important;min-width:180px!important}
+  .report-legend>div{font-size:10px!important;grid-template-columns:7px 1fr auto!important;gap:9px!important}
+  .report-legend i{width:7px!important;height:7px!important;border-radius:50%!important}
+  .report-legend span{color:#68737b!important}
+  .report-legend b{font-size:10px!important;color:#1b2025!important;font-weight:740!important}
+
+  /* Evidence and tables should read like an annual report, not a control panel. */
+  .evidence-status-grid{gap:8px!important}
+  .evidence-status{padding:14px!important;border:1px solid rgba(216,222,226,.85)!important;background:rgba(255,255,255,.50)!important;border-radius:2px!important;box-shadow:none!important}
+  .evidence-status.is-present{border-color:rgba(36,84,199,.18)!important;background:rgba(36,84,199,.035)!important}
+  .evidence-status.is-present b{color:#2454c7!important}
+  .evidence-status.is-missing{background:rgba(255,255,255,.34)!important}
+  .evidence-status b{font-size:8px!important;letter-spacing:.12em!important}
+  .evidence-status span{font-size:10px!important;color:#5e6971!important}
+  .kol-report-page .table-wrap{background:rgba(255,255,255,.58)!important;border:1px solid rgba(214,220,225,.82)!important;border-radius:2px!important;box-shadow:none!important}
+  .kol-report-page table{background:transparent!important}
+  .kol-report-page th{background:rgba(246,248,249,.76)!important;color:#7c858c!important;border-bottom:1px solid rgba(32,42,52,.075)!important}
+  .kol-report-page td{color:#3c454c!important;border-bottom:1px solid rgba(32,42,52,.055)!important}
+  .kol-report-page .pill{border-radius:2px!important;background:rgba(36,84,199,.065)!important;color:#3158a4!important}
+
+  @media(max-width:900px){
+    .kol-report-page>.hero,.kol-report-page>.card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  }
+ `;
+ document.head.appendChild(s);
+})();
 
 /* REPORTS LUXURY ENTERPRISE REFINEMENT · 20261006 */
 (function(){
