@@ -1303,7 +1303,19 @@ function downloadCreatorFitPDF(){
  doc.save('Save PDF.pdf');
  toast('Creator Fit PDF saved.','good');
 }
-function downloadDecisionPDF(){const rows=latestDecisionRows();const selectedIds=new Set([...document.querySelectorAll('[data-select-creator]:checked')].map(x=>x.dataset.selectCreator));const selected=selectedIds.size?rows.filter(x=>selectedIds.has(x.creator.id)):rows;if(!selected.length){toast('Run creator fit calculation first.','error');return}if(!window.jspdf?.jsPDF){window.print();return}const doc=new window.jspdf.jsPDF();doc.setFontSize(18);doc.text('KOL IDS · Creator Decision Report',14,18);doc.setFontSize(9);doc.text(`Campaign: ${S.selectedCampaign?.name||'·'}`,14,27);let y=38;selected.forEach(({creator:r,decision:d})=>{const e=d.evidence||{};if(y>265){doc.addPage();y=18}doc.setFontSize(12);doc.text(r.name,14,y);doc.setFontSize(9);y+=7;doc.text(`Overall: ${d.score==null?'·':Math.round(d.score)} | Decision: ${d.decision||'·'} | Confidence: ${Math.round(e.confidence??0)}`,14,y);y+=6;doc.text(`Audience Fit ${Math.round(e.audienceFit??50)} | Content Fit ${Math.round(e.contentFit??50)} | Brand Alignment ${Math.round(e.brandFit??50)}`,14,y);y+=6;doc.text(`Performance Evidence ${Math.round(e.performance??0)} | Risk ${Math.round(e.risk??50)}`,14,y);y+=6;const reason=doc.splitTextToSize(e.reason||e.method||creatorAdaptation(e),180);doc.text(reason,14,y);y+=reason.length*5+8});doc.save(`KOL-IDS-Creator-Decision-${String(S.selectedCampaign?.name||'Report').replace(/[^A-Za-z0-9-_]+/g,'-')}.pdf`)}
+function downloadDecisionPDF(){
+ exportGateOr(()=>{
+  const rows=latestDecisionRows();const selectedIds=new Set([...document.querySelectorAll('[data-select-creator]:checked')].map(x=>x.dataset.selectCreator));const selected=selectedIds.size?rows.filter(x=>selectedIds.has(x.creator.id)):rows;
+  if(!selected.length){toast('Run creator fit calculation first.','error');return}if(!window.jspdf?.jsPDF){window.print();return}
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});const ctx=pdfEnterprise(doc,'Creator Decision Report','Decision evidence · fit signals · confidence · recommended campaign move');ctx.y=39;
+  pdfMetricGrid(doc,ctx,[{label:'Creators evaluated',value:selected.length},{label:'Approved',value:selected.filter(x=>String(x.decision.decision||'').toUpperCase().includes('APPROVE')).length},{label:'Average fit',value:(selected.reduce((a,x)=>a+(Number(x.decision.score)||0),0)/selected.length).toFixed(1)},{label:'Evidence confidence',value:`${Math.round(selected.reduce((a,x)=>a+(Number(x.decision.evidence?.confidence)||0),0)/selected.length)}`}]);
+  pdfSection(doc,ctx,'Decision register','01 · portfolio view');
+  pdfRows(doc,ctx,['Creator','Decision','Fit','Audience','Content','Brand','Performance','Commercial','Risk','Confidence'],selected.map(({creator:r,decision:d})=>{const e=d.evidence||{};return [r.name,d.decision||'—',d.score==null?'—':Math.round(d.score),Math.round(e.audienceFit??50),Math.round(e.contentFit??50),Math.round(e.brandFit??50),Math.round(e.performance??0),Math.round(e.commercial??50),Math.round(e.risk??50),Math.round(e.confidence??0)]}),[31,23,12,13,13,13,14,14,11,15]);
+  pdfSection(doc,ctx,'Decision rationale','02 · evidence notes');
+  selected.forEach(({creator:r,decision:d})=>{const e=d.evidence||{};pdfNarrative(doc,ctx,r.name,`${d.decision||'—'} · Fit ${d.score==null?'—':Math.round(d.score)}/100 · Confidence ${Math.round(e.confidence??0)}/100 · ${e.reason||e.method||creatorAdaptation(e)||'No rationale recorded.'}`);});
+  doc.save(pdfSaveName('KOL-IDS_Creator-Decision',S.selectedCampaign?.name));
+ });
+}
 function validatePerformancePayload(payload){
  const errs=[];
  for(const k of ['spend_thb','revenue_thb','reach','impressions','views','likes','comments','shares','clicks','conversions','engagement']){const v=num(payload?.[k]);if(v!=null&&v<0)errs.push(`negative_${k}`)}
@@ -1424,34 +1436,57 @@ function cancelPerformanceEdit(){S.performanceEditTarget=null;document.getElemen
 async function removePerformanceRecord(id){const row=S.performance.find(x=>String(x.id)===String(id));if(!row)return;if(!confirm('Remove this performance record? This also recalculates prediction evidence linked to this creator.'))return;try{const data=await intelligenceCall('delete_performance',{id:row.id,creator_id:row.creator_id});if(!data?.success)throw new Error(data?.error||'Could not remove performance record');S.performance=S.performance.filter(x=>String(x.id)!==String(id));S.predictions=S.predictions.filter(x=>!(String(x.campaign_id)===String(S.selectedCampaign.id)&&String(x.creator_id)===String(row.creator_id)));await refresh();if(String(S.performanceEditTarget?.id)===String(id))S.performanceEditTarget=null;toast('Performance record removed and evidence recalculated','good');renderPage()}catch(err){toast(err.message||'Could not remove performance record','error')}}
 function bindPerformanceRecordActions(){document.querySelectorAll('[data-edit-performance]').forEach(b=>b.onclick=()=>editPerformanceRecord(b.dataset.editPerformance));document.querySelectorAll('[data-remove-performance]').forEach(b=>b.onclick=()=>removePerformanceRecord(b.dataset.removePerformance))}
 async function savePerformance(e,type){e.preventDefault();if(!S.selectedCampaign)return;const ids=Array.isArray(S.selectedCampaign.payload?.selectedCreatorIds)?S.selectedCampaign.payload.selectedCreatorIds:[];if(!ids.length){toast('Select creators first','error');return}const prefix=type==='DIGITAL'?'dp':type==='ECOMMERCE'?'ec':'op',creator=document.getElementById(`${prefix}-creator`).value,date=document.getElementById(`${prefix}-date`).value;if(!date){toast('Observed at is required','error');return}let payload={creator_id:creator,observed_at:date,source:document.getElementById(`${prefix}-source`).value,campaign_id:S.selectedCampaign.id,goal:String(S.selectedCampaign.payload?.objective||S.selectedCampaign.payload?.goal||'AWARENESS').toUpperCase(),metadata:{channelType:type,genCode:document.getElementById(`${prefix}-gen-code`)?.value||'',genCodeId:campaignGenCodeForCreator(creator)?.id||'',attributionWindowDays:campaignGenCodeForCreator(creator)?.attributionWindowDays??null}};if(type==='DIGITAL'){Object.assign(payload,{spend_thb:num(document.getElementById('dp-spend').value),reach:num(document.getElementById('dp-reach').value),impressions:num(document.getElementById('dp-impressions').value),views:num(document.getElementById('dp-views').value),likes:num(document.getElementById('dp-likes').value),comments:num(document.getElementById('dp-comments').value),shares:num(document.getElementById('dp-shares').value),clicks:num(document.getElementById('dp-clicks').value),conversions:num(document.getElementById('dp-conversions').value),revenue_thb:num(document.getElementById('dp-revenue').value),engagement:(()=>{const ev=[num(document.getElementById('dp-likes').value),num(document.getElementById('dp-comments').value),num(document.getElementById('dp-shares').value),num(document.getElementById('dp-saves').value)];return ev.some(v=>v!=null)?ev.reduce((a,v)=>a+(v??0),0):null})(),metadata:{channelType:type,genCode:document.getElementById('dp-gen-code').value||'',genCodeId:campaignGenCodeForCreator(creator)?.id||'',attributionWindowDays:campaignGenCodeForCreator(creator)?.attributionWindowDays??null,platform:document.getElementById('dp-platform').value,saves:num(document.getElementById('dp-saves').value),landingSessions:num(document.getElementById('dp-sessions').value),leads:num(document.getElementById('dp-leads').value),contentPieces:num(document.getElementById('dp-content-pieces').value)}})}else if(type==='ECOMMERCE'){const gmv=num(document.getElementById('ec-gmv').value),discounts=num(document.getElementById('ec-discounts').value),refunds=num(document.getElementById('ec-refunds').value),netRaw=num(document.getElementById('ec-net-sales').value),net=netRaw!=null?netRaw:(gmv!=null?Math.max(0,gmv-(discounts??0)-(refunds??0)):null),paid=num(document.getElementById('ec-paid-orders').value),orders=num(document.getElementById('ec-orders').value),clicks=num(document.getElementById('ec-clicks').value),commissionRate=num(document.getElementById('ec-commission').value),commissionRaw=num(document.getElementById('ec-commission-amount').value),commission=commissionRaw!=null?commissionRaw:(net!=null&&commissionRate!=null?net*commissionRate/100:null);Object.assign(payload,{spend_thb:num(document.getElementById('ec-spend').value),revenue_thb:net,clicks,conversions:paid,engagement:null,metadata:{channelType:type,genCode:document.getElementById('ec-gen-code').value||'',genCodeId:campaignGenCodeForCreator(creator)?.id||'',attributionWindowDays:campaignGenCodeForCreator(creator)?.attributionWindowDays??null,platform:document.getElementById('ec-platform').value,orders,paidOrders:paid,gmv,discounts,refunds,netSales:net,newCustomers:num(document.getElementById('ec-new-customers').value),commissionRate,commissionAmount:commission,aov:paid!=null&&paid>0&&net!=null?net/paid:null}})}else{Object.assign(payload,{spend_thb:num(document.getElementById('op-spend').value),revenue_thb:num(document.getElementById('op-revenue').value),conversions:num(document.getElementById('op-conversions').value),engagement:num(document.getElementById('op-engagement').value),metadata:{channelType:type,genCode:document.getElementById('op-gen-code').value||'',genCodeId:campaignGenCodeForCreator(creator)?.id||'',attributionWindowDays:campaignGenCodeForCreator(creator)?.attributionWindowDays??null,eventType:document.getElementById('op-event-type').value,capacity:num(document.getElementById('op-capacity').value),attendance:num(document.getElementById('op-attendance').value),qualifiedLeads:num(document.getElementById('op-leads').value),qrScans:num(document.getElementById('op-scans').value),demos:num(document.getElementById('op-demos').value),samples:num(document.getElementById('op-samples').value),notes:document.getElementById('op-notes').value.trim()}})}payload.metadata=payload.metadata||{};payload.metadata.evidenceConfidence=document.getElementById(`${prefix}-confidence`)?.value||'REPORTED';if(type==='DIGITAL')payload.metadata.contentId=document.getElementById('dp-content-id')?.value.trim()||null;try{let data;const validationErrors=validatePerformancePayload(payload);if(validationErrors.length){throw new Error(`Evidence rejected: ${validationErrors.join(', ')}`)}if(S.performanceEditTarget?.id){const id=S.performanceEditTarget.id;data=await intelligenceCall('update_performance',{id,...payload});S.performanceEditTarget=null;toast(`Performance updated · outcome ${data.actualScore==null?'pending':Math.round(data.actualScore)}`,'good')}else{try{data=await intelligenceCall('record_performance',payload)}catch(remoteErr){data=await savePerformanceDirectFallback(payload);toast('Edge Function unavailable · performance saved with direct database fallback.','good')}toast(`Performance saved · outcome ${data.actualScore==null?'pending':Math.round(data.actualScore)}`,'good')}await refresh();renderPage()}catch(err){toast(err.message||'Evidence rejected','error')}}
+
+/* ENTERPRISE EXPORT SYSTEM · 20261006 */
+function pdfSafeText(v){return v==null||v===''?'—':String(v)}
+function pdfFmt(v,unit=''){if(v==null||v==='')return '—';const n=Number(v);if(Number.isFinite(n)){if(unit==='%')return `${n.toLocaleString('en-US',{maximumFractionDigits:2})}%`;if(unit==='x')return `${n.toLocaleString('en-US',{maximumFractionDigits:2})}x`;if(unit==='THB')return `THB ${n.toLocaleString('en-US',{maximumFractionDigits:2})}`;return n.toLocaleString('en-US',{maximumFractionDigits:2})}return String(v)}
+function pdfEnterprise(doc,title,subtitle=''){
+ const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+ const header=()=>{doc.setDrawColor(225,229,232);doc.setLineWidth(.22);doc.line(14,12,W-14,12);doc.setTextColor(25,29,33);doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text('KOL IDS™',14,9);doc.setFont('helvetica','normal');doc.setTextColor(105,112,118);doc.text('INVESTMENT DECISION INTELLIGENCE',W-14,9,{align:'right'});};
+ const footer=()=>{doc.setDrawColor(230,233,235);doc.setLineWidth(.18);doc.line(14,H-13,W-14,H-13);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(120,126,132);doc.text('Confidential · Enterprise report · Evidence-led analysis',14,H-8);doc.text(`Page ${doc.internal.getNumberOfPages()}`,W-14,H-8,{align:'right'});};
+ header(); footer();
+ doc.setTextColor(24,28,32);doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text(title,14,24);if(subtitle){doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(105,112,118);doc.text(subtitle,14,30)}
+ return {W,H,header,footer};
+}
+function pdfPageBreak(doc,ctx,needed=18){const H=doc.internal.pageSize.getHeight();if(ctx.y+needed>H-20){doc.addPage();ctx.header();ctx.footer();ctx.y=22;return true}return false}
+function pdfSection(doc,ctx,title,kicker=''){
+ pdfPageBreak(doc,ctx,18);ctx.y+=5;doc.setTextColor(120,126,132);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text(String(kicker||'SECTION').toUpperCase(),14,ctx.y);ctx.y+=6;doc.setTextColor(25,29,33);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(title,14,ctx.y);ctx.y+=7;doc.setDrawColor(215,220,223);doc.setLineWidth(.18);doc.line(14,ctx.y,ctx.W-14,ctx.y);ctx.y+=6;
+}
+function pdfMetricGrid(doc,ctx,items){const gap=4;const w=(ctx.W-28-gap*3)/4;let x=14;const h=20;items.forEach((it,i)=>{if(i&&i%4===0){ctx.y+=h+4;x=14}if(pdfPageBreak(doc,ctx,h+2))x=14;doc.setDrawColor(226,230,232);doc.setLineWidth(.2);doc.roundedRect(x,ctx.y,w,h,2,2,'S');doc.setFont('helvetica','normal');doc.setTextColor(115,121,127);doc.setFontSize(6.8);doc.text(String(it.label||'').toUpperCase(),x+4,ctx.y+6);doc.setFont('helvetica','bold');doc.setTextColor(24,28,32);doc.setFontSize(11);doc.text(pdfSafeText(it.value),x+4,ctx.y+14);x+=w+gap});ctx.y+=h+6}
+function pdfRows(doc,ctx,headers,rows,widths){
+ const startX=14;const totalW=ctx.W-28;const ws=widths||headers.map(()=>totalW/headers.length);const lineH=5.2;const headH=8;
+ const drawHead=()=>{doc.setFillColor(247,248,249);doc.setDrawColor(224,228,230);doc.setLineWidth(.18);let x=startX;headers.forEach((h,i)=>{doc.rect(x,ctx.y,ws[i],headH,'FD');doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(70,77,83);const lines=doc.splitTextToSize(pdfSafeText(h),ws[i]-4);doc.text(lines.slice(0,2),x+2,ctx.y+4);x+=ws[i]});ctx.y+=headH};
+ drawHead();rows.forEach(row=>{const cells=row.map((v,i)=>doc.splitTextToSize(pdfSafeText(v),ws[i]-4).slice(0,3));const rh=Math.max(7,...cells.map(a=>a.length*lineH+2));if(ctx.y+rh>ctx.H-20){doc.addPage();ctx.header();ctx.footer();ctx.y=22;drawHead()}let x=startX;row.forEach((v,i)=>{doc.setDrawColor(235,237,239);doc.setLineWidth(.15);doc.rect(x,ctx.y,ws[i],rh,'S');doc.setFont('helvetica',i===0?'bold':'normal');doc.setFontSize(6.5);doc.setTextColor(38,43,48);doc.text(cells[i],x+2,ctx.y+4);x+=ws[i]});ctx.y+=rh});ctx.y+=5;
+}
+function pdfNarrative(doc,ctx,label,text){pdfPageBreak(doc,ctx,20);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(103,110,116);doc.text(String(label).toUpperCase(),14,ctx.y);ctx.y+=5;doc.setFont('helvetica','normal');doc.setFontSize(8.2);doc.setTextColor(43,48,53);const lines=doc.splitTextToSize(pdfSafeText(text),ctx.W-28);doc.text(lines,14,ctx.y);ctx.y+=Math.max(8,lines.length*4.2+4)}
+function pdfSaveName(prefix,name){return `${prefix}_${csvSafeName(name)}_${csvDateStamp()}.pdf`}
+
 function downloadPerformancePDF(){
- if(!window.jspdf?.jsPDF){window.print();return}
- const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
- const rows=S.performance.filter(x=>x.campaign_id===S.selectedCampaign?.id);
- const campaign=S.selectedCampaign?.payload||{};
- const creatorName=id=>S.creators.find(c=>String(c.id)===String(id))?.name||'Creator';
- let y=18;
- const page=()=>{if(y>270){doc.addPage();y=18}};
- const line=(label,value)=>{page();doc.setFontSize(9);const text=`${label}: ${value==null||value===''?'·':value}`;const lines=doc.splitTextToSize(text,180);doc.text(lines,14,y);y+=Math.max(5,lines.length*4.5)};
- const section=(title)=>{page();y+=3;doc.setFontSize(12);doc.text(title,14,y);y+=7};
- doc.setFontSize(18);doc.text('KOL IDS · Performance Report',14,y);y+=8;
- doc.setFontSize(9);doc.text(`Campaign: ${S.selectedCampaign?.name||'·'}`,14,y);y+=5;
- line('Objective',campaign.objective||campaign.goal);line('Performance model',campaign.performanceType);
- section('Campaign-linked performance records');
- if(!rows.length){line('Status','No performance records recorded yet.')} else rows.forEach((x,i)=>{
-   page(); doc.setFontSize(11); doc.text(`${i+1}. ${creatorName(x.creator_id)} · ${String(x.metadata?.channelType||'PERFORMANCE')}`,14,y); y+=6;
-   line('Observed at',x.observed_at);line('Source',x.source);line('Evidence confidence',x.metadata?.evidenceConfidence||x.source);line('Content / Post ID',x.metadata?.contentId);line('Status',x.status);line('Gen Code',x.metadata?.genCode);
-   const type=String(x.metadata?.channelType||'DIGITAL').toUpperCase();
-   if(type==='DIGITAL'){
-     line('Platform / channel',x.metadata?.platform);line('Spend (THB)',x.spend_thb);line('Revenue (THB)',x.revenue_thb);line('Reach',x.reach);line('Impressions',x.impressions);line('Views',x.views);line('Likes',x.likes);line('Comments',x.comments);line('Shares',x.shares);line('Saves',x.metadata?.saves);line('Clicks',x.clicks);line('Landing sessions',x.metadata?.landingSessions);line('Leads',x.metadata?.leads);line('Conversions',x.conversions);line('Engagement',x.engagement);line('Content pieces',x.metadata?.contentPieces);
-   } else if(type==='ECOMMERCE'){
-     line('Shop / platform',x.metadata?.platform);line('Spend / creator fee (THB)',x.spend_thb);line('GMV',x.metadata?.gmv);line('Discounts',x.metadata?.discounts);line('Refunds',x.metadata?.refunds);line('Net sales',x.metadata?.netSales??x.revenue_thb);line('Orders',x.metadata?.orders);line('Paid orders',x.metadata?.paidOrders??x.conversions);line('Clicks / sessions',x.clicks);line('New customers',x.metadata?.newCustomers);line('Commission rate',x.metadata?.commissionRate==null?null:`${x.metadata.commissionRate}%`);line('Commission amount',x.metadata?.commissionAmount);line('AOV',x.metadata?.aov);
-   } else {
-     line('Event type',x.metadata?.eventType);line('Spend (THB)',x.spend_thb);line('Revenue (THB)',x.revenue_thb);line('Attendance',x.metadata?.attendance);line('Event capacity',x.metadata?.capacity);line('Qualified leads',x.metadata?.qualifiedLeads);line('QR scans / tracked visits',x.metadata?.qrScans);line('Product demos / trials',x.metadata?.demos);line('Samples / redemptions',x.metadata?.samples);line('Engagement actions',x.engagement);line('Conversions / purchases',x.conversions);line('Outcome notes',x.metadata?.notes);
-   }
-   line('Calculated outcome score',x.actual_score);
+ exportGateOr(()=>{
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});const ctx=pdfEnterprise(doc,'Performance Evidence Report','Campaign-linked observations · source transparency · operational metrics');ctx.y=39;
+  const rows=S.performance.filter(x=>x.campaign_id===S.selectedCampaign?.id),campaign=S.selectedCampaign?.payload||{};
+  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
+  pdfMetricGrid(doc,ctx,[{label:'Records',value:rows.length},{label:'Digital',value:rows.filter(x=>String(x.metadata?.channelType).toUpperCase()==='DIGITAL').length},{label:'E-commerce',value:rows.filter(x=>String(x.metadata?.channelType).toUpperCase()==='ECOMMERCE').length},{label:'Offline / Event',value:rows.filter(x=>String(x.metadata?.channelType).toUpperCase()==='OFFLINE').length}]);
+  pdfNarrative(doc,ctx,'Campaign',`${S.selectedCampaign?.name||'—'} · ${campaign.objective||campaign.goal||'Objective not specified'} · Performance model: ${campaign.performanceType||'—'}`);
+  pdfSection(doc,ctx,'Evidence register','01 · observed data');
+  if(!rows.length){pdfNarrative(doc,ctx,'Status','No performance records were recorded for this campaign.');}
+  else {
+   const table=rows.map(x=>[creatorName(x.creator_id),String(x.metadata?.channelType||'PERFORMANCE'),x.observed_at||'—',x.metadata?.platform||x.metadata?.eventType||'—',x.source||'—',x.metadata?.evidenceConfidence||x.source||'—',x.actual_score==null?'Pending':`${Math.round(x.actual_score)}/100`,x.metadata?.contentId||x.metadata?.genCode||'—']);
+   pdfRows(doc,ctx,['Creator','Type','Observed','Channel / Event','Source','Confidence','Outcome','Content / Code'],table,[31,20,18,28,19,20,18,22]);
+  }
+  pdfSection(doc,ctx,'Metric detail','02 · complete evidence');
+  rows.forEach((x,i)=>{
+   const m=x.metadata||{},type=String(m.channelType||'PERFORMANCE').toUpperCase();
+   pdfPageBreak(doc,ctx,38);doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(25,29,33);doc.text(`${i+1}. ${creatorName(x.creator_id)} · ${type}`,14,ctx.y);ctx.y+=7;
+   let pairs=[];
+   if(type==='DIGITAL') pairs=[['Platform',m.platform],['Content / Post ID',m.contentId],['Spend',pdfFmt(x.spend_thb,'THB')],['Revenue',pdfFmt(x.revenue_thb,'THB')],['Reach',pdfFmt(x.reach)],['Impressions',pdfFmt(x.impressions)],['Views',pdfFmt(x.views)],['Likes',pdfFmt(x.likes)],['Comments',pdfFmt(x.comments)],['Shares',pdfFmt(x.shares)],['Saves',pdfFmt(m.saves)],['Clicks',pdfFmt(x.clicks)],['Landing sessions',pdfFmt(m.landingSessions)],['Leads',pdfFmt(m.leads)],['Conversions',pdfFmt(x.conversions)],['Engagement',pdfFmt(x.engagement)],['Content pieces',pdfFmt(m.contentPieces)]];
+   else if(type==='ECOMMERCE') pairs=[['Shop / platform',m.platform],['Spend / creator fee',pdfFmt(x.spend_thb,'THB')],['GMV',pdfFmt(m.gmv,'THB')],['Discounts',pdfFmt(m.discounts,'THB')],['Refunds',pdfFmt(m.refunds,'THB')],['Net sales',pdfFmt(m.netSales??x.revenue_thb,'THB')],['Orders',pdfFmt(m.orders)],['Paid orders',pdfFmt(m.paidOrders??x.conversions)],['Clicks / sessions',pdfFmt(x.clicks)],['New customers',pdfFmt(m.newCustomers)],['Commission rate',pdfFmt(m.commissionRate,'%')],['Commission amount',pdfFmt(m.commissionAmount,'THB')],['AOV',pdfFmt(m.aov,'THB')]];
+   else pairs=[['Event type',m.eventType],['Spend',pdfFmt(x.spend_thb,'THB')],['Revenue',pdfFmt(x.revenue_thb,'THB')],['Capacity',pdfFmt(m.capacity)],['Attendance',pdfFmt(m.attendance)],['Qualified leads',pdfFmt(m.qualifiedLeads)],['QR scans',pdfFmt(m.qrScans)],['Demos',pdfFmt(m.demos)],['Samples',pdfFmt(m.samples)],['Engagement',pdfFmt(x.engagement)],['Conversions',pdfFmt(x.conversions)],['Notes',m.notes]];
+   pdfRows(doc,ctx,['Metric','Observed value'],pairs,[58,122]);
+  });
+  doc.save(pdfSaveName('KOL-IDS_Performance',S.selectedCampaign?.name));
  });
- doc.save('KOL-IDS-Performance-Report.pdf');
 }
 function buildLinkedLearning({campaignPayload={},audience,decisionRows=[],digital=[],ecommerce=[],offline=[],rows=[],revenue=0,spend=0,conv=0,reach=0,views=0,clicks=0,eng=0,attendance=0,leads=0,roi=null,roas=null,ctr=null,engRate=null,convRate=null}){
  const fmt=n=>Number(n||0).toLocaleString('en-US');
@@ -1521,7 +1556,31 @@ function renderBusinessImpactPage(c){const fmt=n=>n==null?'Not recorded':Number(
  <div class="bottom-actions"><button class="btn" id="impact-csv">Export impact CSV</button><button class="btn primary" id="continue-report">Continue → Reports</button></div></div>`;
  document.getElementById('regenerate-linked-learning')?.addEventListener('click',()=>{document.getElementById('learn-worked').value=linkedLearning.worked;document.getElementById('learn-friction').value=linkedLearning.friction;document.getElementById('learn-hypothesis').value=linkedLearning.hypothesis;toast('Learning refreshed from linked campaign evidence','good')});
  document.getElementById('learning-form').onsubmit=async e=>{e.preventDefault();const next={...(S.selectedCampaign.payload||{}),impactObjective:p.objective||p.goal||'',impactNotes:document.getElementById('learn-friction').value.trim(),learning:{worked:document.getElementById('learn-worked').value.trim(),friction:document.getElementById('learn-friction').value.trim(),hypothesis:document.getElementById('learn-hypothesis').value.trim(),nextActions:recs,nextInvestmentDecision:nextDecision,sources:linkedLearning.sources,investmentMemoryAtSave:{completedCampaigns:investmentMemory.completed,avgRoas:investmentMemory.avgRoas,avgRoi:investmentMemory.avgRoi},generatedAt:new Date().toISOString()},businessImpact:{score:impactScore,revenue,spend,roi,roas,conversions:conv,reach,views,clicks,engagement:eng,attendance,leads,ctr,engagementRate:engRate,conversionRate:convRate,digitalRecords:digital.length,offlineRecords:offline.length,calculatedAt:new Date().toISOString()}};const q=await sb.from('campaigns').update({payload:next,updated_at:new Date().toISOString()}).eq('id',S.selectedCampaign.id).select().single();if(q.error){toast(q.error.message,'error');return}S.selectedCampaign=q.data;toast('Business impact, learning and next actions saved','good');renderPage()};document.getElementById('impact-csv').onclick=downloadImpactCSV;document.getElementById('continue-report').onclick=()=>{S.page=6;renderPage()}}
-function downloadImpactPDF(){if(!window.jspdf?.jsPDF){window.print();return}const p=S.selectedCampaign?.payload?.businessImpact||{},l=S.selectedCampaign?.payload?.learning||{},doc=new window.jspdf.jsPDF();doc.setFontSize(18);doc.text('KOL IDS · Business Impact & Learning',14,18);doc.setFontSize(9);doc.text(`Campaign: ${S.selectedCampaign?.name||'·'}`,14,27);doc.text(`Impact ${p.score==null?'Not yet scored':Math.round(p.score)+'/100'} | Revenue ${p.revenue==null?'Not recorded':money(p.revenue)} | Spend ${p.spend==null?'Not recorded':money(p.spend)} | ROAS ${p.roas==null?'Not calculable':Number(p.roas).toFixed(2)+'x'} | ROI ${p.roi==null?'Not calculable':Math.round(p.roi)+'%'}`,14,35);let y=48;doc.setFontSize(11);doc.text('Learning',14,y);doc.setFontSize(9);for(const [label,val] of [['Worked',l.worked],['Friction',l.friction],['Next hypothesis',l.hypothesis]]){y+=9;doc.text(`${label}:`,14,y);if(val)doc.text(doc.splitTextToSize(String(val),180),28,y,{maxWidth:165});y+=Math.max(8,doc.splitTextToSize(String(val||'·'),165).length*5)}doc.save('KOL-IDS-Business-Impact-Learning.pdf')}
+function downloadImpactPDF(){
+ exportGateOr(()=>{
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const snap=reportLiveSnapshot(),i=snap.impact||{},l=snap.learning||{};const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});const ctx=pdfEnterprise(doc,'Business Impact & Learning','Observed outcomes · efficiency · evidence coverage · next investment learning');ctx.y=39;
+  pdfMetricGrid(doc,ctx,[{label:'Impact score',value:i.score==null?'Not scored':`${Math.round(i.score)}/100`},{label:'Revenue',value:i.revenue==null?'Not recorded':pdfFmt(i.revenue,'THB')},{label:'Spend',value:i.spend==null?'Not recorded':pdfFmt(i.spend,'THB')},{label:'ROAS',value:i.roas==null?'Not calculable':pdfFmt(i.roas,'x')}]);
+  pdfSection(doc,ctx,'Business impact','01 · observed commercial effect');
+  pdfRows(doc,ctx,['Metric','Value','Status'],[
+   ['Revenue',i.revenue==null?'Not recorded':pdfFmt(i.revenue,'THB'),i.revenue==null?'MISSING':'AVAILABLE'],
+   ['Spend',i.spend==null?'Not recorded':pdfFmt(i.spend,'THB'),i.spend==null?'MISSING':'AVAILABLE'],
+   ['ROAS',i.roas==null?'Not calculable':pdfFmt(i.roas,'x'),i.roas==null?'NOT CALCULABLE':'CALCULATED'],
+   ['ROI',i.roi==null?'Not calculable':pdfFmt(i.roi,'%'),i.roi==null?'NOT CALCULABLE':'CALCULATED'],
+   ['Conversions',i.conversions==null?'Not recorded':pdfFmt(i.conversions),'OBSERVED'],
+   ['Reach',i.reach==null?'Not recorded':pdfFmt(i.reach),'OBSERVED'],
+   ['Views',i.views==null?'Not recorded':pdfFmt(i.views),'OBSERVED'],
+   ['Clicks',i.clicks==null?'Not recorded':pdfFmt(i.clicks),'OBSERVED'],
+   ['Event attendance',i.attendance==null?'Not recorded':pdfFmt(i.attendance),'OBSERVED'],
+   ['Qualified leads',i.leads==null?'Not recorded':pdfFmt(i.leads),'OBSERVED']
+  ],[62,68,50]);
+  pdfSection(doc,ctx,'Learning register','02 · decision memory');
+  pdfNarrative(doc,ctx,'What worked',l.worked);pdfNarrative(doc,ctx,'Friction / what did not work',l.friction);pdfNarrative(doc,ctx,'Next hypothesis',l.hypothesis);
+  pdfSection(doc,ctx,'Recommended next actions','03 · calculated action set');
+  (l.nextActions||[]).forEach((x,n)=>pdfNarrative(doc,ctx,`Action ${n+1}`,x));
+  doc.save(pdfSaveName('KOL-IDS_Business-Impact',S.selectedCampaign?.name));
+ });
+}
 function reportExportIsTrial(){return Boolean(S.plan?.is_trial||String(S.subscription?.plan_code||'').toUpperCase()==='TRIAL_7')}
 function showPaidExportGate(){
  const old=document.getElementById('kol-export-gate');if(old)old.remove();
@@ -1534,9 +1593,9 @@ function csvDateStamp(){const d=new Date();return `${d.getFullYear()}${String(d.
 function csvIsoNow(){return new Date().toISOString()}
 function csvCell(v){return `"${String(v==null?'':v).replace(/"/g,'""')}"`}
 function enterpriseCSV(headers,rows,scope){
- const metaHeaders=['Export Version','Generated At','Product','Data Scope',...headers];
+ const metaHeaders=['Export Version','Generated At','Product','Data Scope','Campaign ID','Campaign Name',...headers];
  const generated=csvIsoNow();
- const metaRows=rows.map(r=>['2.0',generated,'KOL IDS','Enterprise / '+scope,...r]);
+ const metaRows=rows.map(r=>['3.0',generated,'KOL IDS','Enterprise / '+scope,S.selectedCampaign?.id||'',S.selectedCampaign?.name||'',...r]);
  return {headers:metaHeaders,rows:metaRows};
 }
 function downloadCSVFile(filename,headers,rows){
@@ -1562,8 +1621,8 @@ function downloadDecisionCSV(){exportGateOr(()=>{
 })}
 function performanceExportRows(){
  const {snap}=reportContext(),perf=snap.perf,creatorName=id=>S.creators.find(c=>String(c.id)===String(id))?.name||'Creator';
- const headers=['Campaign','Campaign ID','Performance Type','Creator ID','Creator','Observed At','Source','Evidence Confidence','Status','Outcome Score','Gen Code','Attribution Window Days','Spend THB','Revenue THB','Platform','Reach','Impressions','Views','Likes','Comments','Shares','Saves','Clicks / Sessions','Landing Sessions','Leads','Conversions','Engagement','Content Pieces','Orders','Paid Orders','GMV','Discounts','Refunds','Net Sales','New Customers','Commission Rate %','Commission Amount','AOV','Event Type','Capacity','Attendance','Qualified Leads','QR Scans','Demos','Samples','Event Engagement','Event Conversions','Outcome Notes'];
- const rows=perf.map(x=>{const m=x.metadata||{},t=String(m.channelType||'PERFORMANCE').toUpperCase();return [S.selectedCampaign?.name,S.selectedCampaign?.id,t,x.creator_id,creatorName(x.creator_id),x.observed_at,x.source,m.evidenceConfidence||x.source,x.status,x.actual_score,m.genCode,m.attributionWindowDays,x.spend_thb,x.revenue_thb,m.platform,x.reach,x.impressions,x.views,x.likes,x.comments,x.shares,m.saves,x.clicks,m.landingSessions,m.leads,x.conversions,x.engagement,m.contentPieces,m.orders,m.paidOrders,m.gmv,m.discounts,m.refunds,m.netSales,m.newCustomers,m.commissionRate,m.commissionAmount,m.aov,m.eventType,m.capacity,m.attendance,m.qualifiedLeads,m.qrScans,m.demos,m.samples,m.engagement,x.conversions,m.notes]});
+ const headers=['Report Version','Generated At','Campaign','Campaign ID','Performance Type','Creator ID','Creator','Observed At','Source','Evidence Confidence','Status','Outcome Score','Gen Code','Attribution Window Days','Spend THB','Revenue THB','Platform','Reach','Impressions','Views','Likes','Comments','Shares','Saves','Clicks / Sessions','Landing Sessions','Leads','Conversions','Engagement','Content Pieces','Orders','Paid Orders','GMV','Discounts','Refunds','Net Sales','New Customers','Commission Rate %','Commission Amount','AOV','Event Type','Capacity','Attendance','Qualified Leads','QR Scans','Demos','Samples','Event Engagement','Event Conversions','Outcome Notes'];
+ const rows=perf.map(x=>{const m=x.metadata||{},t=String(m.channelType||'PERFORMANCE').toUpperCase();return ['3.0',csvIsoNow(),S.selectedCampaign?.name,S.selectedCampaign?.id,t,x.creator_id,creatorName(x.creator_id),x.observed_at,x.source,m.evidenceConfidence||x.source,x.status,x.actual_score,m.genCode,m.attributionWindowDays,x.spend_thb,x.revenue_thb,m.platform,x.reach,x.impressions,x.views,x.likes,x.comments,x.shares,m.saves,x.clicks,m.landingSessions,m.leads,x.conversions,x.engagement,m.contentPieces,m.orders,m.paidOrders,m.gmv,m.discounts,m.refunds,m.netSales,m.newCustomers,m.commissionRate,m.commissionAmount,m.aov,m.eventType,m.capacity,m.attendance,m.qualifiedLeads,m.qrScans,m.demos,m.samples,m.engagement,x.conversions,m.notes]});
  return {headers,rows}
 }
 function downloadPerformanceCSV(){exportGateOr(()=>{const {headers,rows}=performanceExportRows();if(!rows.length){toast('No performance records to export yet.','error');return}downloadEnterpriseCSV(`KOL-IDS_Performance_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,rows,'Performance observations');toast('Performance CSV saved','good')})}
@@ -1636,7 +1695,7 @@ function reportSvgBarChart(items, opts={}){
  const valid=items.filter(x=>Number.isFinite(Number(x.value)));
  if(!valid.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const max=Math.max(...valid.map(x=>Number(x.value)),1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
- const rowH=Math.max(30,innerH/valid.length),barH=Math.min(18,rowH*.46);
+ const rowH=Math.max(30,innerH/valid.length),barH=Math.min(11,rowH*.30);
  const ticks=4;
  const grid=Array.from({length:ticks+1},(_,i)=>{const x=pad.l+innerW*i/ticks;const v=max*i/ticks;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+innerH}" class="rchart-gridline"/><text x="${x}" y="${height-8}" text-anchor="middle" class="rchart-axis">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text>`}).join('');
  const bars=valid.map((x,i)=>{
@@ -1654,7 +1713,7 @@ function reportSvgLineChart(items, opts={}){
  const point=(v,i)=>[pad.l+(items.length===1?innerW/2:i*innerW/(items.length-1)),pad.t+innerH-(Number(v)-min)/range*innerH];
  const path=(key)=>items.map((x,i)=>point(x[key],i).map(n=>n.toFixed(1)).join(',')).join(' ');
  const poly=(key,cls)=>`<polyline fill="none" class="${cls}" points="${path(key)}"/>`;
- const dots=key=>items.map((x,i)=>{const [cx,cy]=point(x[key],i);return `<circle cx="${cx}" cy="${cy}" r="4" class="${key==='a'?'rchart-dot-a':'rchart-dot-b'}"/>`}).join('');
+ const dots=key=>items.map((x,i)=>{const [cx,cy]=point(x[key],i);return `<circle cx="${cx}" cy="${cy}" r="2.5" class="${key==='a'?'rchart-dot-a':'rchart-dot-b'}"/>`}).join('');
  const grid=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4;const v=max-(max-min)*i/4;return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-10}" y="${y+4}" text-anchor="end" class="rchart-axis">${esc(opts.formatAxis?opts.formatAxis(v):money(v))}</text>`}).join('');
  const labels=items.map((x,i)=>{const [cx]=point(x.a,i);return `<text x="${cx}" y="${height-14}" text-anchor="middle" class="rchart-label">${esc(String(x.label||'').slice(0,12))}</text>`}).join('');
  return `<svg class="report-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Line chart')}">${grid}${poly('a','rchart-line-a')}${poly('b','rchart-line-b')}${dots('a')}${dots('b')}${labels}<g transform="translate(${width-180},12)"><circle cx="4" cy="4" r="4" class="rchart-dot-a"/><text x="12" y="8" class="rchart-legend">Revenue</text><circle cx="80" cy="4" r="4" class="rchart-dot-b"/><text x="88" y="8" class="rchart-legend">Spend</text></g><text x="${pad.l}" y="18" class="rchart-title">${esc(opts.title||'')}</text></svg>`;
@@ -1714,23 +1773,41 @@ function reports(c){
  }};
 }
 function downloadFullPDF(){
- if(!window.jspdf?.jsPDF){window.print();return}
- const snap=reportLiveSnapshot(),{p,perf,digital,ecommerce,offline,decisionRows,impact,learning}=snap;
- const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});let y=18;
- const creatorName=id=>S.creators.find(c=>String(c.id)===String(id))?.name||'Creator';
- const page=()=>{if(y>270){doc.addPage();y=18}};
- const add=(title,text)=>{page();doc.setFontSize(11);doc.text(title,14,y);y+=6;doc.setFontSize(8.5);const lines=doc.splitTextToSize(String(text==null||text===''?'·':text),180);doc.text(lines,14,y);y+=Math.max(7,lines.length*4.3+4)};
- doc.setFontSize(18);doc.text('KOL IDS · Campaign Intelligence Report',14,y);y+=8;doc.setFontSize(9);doc.text(`Campaign: ${S.selectedCampaign?.name||'·'}`,14,y);y+=5;doc.text(`Generated: ${new Date().toLocaleString('en-GB')}`,14,y);y+=8;
- add('Campaign objective',(p.objectives||[]).join(' · ')||p.objective||p.goal);add('Brand personality',(p.brandPersonalities||[]).join(' · '));add('Audience type',S.selectedAudience?.payload?.audienceType);add('Audience persona',S.selectedAudience?.payload?.audiencePersona);
- page();doc.setFontSize(12);doc.text('Creator decisions',14,y);y+=7;decisionRows.forEach(({creator:r,decision:d})=>{page();const e=d.evidence||{};add(r.name,`Decision ${d.decision||'·'} · Overall ${d.score==null?'·':Math.round(d.score)} · Audience ${Math.round(e.audienceFit??50)} · Content ${Math.round(e.contentFit??50)} · Brand ${Math.round(e.brandFit??50)} · Performance ${Math.round(e.performance??0)} · Commercial ${Math.round(e.commercial??50)} · Risk ${Math.round(e.risk??50)} · Confidence ${Math.round(e.confidence??0)}`)});
- page();doc.setFontSize(12);doc.text('Performance evidence',14,y);y+=7;
- if(!perf.length)add('Status','No performance records recorded yet.');
- perf.forEach((x,i)=>{page();const t=String(x.metadata?.channelType||'PERFORMANCE').toUpperCase();add(`${i+1}. ${creatorName(x.creator_id)} · ${t}`,`Observed ${x.observed_at||'·'} · Source ${x.source||'·'} · Outcome ${x.actual_score==null?'Pending':Math.round(x.actual_score)+'/100'} · Gen Code ${x.metadata?.genCode||'·'}`);if(t==='DIGITAL')add('Digital metrics',`Platform ${x.metadata?.platform||'·'} · Spend ${money(x.spend_thb)} · Revenue ${money(x.revenue_thb)} · Reach ${money(x.reach)} · Impressions ${money(x.impressions)} · Views ${money(x.views)} · Likes ${money(x.likes)} · Comments ${money(x.comments)} · Shares ${money(x.shares)} · Saves ${money(x.metadata?.saves)} · Clicks ${money(x.clicks)} · Sessions ${money(x.metadata?.landingSessions)} · Leads ${money(x.metadata?.leads)} · Conversions ${money(x.conversions)} · Engagement ${money(x.engagement)} · Content pieces ${money(x.metadata?.contentPieces)}`);else if(t==='ECOMMERCE')add('E-commerce metrics',`Platform ${x.metadata?.platform||'·'} · Spend ${money(x.spend_thb)} · GMV ${money(x.metadata?.gmv)} · Discounts ${money(x.metadata?.discounts)} · Refunds ${money(x.metadata?.refunds)} · Net sales ${money(x.metadata?.netSales??x.revenue_thb)} · Orders ${money(x.metadata?.orders)} · Paid orders ${money(x.metadata?.paidOrders??x.conversions)} · Clicks ${money(x.clicks)} · New customers ${money(x.metadata?.newCustomers)} · Commission rate ${x.metadata?.commissionRate==null?'·':x.metadata.commissionRate+'%'} · Commission ${money(x.metadata?.commissionAmount)} · AOV ${money(x.metadata?.aov)}`);else add('Event metrics',`Event ${x.metadata?.eventType||'·'} · Spend ${money(x.spend_thb)} · Revenue ${money(x.revenue_thb)} · Capacity ${money(x.metadata?.capacity)} · Attendance ${money(x.metadata?.attendance)} · Qualified leads ${money(x.metadata?.qualifiedLeads)} · QR scans ${money(x.metadata?.qrScans)} · Demos ${money(x.metadata?.demos)} · Samples ${money(x.metadata?.samples)} · Engagement ${money(x.engagement)} · Conversions ${money(x.conversions)} · Notes ${x.metadata?.notes||'·'}`)});
- add('Business impact',`Impact score ${impact.score==null?'Not yet scored':Math.round(impact.score)+'/100'} · Revenue ${impact.revenue==null?'Not recorded':money(impact.revenue)} · Spend ${impact.spend==null?'Not recorded':money(impact.spend)} · ROAS ${impact.roas==null?'Not calculable':Number(impact.roas).toFixed(2)+'x'} · ROI ${impact.roi==null?'Not calculable':Math.round(impact.roi)+'%'} · Conversions ${impact.conversions==null?'Not recorded':money(impact.conversions)} · Reach ${impact.reach==null?'Not recorded':money(impact.reach)} · Views ${impact.views==null?'Not recorded':money(impact.views)} · Clicks ${impact.clicks==null?'Not recorded':money(impact.clicks)} · Event attendance ${impact.attendance==null?'Not recorded':money(impact.attendance)} · Event leads ${impact.leads==null?'Not recorded':money(impact.leads)}`);
- add('Learning · What worked',learning.worked);add('Learning · Friction',learning.friction);add('Learning · Next hypothesis',learning.hypothesis);add('Learning · Next actions',(learning.nextActions||[]).map((x,i)=>`${i+1}. ${x}`).join('\\n'));
- doc.save(`KOL-IDS-Full-Report-${String(S.selectedCampaign?.name||'Campaign').replace(/[^A-Za-z0-9-_]+/g,'-')}.pdf`);
+ exportGateOr(()=>{
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const snap=reportLiveSnapshot(),{p,perf,digital,ecommerce,offline,decisionRows,impact,learning}=snap;const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});const ctx=pdfEnterprise(doc,'Campaign Intelligence Report','Executive decision pack · evidence register · creator decisions · performance · business impact');ctx.y=39;
+  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
+  pdfMetricGrid(doc,ctx,[{label:'Creators approved',value:decisionRows.length},{label:'Evidence records',value:perf.length},{label:'Revenue',value:impact.revenue==null?'Not recorded':pdfFmt(impact.revenue,'THB')},{label:'ROAS',value:impact.roas==null?'Not calculable':pdfFmt(impact.roas,'x')}]);
+  pdfSection(doc,ctx,'Executive context','01 · campaign context');
+  pdfRows(doc,ctx,['Field','Observed value'],[
+   ['Campaign',S.selectedCampaign?.name||'—'],['Status',S.selectedCampaign?.status||'—'],['Objective',(p.objectives||[]).join(' · ')||p.objective||p.goal||'—'],['Performance model',p.performanceType||'—'],['Budget',pdfFmt(p.budget,'THB')],['Market',p.market||'—'],['Start date',p.startDate||'—'],['End date',p.endDate||'—'],['Audience type',S.selectedAudience?.payload?.audienceType||'—'],['Audience persona',S.selectedAudience?.payload?.audiencePersona||'—']],[58,122]);
+  pdfSection(doc,ctx,'Creator decision register','02 · decision evidence');
+  if(!decisionRows.length) pdfNarrative(doc,ctx,'Status','No creator decision records were linked to this campaign.');
+  else pdfRows(doc,ctx,['Creator','Decision','Overall','Audience','Content','Brand','Performance','Commercial','Risk','Confidence'],decisionRows.map(({creator:r,decision:d})=>{const e=d.evidence||{};return [r.name,d.decision||'—',d.score==null?'—':Math.round(d.score),Math.round(e.audienceFit??50),Math.round(e.contentFit??50),Math.round(e.brandFit??50),Math.round(e.performance??0),Math.round(e.commercial??50),Math.round(e.risk??50),Math.round(e.confidence??0)]}),[30,24,13,13,13,13,14,14,11,15]);
+  pdfSection(doc,ctx,'Performance evidence','03 · all linked observations');
+  if(!perf.length) pdfNarrative(doc,ctx,'Status','No performance evidence was recorded yet.');
+  else pdfRows(doc,ctx,['Creator','Type','Observed','Source','Confidence','Outcome','Content / Code'],perf.map(x=>[creatorName(x.creator_id),String(x.metadata?.channelType||'PERFORMANCE'),x.observed_at||'—',x.source||'—',x.metadata?.evidenceConfidence||x.source||'—',x.actual_score==null?'Pending':`${Math.round(x.actual_score)}/100`,x.metadata?.contentId||x.metadata?.genCode||'—']),[34,22,20,22,23,20,37]);
+  pdfSection(doc,ctx,'Business impact','04 · commercial effect');
+  pdfRows(doc,ctx,['Metric','Value','Interpretation'],[
+   ['Revenue',impact.revenue==null?'Not recorded':pdfFmt(impact.revenue,'THB'),impact.revenue==null?'Evidence unavailable':'Observed revenue'],
+   ['Spend',impact.spend==null?'Not recorded':pdfFmt(impact.spend,'THB'),impact.spend==null?'Evidence unavailable':'Observed spend'],
+   ['ROAS',impact.roas==null?'Not calculable':pdfFmt(impact.roas,'x'),impact.roas==null?'Requires revenue + spend':'Revenue ÷ spend'],
+   ['ROI',impact.roi==null?'Not calculable':pdfFmt(impact.roi,'%'),impact.roi==null?'Requires revenue + spend':'(Revenue − spend) ÷ spend'],
+   ['Conversions',impact.conversions==null?'Not recorded':pdfFmt(impact.conversions),'Observed conversion count'],
+   ['Reach',impact.reach==null?'Not recorded':pdfFmt(impact.reach),'Observed reach'],
+   ['Clicks',impact.clicks==null?'Not recorded':pdfFmt(impact.clicks),'Observed clicks / sessions'],
+   ['Event attendance',impact.attendance==null?'Not recorded':pdfFmt(impact.attendance),'Observed attendance'],
+   ['Qualified leads',impact.leads==null?'Not recorded':pdfFmt(impact.leads),'Observed lead count']
+  ],[52,55,73]);
+  pdfSection(doc,ctx,'Learning & next decision','05 · institutional memory');
+  pdfNarrative(doc,ctx,'What worked',learning.worked);pdfNarrative(doc,ctx,'Friction',learning.friction);pdfNarrative(doc,ctx,'Next hypothesis',learning.hypothesis);
+  const nid=learning.nextInvestmentDecision||{};if(nid.recommendation) pdfNarrative(doc,ctx,'Next investment decision',`${nid.recommendation} · Confidence ${nid.confidence||'—'} · ${nid.reason||''}`);if(nid.threshold)pdfNarrative(doc,ctx,'Success threshold',nid.threshold);if(nid.historicalBenchmark)pdfNarrative(doc,ctx,'Historical benchmark',`ROAS ${nid.historicalBenchmark} · ${nid.historyCount||0} historical campaign(s)`);(learning.nextActions||[]).forEach((x,n)=>pdfNarrative(doc,ctx,`Next action ${n+1}`,x));
+  pdfSection(doc,ctx,'Evidence coverage','06 · data quality');
+  const coverage=[['Digital records',digital.length],['E-commerce records',ecommerce.length],['Offline / event records',offline.length],['Decision records',decisionRows.length],['Revenue evidence',impact.revenue==null?'MISSING':'AVAILABLE'],['Spend evidence',impact.spend==null?'MISSING':'AVAILABLE'],['Conversion evidence',impact.conversions==null?'MISSING':'AVAILABLE'],['Impression evidence',digital.some(x=>x.impressions!=null)?'AVAILABLE':'MISSING'],['Click evidence',impact.clicks==null?'MISSING':'AVAILABLE']];
+  pdfRows(doc,ctx,['Evidence class','Status / count'],coverage,[80,100]);
+  doc.save(pdfSaveName('KOL-IDS_Full-Report',S.selectedCampaign?.name));
+ });
 }
-
 function accessGate(){
  const reason=S.accessReason||'NO_ACTIVE_SUBSCRIPTION';
  const pending=reason==='PAYMENT_PENDING';
@@ -3099,3 +3176,93 @@ tbody tr:hover td{background:#fbfdfe}
   `;
   document.head.appendChild(s);
 })();
+
+
+/* REPORTS LUXURY ENTERPRISE REFINEMENT · 20261006 */
+(function(){
+ const styleId='kol-ids-reports-luxury-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  :root{
+    --lux-ink:#17191c;
+    --lux-body:#3e464d;
+    --lux-muted:#778087;
+    --lux-hairline:#e8ebed;
+    --lux-paper:#ffffff;
+    --lux-pearl:#fbfbfa;
+    --lux-cyan:#59bfcb;
+    --lux-gold:#b29a6b;
+  }
+  .kol-report-page{color:var(--lux-ink)!important;background:transparent!important}
+  .kol-report-page>.hero{
+    background:linear-gradient(180deg,#fff 0%,#fcfcfb 100%)!important;
+    border:1px solid var(--lux-hairline)!important;
+    box-shadow:0 18px 55px rgba(20,24,28,.035)!important;
+  }
+  .kol-report-page>.hero h2{font-weight:820!important;color:#111315!important}
+  .kol-report-page>.hero p{color:#59636a!important}
+  .kol-report-page>.card{
+    background:rgba(255,255,255,.97)!important;
+    border:1px solid var(--lux-hairline)!important;
+    box-shadow:0 14px 42px rgba(20,24,28,.028)!important;
+  }
+  .kol-report-page>.card .section-head h2{color:#151719!important;font-weight:790!important}
+  .kol-report-page>.card .section-head .sub{color:#69737a!important}
+  .kol-report-page>.card .metric{background:#fff!important;border:1px solid #eceeef!important;box-shadow:none!important}
+  .kol-report-page>.card .metric strong{color:#121416!important;font-weight:800!important}
+
+  /* Charts: restrained, hairline geometry; typography remains high-contrast. */
+  .report-chart-grid{gap:18px!important}
+  .report-chart-card{
+    border:1px solid #eceeef!important;
+    border-radius:18px!important;
+    background:#fff!important;
+    padding:20px 20px 18px!important;
+    box-shadow:none!important;
+  }
+  .report-chart-head{margin-bottom:10px!important;padding-bottom:10px!important;border-bottom:1px solid #f0f1f2!important}
+  .report-chart-head b{font-size:13px!important;font-weight:780!important;color:#17191c!important;letter-spacing:-.01em!important}
+  .report-chart-head span{font-size:9px!important;color:#8a9298!important;letter-spacing:.04em!important}
+  .report-chart-svg{min-height:230px!important}
+  .rchart-title{font-size:10px!important;fill:#7d868c!important;font-weight:650!important}
+  .rchart-value{font-size:10px!important;fill:#202428!important;font-weight:760!important}
+  .rchart-label{font-size:9px!important;fill:#7b858b!important}
+  .rchart-label-strong{font-size:10px!important;fill:#3f474d!important;font-weight:650!important}
+  .rchart-axis{font-size:8px!important;fill:#9aa1a6!important}
+  .rchart-legend{font-size:9px!important;fill:#70797f!important}
+  .rchart-gridline{stroke:#eef0f1!important;stroke-width:.65!important;shape-rendering:crispEdges!important}
+  .rchart-bar{fill:#202326!important}
+  .rchart-line-a{stroke:#202326!important;stroke-width:1.35!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
+  .rchart-line-b{stroke:#59bfcb!important;stroke-width:1.25!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
+  .rchart-dot-a{fill:#202326!important;r:2.25px!important}
+  .rchart-dot-b{fill:#59bfcb!important;r:2.25px!important}
+  .report-chart-empty{height:230px!important;border:1px dashed #e4e7e9!important;background:#fdfdfc!important;color:#899197!important}
+
+  /* Donut: intentionally light and thin, like an institutional report. */
+  .report-donut-wrap{min-height:238px!important;gap:32px!important}
+  .report-donut{width:164px!important;height:164px!important;flex-basis:164px!important;box-shadow:none!important}
+  .report-donut>div{width:134px!important;height:134px!important;background:#fff!important}
+  .report-donut strong{font-size:24px!important;font-weight:800!important;letter-spacing:-.04em!important;color:#17191c!important}
+  .report-donut span{font-size:8px!important;color:#899197!important;letter-spacing:.12em!important}
+  .report-legend{gap:13px!important;min-width:180px!important}
+  .report-legend>div{font-size:10px!important;grid-template-columns:8px 1fr auto!important;gap:9px!important}
+  .report-legend i{width:7px!important;height:7px!important;border-radius:50%!important}
+  .report-legend span{color:#69737a!important}
+  .report-legend b{font-size:10px!important;color:#1b1e21!important;font-weight:760!important}
+
+  /* Enterprise evidence language: calm, precise, no visual noise. */
+  .evidence-status-grid{gap:8px!important}
+  .evidence-status{border:1px solid #eceeef!important;background:#fdfdfc!important;border-radius:11px!important;box-shadow:none!important}
+  .evidence-status.is-present{border-color:#d9edef!important;background:#fbfefe!important}
+  .evidence-status.is-missing{border-color:#eceeef!important;background:#fdfdfd!important}
+  .evidence-status b{font-size:8px!important;letter-spacing:.12em!important}
+  .evidence-status span{font-size:10px!important;color:#5f6970!important}
+
+  @media(max-width:900px){
+    .kol-report-page>.card{box-shadow:none!important}
+    .report-chart-card{padding:16px!important}
+  }
+ `;
+ document.head.appendChild(s);
+})();
+
