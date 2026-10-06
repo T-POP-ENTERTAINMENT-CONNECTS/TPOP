@@ -4900,12 +4900,55 @@ function pdfBlueHeader(doc,title,subtitle=''){
 }
 function pdfBlueSection(doc,ctx,title,kicker=''){pdfPageBreak(doc,ctx,19);ctx.y+=4;doc.setFont('helvetica','bold');doc.setFontSize(6.8);doc.setTextColor(36,84,199);doc.text(pdfSafeText(kicker||'SECTION').toUpperCase(),14,ctx.y);ctx.y+=6;doc.setFontSize(12.5);doc.setTextColor(23,36,60);doc.text(pdfSafeText(title),14,ctx.y);ctx.y+=5;doc.setDrawColor(36,84,199);doc.setLineWidth(.45);doc.line(14,ctx.y,ctx.W-14,ctx.y);ctx.y+=6;}
 function pdfBlueMetrics(doc,ctx,items){const gap=4,w=(ctx.W-28-gap*3)/4,h=22;let x=14;items.forEach((it,i)=>{if(i&&i%4===0){ctx.y+=h+4;x=14}if(pdfPageBreak(doc,ctx,h+2))x=14;doc.setFillColor(248,250,254);doc.setDrawColor(214,224,241);doc.roundedRect(x,ctx.y,w,h,2.5,2.5,'FD');doc.setFont('helvetica','bold');doc.setFontSize(6.7);doc.setTextColor(91,109,137);doc.text(String(it.label||'').toUpperCase(),x+4,ctx.y+6.5);doc.setFontSize(11.5);doc.setTextColor(23,36,60);doc.text(pdfSafeText(it.value),x+4,ctx.y+15);x+=w+gap});ctx.y+=h+7}
-function pdfChartSvgStyled(svg){if(!svg||!svg.startsWith('<svg'))return svg;const css='.rchart-gridline{stroke:#E3EAF5;stroke-width:1}.rchart-axis{font-family:Arial,sans-serif;font-size:13px;fill:#71819A;font-weight:600}.rchart-label{font-family:Arial,sans-serif;font-size:13px;fill:#52647F;font-weight:650}.rchart-label-strong{font-family:Arial,sans-serif;font-size:15px;fill:#30415D;font-weight:750}.rchart-value{font-family:Arial,sans-serif;font-size:16px;fill:#17243C;font-weight:850}.rchart-share{font-family:Arial,sans-serif;font-size:15px;fill:#17243C;font-weight:850}.rchart-line-a{stroke:#2454C7;stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round}.rchart-line-b{stroke:#6D8DDF;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 5}.rchart-dot-a{fill:#2454C7;stroke:#fff;stroke-width:2.5}.rchart-dot-b{fill:#6D8DDF;stroke:#fff;stroke-width:2.5}.rchart-point-value{font-family:Arial,sans-serif;font-size:13px;fill:#17243C;font-weight:900}.rchart-legend{font-family:Arial,sans-serif;font-size:13px;fill:#30415D;font-weight:750}.rchart-bar{fill:#2454C7}.rchart-bar-track{fill:#E8EEF9}';return svg.replace(/(<svg\b[^>]*>)/,'$1<style>'+css+'</style>')}
+function pdfChartSvgStyled(svg){if(!svg||!svg.startsWith('<svg'))return svg;const css='.rchart-gridline{stroke:#E3EAF5;stroke-width:1}.rchart-axis{font-family:Arial,sans-serif;font-size:13px;fill:#71819A;font-weight:600}.rchart-label{font-family:Arial,sans-serif;font-size:13px;fill:#52647F;font-weight:650}.rchart-label-strong{font-family:Arial,sans-serif;font-size:15px;fill:#30415D;font-weight:750}.rchart-value{font-family:Arial,sans-serif;font-size:16px;fill:#17243C;font-weight:850}.rchart-share{font-family:Arial,sans-serif;font-size:15px;fill:#17243C;font-weight:850}.rchart-line-a{stroke:#2454C7;stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round}.rchart-line-b{stroke:#2454C7;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 5}.rchart-dot-a{fill:#2454C7;stroke:#fff;stroke-width:2.5}.rchart-dot-b{fill:#2454C7;stroke:#fff;stroke-width:2.5}.rchart-point-value{font-family:Arial,sans-serif;font-size:13px;fill:#17243C;font-weight:900}.rchart-legend{font-family:Arial,sans-serif;font-size:13px;fill:#30415D;font-weight:750}.rchart-bar{fill:#2454C7}.rchart-bar-track{fill:#E8EEF9}';return svg.replace(/(<svg\b[^>]*>)/,'$1<style>'+css+'</style>')}
 function pdfDonutSvg(parts){const valid=(parts||[]).filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);if(!total)return '';const colors=['#2454C7','#4B73D5','#6D8DDF','#91A9E9','#B4C4F2','#D7E0FA'];const cx=190,cy=150,r=88,inner=57;let angle=-Math.PI/2,paths='';valid.forEach((x,i)=>{const a0=angle,a1=angle+(Number(x.value)/total)*Math.PI*2;const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),ix1=cx+inner*Math.cos(a1),iy1=cy+inner*Math.sin(a1),ix0=cx+inner*Math.cos(a0),iy0=cy+inner*Math.sin(a0),large=a1-a0>Math.PI?1:0;paths+='<path d="M '+x0+' '+y0+' A '+r+' '+r+' 0 '+large+' 1 '+x1+' '+y1+' L '+ix1+' '+iy1+' A '+inner+' '+inner+' 0 '+large+' 0 '+ix0+' '+iy0+' Z" fill="'+colors[i%colors.length]+'"/>';angle=a1});const legend=valid.map((x,i)=>{const y=70+i*34;return '<circle cx="330" cy="'+y+'" r="5" fill="'+colors[i%colors.length]+'"/><text x="344" y="'+(y+4)+'" font-family="Arial" font-size="13" fill="#52647F" font-weight="700">'+esc(x.label)+'</text><text x="500" y="'+(y+4)+'" text-anchor="end" font-family="Arial" font-size="13" fill="#2454C7" font-weight="900">'+Number(x.value).toLocaleString()+'</text>'}).join('');return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" width="1040" height="600"><rect width="520" height="300" fill="#FFFFFF"/><circle cx="'+cx+'" cy="'+cy+'" r="'+(r+1)+'" fill="none" stroke="#D5E0F4"/><g>'+paths+'</g><circle cx="'+cx+'" cy="'+cy+'" r="'+inner+'" fill="#FFFFFF"/><text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" font-family="Arial" font-size="30" fill="#17243C" font-weight="900">'+total.toLocaleString()+'</text><text x="'+cx+'" y="'+(cy+17)+'" text-anchor="middle" font-family="Arial" font-size="10" fill="#71819A" font-weight="800" letter-spacing="2">RECORDS</text>'+legend+'</svg>'}
 function pdfChartTitle(doc,ctx,title,note){pdfPageBreak(doc,ctx,30);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(23,36,60);doc.text(pdfSafeText(title),14,ctx.y);ctx.y+=5;doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.setTextColor(91,109,137);doc.text(pdfSafeText(note),14,ctx.y);ctx.y+=5;}
 function pdfAddSvgImage(doc,svg,x,y,w,h){return new Promise(resolve=>{if(!svg||!svg.startsWith('<svg')){resolve(false);return}const img=new Image();img.onload=()=>{try{const scale=2,canvas=document.createElement('canvas');canvas.width=Math.round(w*3.78*scale);canvas.height=Math.round(h*3.78*scale);const c=canvas.getContext('2d');c.fillStyle='#FFFFFF';c.fillRect(0,0,canvas.width,canvas.height);c.drawImage(img,0,0,canvas.width,canvas.height);doc.addImage(canvas.toDataURL('image/png',1),'PNG',x,y,w,h,undefined,'FAST');resolve(true)}catch(e){resolve(false)}};img.onerror=()=>resolve(false);img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(pdfChartSvgStyled(svg))})}
 function pdfObservationRows(snap){return (snap.perf||[]).map(x=>{const m=x.metadata||{},t=String(m.channelType||'PERFORMANCE').toUpperCase(),sp=num(x.spend_thb),rev=m.netSales!=null?num(m.netSales):num(x.revenue_thb),roas=sp>0&&rev!=null?rev/sp:null,roi=sp>0&&rev!=null?(rev-sp)/sp*100:null;return [S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator',t,x.observed_at||'—',m.platform||'—',m.evidenceConfidence||x.source||'—',x.actual_score==null?'Pending':`${Math.round(x.actual_score)}/100`,sp==null?'—':pdfFmt(sp,'THB'),rev==null?'—':pdfFmt(rev,'THB'),roas==null?'—':pdfFmt(roas,'x'),roi==null?'—':pdfFmt(roi,'%')]})}
 function pdfCreatorDetailRows(snap){return (snap.decisionRows||[]).map(({creator:r,decision:d})=>{const e=d.evidence||{};return [r.name,r.payload?.channel||'—',r.payload?.followers==null?'—':Number(r.payload.followers).toLocaleString(),r.payload?.engagementRate==null?'—':`${Number(r.payload.engagementRate).toFixed(2)}%`,d.decision||'—',d.score==null?'—':Math.round(d.score),Math.round(e.confidence??0),Math.round(e.audienceFit??50),Math.round(e.contentFit??50),Math.round(e.brandFit??50),Math.round(e.performance??0),Math.round(e.commercial??50),Math.round(e.risk??50)]})}
+
+/* FINAL REPORT CLEAN THEME · 20261006 */
+(function(){
+ const s=document.createElement('style');
+ s.textContent=`
+ .kol-report-page{color:#17243C!important}
+ .kol-report-page .report-chart-grid{gap:14px!important}
+ .kol-report-page .report-chart-card{background:#fff!important;border:1px solid #DCE5F3!important;border-radius:14px!important;box-shadow:0 4px 18px rgba(23,36,60,.045)!important;padding:20px!important;overflow:hidden!important}
+ .kol-report-page .report-chart-head{border-bottom:1px solid #E8EDF5!important;padding-bottom:12px!important;margin-bottom:12px!important}
+ .kol-report-page .report-chart-head b{color:#17243C!important;font-weight:750!important}
+ .kol-report-page .report-chart-head span{color:#6B7B95!important}
+ .kol-report-page .report-chart-svg{background:#fff!important}
+ .kol-report-page .report-chart-svg .rchart-gridline{stroke:#E7ECF4!important;stroke-width:1!important}
+ .kol-report-page .report-chart-svg .rchart-axis{fill:#5D6D86!important;font-weight:600!important}
+ .kol-report-page .report-chart-svg .rchart-label,.kol-report-page .report-chart-svg .rchart-label-strong{fill:#30415D!important;font-weight:700!important}
+ .kol-report-page .report-chart-svg .rchart-value,.kol-report-page .report-chart-svg .rchart-share{fill:#17243C!important;font-weight:800!important}
+ .kol-report-page .report-chart-svg .rchart-legend{fill:#30415D!important;font-weight:700!important}
+ .kol-report-page .report-chart-svg .rchart-line-a{stroke:#2454C7!important;stroke-width:3.2!important;opacity:1!important;fill:none!important}
+ .kol-report-page .report-chart-svg .rchart-line-b{stroke:#4B73D5!important;stroke-width:3!important;opacity:1!important;fill:none!important;stroke-dasharray:7 5!important}
+ .kol-report-page .report-chart-svg .rchart-dot-a{fill:#2454C7!important;stroke:#fff!important;stroke-width:2!important}
+ .kol-report-page .report-chart-svg .rchart-dot-b{fill:#4B73D5!important;stroke:#fff!important;stroke-width:2!important}
+ .kol-report-page .report-chart-svg .rchart-dot-a-text,.kol-report-page .report-chart-svg .rchart-dot-b-text{fill:#17243C!important}
+ .kol-report-page .report-chart-svg .rchart-bar{fill:#2454C7!important;opacity:1!important}
+ .kol-report-page .report-chart-svg .rchart-revenue-bar-0{fill:#2454C7!important}.kol-report-page .report-chart-svg .rchart-revenue-bar-1{fill:#4B73D5!important}.kol-report-page .report-chart-svg .rchart-revenue-bar-2{fill:#6D8DDF!important}.kol-report-page .report-chart-svg .rchart-revenue-bar-3{fill:#91A9E9!important}.kol-report-page .report-chart-svg .rchart-revenue-bar-4{fill:#B4C4F2!important}.kol-report-page .report-chart-svg .rchart-revenue-bar-5{fill:#D7E0FA!important}
+ .kol-report-page .report-chart-svg .rchart-bar-track{fill:#F4F7FC!important;stroke:#E2E8F2!important}
+ .kol-report-page .report-legend span{color:#30415D!important}.kol-report-page .report-legend b{color:#17243C!important}.kol-report-page .report-legend i{border:1px solid rgba(23,36,60,.08)!important}
+ .kol-report-page .report-donut{box-shadow:none!important}
+ .kol-report-page .card,.kol-report-page .report-data-quality{box-shadow:0 4px 18px rgba(23,36,60,.035)!important;border-color:#DCE5F3!important}
+ .kol-report-page .signal-box{border-color:#E1E8F2!important;background:#FBFCFE!important}
+ `;
+ document.head.appendChild(s);
+})();
+
+function pdfAllPayloadRows(label,payload){
+ const rows=[]; Object.entries(payload||{}).forEach(([k,v])=>{if(v===undefined||v===null||v==='')return; let out=v; if(typeof v==='object'){try{out=JSON.stringify(v)}catch(e){out=String(v)}} rows.push([`${label} · ${k}`,pdfSafeText(out)]);}); return rows;
+}
+function pdfCompleteEvidenceRows(x){
+ const rows=[]; const base=['id','campaign_id','creator_id','observed_at','actual_score','spend_thb','revenue_thb','reach','impressions','views','likes','comments','shares','clicks','conversions','engagement','source'];
+ base.forEach(k=>{if(x[k]!==undefined&&x[k]!==null&&x[k]!=='')rows.push([k,pdfSafeText(x[k])])});
+ Object.entries(x.metadata||{}).forEach(([k,v])=>{if(v===undefined||v===null||v==='')return;let out=v;if(typeof v==='object'){try{out=JSON.stringify(v)}catch(e){out=String(v)}}rows.push([`metadata · ${k}`,pdfSafeText(out)])});
+ return rows;
+}
+function pdfCreatorIntelligenceRows(snap){return (snap.decisionRows||[]).map(({creator:r,decision:d})=>{const e=d.evidence||{};return [r.name,r.payload?.channel||'—',r.payload?.niche||r.payload?.category||'—',r.payload?.followers==null?'—':Number(r.payload.followers).toLocaleString(),r.payload?.engagementRate==null?'—':`${Number(r.payload.engagementRate).toFixed(2)}%`,e.reason||e.method||'—',e.ifSelected||creatorAdaptation(e)||'—',e.campaignMove||creatorAdaptation(e)||'—']})}
 
 async function buildPremiumFullPDF(){
  if(!window.jspdf?.jsPDF){window.print();return}
@@ -4913,13 +4956,19 @@ async function buildPremiumFullPDF(){
  pdfBlueMetrics(doc,ctx,[{label:'Creators approved',value:decisionRows.length},{label:'Evidence records',value:perf.length},{label:'Revenue',value:impact.revenue==null?'Not recorded':pdfFmt(impact.revenue,'THB')},{label:'ROAS',value:impact.roas==null?'Not calculable':pdfFmt(impact.roas,'x')}]);
  pdfBlueSection(doc,ctx,'Executive decision summary','01 · executive view');pdfNarrative(doc,ctx,'Decision posture',reportDecisionSignal(snap).action||'Review the linked evidence before changing investment allocation.');pdfNarrative(doc,ctx,'Campaign objective',(p.objectives||[]).join(' · ')||p.objective||p.goal||'Not recorded');pdfNarrative(doc,ctx,'Evidence posture',`${perf.length} observed performance record(s), ${decisionRows.length} creator decision record(s), ${digital.length} digital, ${ecommerce.length} e-commerce and ${offline.length} offline/event record(s).`);
  pdfBlueSection(doc,ctx,'Campaign & audience intelligence','02 · strategic context');pdfRows(doc,ctx,['Field','Observed value'],[['Campaign',S.selectedCampaign?.name||'—'],['Status',S.selectedCampaign?.status||'—'],['Objective',(p.objectives||[]).join(' · ')||p.objective||p.goal||'—'],['Performance model',p.performanceType||'—'],['Budget',pdfFmt(p.budget,'THB')],['Market',p.market||'—'],['Start date',p.startDate||'—'],['End date',p.endDate||'—'],['Brand personality',(p.brandPersonalities||[]).join(' · ')||'—'],['Audience type',S.selectedAudience?.payload?.audienceType||'—'],['Audience persona',S.selectedAudience?.payload?.audiencePersona||'—'],['Audience notes',S.selectedAudience?.payload?.notes||'—']],[55,125]);
- pdfBlueSection(doc,ctx,'Creator decision register','03 · creator intelligence');if(decisionRows.length)pdfRows(doc,ctx,['Creator','Channel','Followers','ER','Decision','Fit','Conf.','Audience','Content','Brand','Perf.','Commercial','Risk'],pdfCreatorDetailRows(snap),[27,17,18,14,20,12,12,13,13,13,13,14,11]);else pdfNarrative(doc,ctx,'Status','No creator decision records are linked to this campaign.');
- decisionRows.slice(0,20).forEach(({creator:r,decision:d})=>{const e=d.evidence||{};pdfNarrative(doc,ctx,r.name,`${d.decision||'—'} · Fit ${d.score==null?'—':Math.round(d.score)}/100 · Confidence ${Math.round(e.confidence??0)}/100 · ${e.reason||e.method||creatorAdaptation(e)||'No rationale recorded.'}`)});
+ pdfBlueSection(doc,ctx,'Complete campaign & audience record','02A · full source fields');
+pdfRows(doc,ctx,['Field','Recorded value'],pdfAllPayloadRows('Campaign',p).concat(pdfAllPayloadRows('Audience',S.selectedAudience?.payload||{})),[55,125]);
+pdfBlueSection(doc,ctx,'Creator intelligence & decision rationale','03 · creator intelligence');
+if(decisionRows.length)pdfRows(doc,ctx,['Creator','Channel','Niche','Followers','ER','Why','If selected','Campaign move'],pdfCreatorIntelligenceRows(snap),[25,16,20,18,14,42,40,40]);else pdfNarrative(doc,ctx,'Status','No creator intelligence records are linked to this campaign.');
+pdfBlueSection(doc,ctx,'Creator decision register','03A · scored decision matrix');if(decisionRows.length)pdfRows(doc,ctx,['Creator','Channel','Followers','ER','Decision','Fit','Conf.','Audience','Content','Brand','Perf.','Commercial','Risk'],pdfCreatorDetailRows(snap),[27,17,18,14,20,12,12,13,13,13,13,14,11]);else pdfNarrative(doc,ctx,'Status','No creator decision records are linked to this campaign.');
+ decisionRows.forEach(({creator:r,decision:d})=>{const e=d.evidence||{};pdfNarrative(doc,ctx,r.name,`${d.decision||'—'} · Fit ${d.score==null?'—':Math.round(d.score)}/100 · Confidence ${Math.round(e.confidence??0)}/100 · ${e.reason||e.method||creatorAdaptation(e)||'No rationale recorded.'}`)});
  pdfBlueSection(doc,ctx,'Performance evidence register','04 · observed records');if(perf.length)pdfRows(doc,ctx,['Creator','Type','Observed','Platform','Confidence','Outcome','Spend','Revenue','ROAS','ROI'],pdfObservationRows(snap),[27,17,18,18,19,17,20,22,16,16]);else pdfNarrative(doc,ctx,'Status','No performance evidence was recorded.');
  pdfBlueSection(doc,ctx,'Digital performance detail','04A · multi-platform evidence');if(digital.length)pdfRows(doc,ctx,['Creator','Platform','Observed','Reach','Impressions','Views','Likes','Comments','Shares','Clicks','Conversions','Engagement'],digital.map(x=>[S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator',x.metadata?.platform||'—',x.observed_at||'—',x.reach==null?'—':Number(x.reach).toLocaleString(),x.impressions==null?'—':Number(x.impressions).toLocaleString(),x.views==null?'—':Number(x.views).toLocaleString(),x.likes==null?'—':Number(x.likes).toLocaleString(),x.comments==null?'—':Number(x.comments).toLocaleString(),x.shares==null?'—':Number(x.shares).toLocaleString(),x.clicks==null?'—':Number(x.clicks).toLocaleString(),x.conversions==null?'—':Number(x.conversions).toLocaleString(),x.engagement==null?'—':Number(x.engagement).toLocaleString()]),[25,17,18,18,20,18,18,18,18,18,18,20]);else pdfNarrative(doc,ctx,'Status','No digital records.');
  pdfBlueSection(doc,ctx,'E-commerce performance detail','04B · commerce evidence');if(ecommerce.length)pdfRows(doc,ctx,['Creator','Platform','Observed','GMV','Net sales','Orders','Paid orders','Discounts','Refunds','AOV','Commission','New customers'],ecommerce.map(x=>{const m=x.metadata||{};return [S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator',m.platform||'—',x.observed_at||'—',m.gmv==null?'—':pdfFmt(m.gmv,'THB'),m.netSales==null?'—':pdfFmt(m.netSales,'THB'),m.orders==null?'—':Number(m.orders).toLocaleString(),m.paidOrders==null?'—':Number(m.paidOrders).toLocaleString(),m.discounts==null?'—':pdfFmt(m.discounts,'THB'),m.refunds==null?'—':pdfFmt(m.refunds,'THB'),m.aov==null?'—':pdfFmt(m.aov,'THB'),m.commissionAmount==null?'—':pdfFmt(m.commissionAmount,'THB'),m.newCustomers==null?'—':Number(m.newCustomers).toLocaleString()]}),[25,17,18,22,22,17,19,22,22,20,24,22]);else pdfNarrative(doc,ctx,'Status','No e-commerce records.');
  pdfBlueSection(doc,ctx,'Offline / event performance detail','04C · physical evidence');if(offline.length)pdfRows(doc,ctx,['Creator','Event','Observed','Capacity','Attendance','Leads','QR scans','Demos','Samples','Conversions','Engagement','Revenue'],offline.map(x=>{const m=x.metadata||{};return [S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator',m.eventType||'—',x.observed_at||'—',m.capacity==null?'—':Number(m.capacity).toLocaleString(),m.attendance==null?'—':Number(m.attendance).toLocaleString(),m.qualifiedLeads==null?'—':Number(m.qualifiedLeads).toLocaleString(),m.qrScans==null?'—':Number(m.qrScans).toLocaleString(),m.demos==null?'—':Number(m.demos).toLocaleString(),m.samples==null?'—':Number(m.samples).toLocaleString(),x.conversions==null?'—':Number(x.conversions).toLocaleString(),m.engagement==null?'—':Number(m.engagement).toLocaleString(),x.revenue_thb==null?'—':pdfFmt(x.revenue_thb,'THB')]}),[25,20,18,19,20,19,18,18,18,19,20,22]);else pdfNarrative(doc,ctx,'Status','No offline/event records.');
 
+ pdfBlueSection(doc,ctx,'Complete evidence ledger','04D · every recorded field');
+ if(perf.length){perf.forEach((x,i)=>{pdfPageBreak(doc,ctx,25);const nm=S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator';pdfNarrative(doc,ctx,`${i+1}. ${nm} · ${String(x.metadata?.channelType||'PERFORMANCE').toUpperCase()}`,`Observed ${x.observed_at||'—'} · Every stored base field and metadata field is reproduced below for auditability.`);pdfRows(doc,ctx,['Recorded field','Value'],pdfCompleteEvidenceRows(x),[58,122]);});}else pdfNarrative(doc,ctx,'Status','No observed evidence records are available.');
  const charts=[['Outcome trend','Revenue vs Spend across observed dates',reportSvgLineChart(visuals.trend,{title:'Observed financial movement',aria:'Revenue and spend over observed dates',width:760,height:390}),760,390],['Creator performance','Observed outcome score by creator',reportSvgBarChart(visuals.bars,{title:'Completed outcome score',aria:'Creator observed outcome scores',width:760,height:390}),760,390],['Revenue contribution','Observed revenue contribution by creator',reportSvgRevenueContribution(visuals.revBars,{title:'Revenue share by creator',aria:'Revenue contribution share by creator',width:760,height:390}),760,390],['Evidence mix','Observed records by evidence type',pdfDonutSvg(visuals.mix),520,300]];
  for(let i=0;i<charts.length;i++){const [title,note,svg,sw,sh]=charts[i];doc.addPage();ctx.header();ctx.footer();ctx.y=24;pdfChartTitle(doc,ctx,title,note);const maxW=ctx.W-28,ratio=sw/sh,w=maxW,h=Math.min(90,maxW/ratio);await pdfAddSvgImage(doc,svg,14,ctx.y,w,h);ctx.y+=h+8;const related=i===0?visuals.trend.map(x=>[x.label,x.a==null?'—':pdfFmt(x.a,'THB'),x.b==null?'—':pdfFmt(x.b,'THB')]):i===1?visuals.bars.map(x=>[x.label,Math.round(x.value)]):i===2?visuals.revBars.map(x=>[x.label,pdfFmt(x.value,'THB')]):visuals.mix.map(x=>[x.label,Number(x.value)]);pdfRows(doc,ctx,i===0?['Observed date','Revenue','Spend']:i===1?['Creator','Observed score']:i===2?['Creator','Revenue']:['Evidence type','Records'],related,i===0?[55,63,64]:[115,67]);}
 
@@ -4929,3 +4978,126 @@ async function buildPremiumFullPDF(){
  doc.save(pdfSaveName('KOL-IDS_Premium-Campaign-Intelligence',S.selectedCampaign?.name));toast('Premium detailed PDF saved','good');
 }
 function downloadFullPDF(){if(reportExportIsTrial()){showPaidExportGate();return}buildPremiumFullPDF().catch(err=>{console.error(err);toast('Could not generate the detailed PDF. Please try again.','error')})}
+
+
+/* KOL IDS REPORT · FINAL CLEAN OVERRIDE · 20261006 */
+(function(){
+ const styleId='kol-ids-report-final-clean-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  /* One restrained visual language: white, navy text, royal blue accents. */
+  .kol-report-page .report-chart-grid{
+    gap:16px!important;
+  }
+  .kol-report-page .report-chart-card{
+    min-width:0!important;
+    min-height:0!important;
+    background:#FFFFFF!important;
+    border:1px solid #DCE4EF!important;
+    border-top:2px solid #2454C7!important;
+    border-radius:14px!important;
+    padding:18px 18px 16px!important;
+    box-shadow:none!important;
+    overflow:hidden!important;
+  }
+  .kol-report-page .report-chart-card:hover{
+    transform:none!important;
+    box-shadow:none!important;
+  }
+  .kol-report-page .report-chart-head{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:12px!important;
+    margin:0 0 12px!important;
+    padding:0 0 10px!important;
+    border-bottom:1px solid #E8EDF4!important;
+  }
+  .kol-report-page .report-chart-head b{
+    color:#17243C!important;
+    font-size:14px!important;
+    line-height:1.2!important;
+    font-weight:800!important;
+    letter-spacing:-.02em!important;
+  }
+  .kol-report-page .report-chart-head span{
+    color:#6B7A91!important;
+    font-size:9px!important;
+    line-height:1.2!important;
+    font-weight:750!important;
+    text-transform:uppercase!important;
+    letter-spacing:.08em!important;
+  }
+  .kol-report-page .report-chart-svg{
+    display:block!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  /* Readable chart typography */
+  .kol-report-page .report-chart-svg text{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+  .kol-report-page .rchart-gridline{stroke:#E5EBF3!important;stroke-width:1!important}
+  .kol-report-page .rchart-axis{fill:#687990!important;font-size:12px!important;font-weight:650!important}
+  .kol-report-page .rchart-axis-heading{fill:#5D6E86!important;font-size:10px!important;font-weight:700!important}
+  .kol-report-page .rchart-label{fill:#4F6078!important;font-size:12px!important;font-weight:650!important}
+  .kol-report-page .rchart-label-strong{fill:#263A58!important;font-size:13px!important;font-weight:750!important}
+  .kol-report-page .rchart-value{fill:#17243C!important;font-size:14px!important;font-weight:900!important}
+  .kol-report-page .rchart-share{fill:#17243C!important;font-size:13px!important;font-weight:900!important}
+  .kol-report-page .rchart-legend{fill:#30415D!important;font-size:11px!important;font-weight:750!important}
+  .kol-report-page .rchart-point-value{fill:#17243C!important;font-size:12px!important;font-weight:900!important}
+  .kol-report-page .rchart-dot-a-text,.kol-report-page .rchart-dot-b-text{fill:#17243C!important}
+  /* Everything visual stays in the same royal-blue family. */
+  .kol-report-page .rchart-bar{fill:#2454C7!important;opacity:1!important}
+  .kol-report-page .rchart-bar-track{fill:#EEF2F8!important}
+  .kol-report-page .rchart-revenue-bar-0{fill:#2454C7!important}
+  .kol-report-page .rchart-revenue-bar-1{fill:#4B73D5!important}
+  .kol-report-page .rchart-revenue-bar-2{fill:#6D8DDF!important}
+  .kol-report-page .rchart-revenue-bar-3{fill:#91A9E9!important}
+  .kol-report-page .rchart-revenue-bar-4{fill:#B4C4F2!important}
+  .kol-report-page .rchart-revenue-bar-5{fill:#D7E0FA!important}
+  /* Outcome trend: both series remain dark blue; dash pattern is the only distinction. */
+  .kol-report-page .rchart-line-a{stroke:#2454C7!important;stroke-width:3!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
+  .kol-report-page .rchart-line-b{stroke:#2454C7!important;stroke-width:2.6!important;stroke-linecap:round!important;stroke-linejoin:round!important;stroke-dasharray:7 5!important;fill:none!important}
+  .kol-report-page .rchart-dot-a{fill:#2454C7!important;stroke:#FFFFFF!important;stroke-width:2.5!important}
+  .kol-report-page .rchart-dot-b{fill:#2454C7!important;stroke:#FFFFFF!important;stroke-width:2.5!important}
+  /* Donut stays blue-only with readable legend. */
+  .kol-report-page .report-donut{box-shadow:0 0 0 1px #D7E1F0!important}
+  .kol-report-page .report-donut>div{background:#FFFFFF!important;box-shadow:none!important}
+  .kol-report-page .report-donut strong{color:#17243C!important}
+  .kol-report-page .report-donut span{color:#6B7A91!important}
+  .kol-report-page .report-legend{gap:11px!important;min-width:180px!important}
+  .kol-report-page .report-legend>div{font-size:12px!important;grid-template-columns:9px 1fr auto!important;gap:9px!important}
+  .kol-report-page .report-legend i{width:9px!important;height:9px!important}
+  .kol-report-page .report-legend span{color:#4F6078!important;font-weight:700!important}
+  .kol-report-page .report-legend b{color:#2454C7!important;font-size:12px!important;font-weight:900!important}
+  .kol-report-page .report-chart-empty{
+    min-height:250px!important;
+    height:250px!important;
+    border:1px dashed #C9D5E6!important;
+    border-radius:10px!important;
+    background:#FBFCFE!important;
+    color:#65758C!important;
+    font-size:13px!important;
+    font-weight:700!important;
+  }
+  /* Keep the surrounding report cards clean too. */
+  .kol-report-page > .card{
+    background:#FFFFFF!important;
+    border:1px solid #E0E6EE!important;
+    box-shadow:none!important;
+    border-radius:14px!important;
+  }
+  .kol-report-page > .hero{
+    background:#FFFFFF!important;
+    border:1px solid #E0E6EE!important;
+    box-shadow:none!important;
+    border-radius:14px!important;
+  }
+  .kol-report-page > .hero h2,.kol-report-page > .card h2{color:#17243C!important}
+  .kol-report-page .label,.kol-report-page .sub{color:#687990!important}
+  @media(max-width:900px){
+    .kol-report-page .report-chart-grid{grid-template-columns:1fr!important}
+  }
+ `;document.head.appendChild(s);
+})();
