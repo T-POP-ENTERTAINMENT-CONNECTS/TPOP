@@ -482,6 +482,33 @@ th,td{padding:13px 12px}
 .access-gate-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}.access-gate-meta>div{min-width:0;border:1px solid #e3e6e9;border-radius:13px;padding:13px 14px;background:#fff}.access-gate-meta span{display:block;color:#8b9298;font-size:8px;letter-spacing:.14em;font-weight:900;margin-bottom:6px}.access-gate-meta b{display:block;font-size:12px;color:#15171a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .access-gate-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:22px}.access-gate-actions .btn{min-height:42px;padding:10px 15px}.access-gate-actions .btn.ghost{border-color:transparent;color:#777980}.access-gate-foot{margin-top:18px;color:#8f969c;font-size:9px;line-height:1.5}
 @media(max-width:620px){.access-gate{padding:18px 12px;place-items:start center}.access-gate-shell{margin-top:10vh}.access-gate-card{padding:26px 20px;border-radius:20px}.access-gate-card h1{font-size:28px}.access-gate-meta{grid-template-columns:1fr}.access-gate-actions{display:grid;grid-template-columns:1fr}.access-gate-actions .btn{width:100%}.access-gate-brand{margin-left:2px}}
+
+/* V25 · Translucent Luxury Surface System */
+:root{--glass:rgba(255,255,255,.62);--glass-strong:rgba(255,255,255,.76);--glass-soft:rgba(255,255,255,.46);--glass-line:rgba(120,130,140,.16);--glass-shadow:0 18px 55px rgba(25,30,38,.055)}
+body{background:radial-gradient(900px 520px at 84% -8%,rgba(79,215,232,.11),transparent 62%),radial-gradient(720px 420px at 8% 18%,rgba(128,103,232,.035),transparent 65%),linear-gradient(180deg,#fbfcfd,#f4f5f7)}
+.kol-top{background:rgba(255,255,255,.72)!important;background-color:rgba(255,255,255,.72)!important;background-image:none!important;backdrop-filter:blur(18px) saturate(125%)!important;-webkit-backdrop-filter:blur(18px) saturate(125%)!important;border-bottom-color:rgba(160,168,176,.18)!important;box-shadow:0 8px 30px rgba(20,22,30,.025)}
+.card,.campaign-intake,.campaign-reference-page .campaign-intake{background:rgba(255,255,255,.66);border-color:rgba(160,168,176,.18);box-shadow:var(--glass-shadow);backdrop-filter:blur(16px) saturate(120%);-webkit-backdrop-filter:blur(16px) saturate(120%)}
+.metric,.creator-fit-card,.creator-fit-recovery,.table-wrap,.signal-box,.weight-box,.campaign-intake .objective,.campaign-intake .choice,.campaign-reference-page .objective,.campaign-reference-page .choice,.top-chip,.side-foot{background:rgba(255,255,255,.58);border-color:rgba(150,160,170,.16)}
+.metric,.creator-fit-card{box-shadow:0 10px 34px rgba(25,30,38,.035)}
+.table-wrap{box-shadow:0 10px 34px rgba(25,30,38,.03)}
+th{background:rgba(248,249,250,.56)}
+.field input,.field textarea,.field select,.campaign-intake .field input,.campaign-intake .field textarea,.campaign-intake .field select,.campaign-reference-page .field input,.campaign-reference-page .field select,.campaign-reference-page .field textarea{background:rgba(255,255,255,.62);border-color:rgba(150,160,170,.2)}
+.btn{background:rgba(255,255,255,.58);border-color:rgba(135,145,155,.2);box-shadow:0 5px 18px rgba(25,30,38,.025)}
+.btn.primary{background:rgba(23,23,27,.88);border-color:rgba(23,23,27,.78);box-shadow:0 8px 24px rgba(20,20,25,.11)}
+.btn.cyan{background:rgba(79,215,232,.68);border-color:rgba(79,215,232,.52);box-shadow:0 8px 24px rgba(79,215,232,.12)}
+.chip,.pill,.selected-chip,.gen-code-badge{background:rgba(255,255,255,.55);border-color:rgba(150,160,170,.17)}
+.chip.selected,.pill.cyan{background:rgba(227,251,254,.62);border-color:rgba(183,237,243,.62)}
+.progress{background:rgba(220,224,228,.52)}
+.score-ring{background:conic-gradient(rgba(79,215,232,.78) calc(var(--score)*1%),rgba(220,224,228,.5) 0)}
+.score-ring:after{background:rgba(255,255,255,.78)}
+.dark-card{background:linear-gradient(135deg,rgba(23,23,27,.92),rgba(41,40,47,.82));border:1px solid rgba(255,255,255,.07);box-shadow:0 25px 70px rgba(20,20,26,.12);backdrop-filter:blur(18px) saturate(115%);-webkit-backdrop-filter:blur(18px) saturate(115%)}
+.dark-card .reason{background:rgba(255,255,255,.055)}
+.kol-side{background:rgba(255,255,255,.78);backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);border-right-color:rgba(160,168,176,.18)}
+.kol-nav button.active{background:rgba(223,245,255,.62);border-color:rgba(188,230,243,.55)}
+.kol-logo{background:linear-gradient(145deg,rgba(244,255,255,.92),rgba(79,215,232,.72));box-shadow:0 9px 28px rgba(79,215,232,.16)}
+.campaign-reference-page .intake-section{border-bottom-color:rgba(160,168,176,.14)}
+.campaign-reference-page .selected-strip,.campaign-intake .selected-strip,.workflow-side-note{background:rgba(247,249,250,.5);border-color:rgba(160,168,176,.15)}
+.reason,.creator-fit-reason{background:rgba(242,251,252,.55)}
 ` ;document.head.appendChild(s)}
 function initials(){const s=S.session?.user?.email||S.org?.name||'KOL';return s.split(/[^A-Za-z0-9]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'K'}
 async function loadContext(){const {data,error}=await sb.rpc('bootstrap_workspace');if(error)throw error;S.org=data.organization;S.membership=data.membership;S.plan=data.plan;S.subscription=data.subscription;S.access=Boolean(data.access_granted);S.accessReason=data.access_reason||null;return data}
@@ -1691,52 +1718,101 @@ function reportLiveSnapshot(){
 }
 
 function reportSvgBarChart(items, opts={}){
- const width=opts.width||900,height=opts.height||330,pad={l:190,r:42,t:38,b:42};
+ const width=opts.width||900,height=opts.height||340,pad={l:190,r:120,t:48,b:54};
  const valid=items.filter(x=>Number.isFinite(Number(x.value)));
  if(!valid.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const max=Math.max(...valid.map(x=>Number(x.value)),1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
- const rowH=Math.max(34,innerH/valid.length),barH=Math.min(13,rowH*.30);
- const ticks=4;
- const grid=Array.from({length:ticks+1},(_,i)=>{const x=pad.l+innerW*i/ticks;const v=max*i/ticks;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+innerH}" class="rchart-gridline"/><text x="${x}" y="${height-8}" text-anchor="middle" class="rchart-axis">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text>`}).join('');
+ const rowH=Math.max(38,innerH/valid.length),barH=Math.min(18,rowH*.34);
+ const ticks=5;
+ const grid=Array.from({length:ticks+1},(_,i)=>{const x=pad.l+innerW*i/ticks;const v=max*i/ticks;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+innerH}" class="rchart-gridline"/><text x="${x}" y="${height-15}" text-anchor="middle" class="rchart-axis">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text>`}).join('');
  const bars=valid.map((x,i)=>{
    const v=Number(x.value)||0,y=pad.t+i*rowH+(rowH-barH)/2,w=Math.max(2,v/max*innerW);
-   const label=String(x.label||'').length>24?String(x.label).slice(0,23)+'…':String(x.label||'');
-   return `<g><text x="${pad.l-12}" y="${y+barH/2+4}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="${barH}" rx="5" class="rchart-bar"/><text x="${Math.min(width-pad.r,w+pad.l+8)}" y="${y+barH/2+4}" class="rchart-value">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text></g>`;
+   const label=String(x.label||'');
+   const value=opts.format?opts.format(v):String(Math.round(v));
+   const valueX=Math.min(width-pad.r+4,pad.l+w+10);
+   return `<g><text x="${pad.l-16}" y="${y+barH/2+6}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="${barH}" rx="7" class="rchart-bar"/><text x="${valueX}" y="${y+barH/2+6}" class="rchart-value">${esc(value)}</text></g>`;
  }).join('');
- return `<svg class="report-chart-svg report-chart-horizontal" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Bar chart')}"><text x="${pad.l}" y="16" class="rchart-title">${esc(opts.title||'')}</text>${grid}${bars}</svg>`;
+ return `<svg class="report-chart-svg report-chart-horizontal" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Bar chart')}"><text x="${pad.l}" y="24" class="rchart-title">${esc(opts.title||'')}</text>${grid}${bars}</svg>`;
 }
+
 function reportSvgLineChart(items, opts={}){
- const width=opts.width||900,height=opts.height||330,pad={l:74,r:34,t:46,b:58};
+ const width=opts.width||900,height=opts.height||340,pad={l:84,r:84,t:58,b:58};
  if(!items.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- const all=items.flatMap(x=>[Number(x.a),Number(x.b)]).filter(Number.isFinite); if(!all.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- const max=Math.max(...all,1),min=Math.min(0,...all),range=Math.max(max-min,1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
- const point=(v,i)=>[pad.l+(items.length===1?innerW/2:i*innerW/(items.length-1)),pad.t+innerH-(Number(v)-min)/range*innerH];
- const path=(key)=>items.map((x,i)=>point(x[key],i).map(n=>n.toFixed(1)).join(',')).join(' ');
- const poly=(key,cls)=>`<polyline fill="none" class="${cls}" points="${path(key)}"/>`;
- const dots=key=>items.map((x,i)=>{const [cx,cy]=point(x[key],i);return `<circle cx="${cx}" cy="${cy}" r="2.5" class="${key==='a'?'rchart-dot-a':'rchart-dot-b'}"/>`}).join('');
- const grid=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4;const v=max-(max-min)*i/4;return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-10}" y="${y+4}" text-anchor="end" class="rchart-axis">${esc(opts.formatAxis?opts.formatAxis(v):money(v))}</text>`}).join('');
- const labels=items.map((x,i)=>{const [cx]=point(x.a,i);return `<text x="${cx}" y="${height-14}" text-anchor="middle" class="rchart-label">${esc(String(x.label||'').slice(0,12))}</text>`}).join('');
- return `<svg class="report-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Line chart')}">${grid}${poly('a','rchart-line-a')}${poly('b','rchart-line-b')}${dots('a')}${dots('b')}${labels}<g transform="translate(${width-180},12)"><circle cx="4" cy="4" r="4" class="rchart-dot-a"/><text x="12" y="8" class="rchart-legend">Revenue</text><circle cx="80" cy="4" r="4" class="rchart-dot-b"/><text x="88" y="8" class="rchart-legend">Spend</text></g><text x="${pad.l}" y="18" class="rchart-title">${esc(opts.title||'')}</text></svg>`;
+ const finiteA=items.map(x=>Number(x.a)).filter(Number.isFinite),finiteB=items.map(x=>Number(x.b)).filter(Number.isFinite);
+ if(!finiteA.length&&!finiteB.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
+ const maxA=Math.max(...finiteA,1),maxB=Math.max(...finiteB,1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
+ const xAt=i=>pad.l+(items.length===1?innerW/2:i*innerW/(items.length-1));
+ const yA=v=>pad.t+innerH-(Number(v)/maxA)*innerH;
+ const yB=v=>pad.t+innerH-(Number(v)/maxB)*innerH;
+ const segments=(key,yFn,cls)=>{
+   const out=[];let pts=[];
+   items.forEach((x,i)=>{const v=Number(x[key]);if(Number.isFinite(v)){pts.push(`${xAt(i).toFixed(1)},${yFn(v).toFixed(1)}`)}else if(pts.length){out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});
+   if(pts.length)out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);
+   return out.join('');
+ };
+ const dots=(key,yFn,cls)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=yFn(v);return `<circle cx="${cx}" cy="${cy}" r="4" class="${cls}"/>`}).join('');
+ const fmt=opts.formatAxis||money;
+ const leftGrid=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4,v=maxA-(maxA*i/4);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-12}" y="${y+5}" text-anchor="end" class="rchart-axis">${esc(fmt(v))}</text>`}).join('');
+ const rightAxis=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4,v=maxB-(maxB*i/4);return `<text x="${width-pad.r+12}" y="${y+5}" text-anchor="start" class="rchart-axis">${esc(fmt(v))}</text>`}).join('');
+ const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-18}" text-anchor="middle" class="rchart-label">${esc(String(x.label||'').slice(0,16))}</text>`).join('');
+ const aLabel=finiteA.length?'Revenue (THB)':'Revenue'; const bLabel=finiteB.length?'Spend (THB)':'Spend';
+ return `<svg class="report-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Line chart')}">
+ ${leftGrid}${rightAxis}
+ <text x="${pad.l}" y="40" class="rchart-axis rchart-axis-heading">${esc(aLabel)}</text><text x="${width-pad.r}" y="40" text-anchor="end" class="rchart-axis rchart-axis-heading">${esc(bLabel)}</text>
+ ${segments('a',yA,'rchart-line-a')}${segments('b',yB,'rchart-line-b')}${dots('a',yA,'rchart-dot-a')}${dots('b',yB,'rchart-dot-b')}${labels}
+ <g transform="translate(${Math.max(pad.l,width-270)},14)"><circle cx="5" cy="5" r="5" class="rchart-dot-a"/><text x="16" y="9" class="rchart-legend">Revenue</text><circle cx="104" cy="5" r="5" class="rchart-dot-b"/><text x="115" y="9" class="rchart-legend">Spend</text></g>
+ <text x="${pad.l}" y="20" class="rchart-title">${esc(opts.title||'')}</text></svg>`;
 }
+
+function reportSvgRevenueContribution(items, opts={}){
+ const valid=items.filter(x=>Number.isFinite(Number(x.value))&&Number(x.value)>0);
+ if(!valid.length)return `<div class="report-chart-empty">Not enough revenue evidence to visualize</div>`;
+ const total=valid.reduce((a,x)=>a+Number(x.value),0);
+ const width=opts.width||900,height=Math.max(330,56+valid.length*50),pad={l:190,r:150,t:52,b:44};
+ const innerW=width-pad.l-pad.r,rowH=(height-pad.t-pad.b)/valid.length;
+ const grid=Array.from({length:6},(_,i)=>{const x=pad.l+innerW*i/5;const pct=i*20;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${height-pad.b}" class="rchart-gridline"/><text x="${x}" y="${height-13}" text-anchor="middle" class="rchart-axis">${pct}%</text>`}).join('');
+ const rows=valid.map((x,i)=>{const v=Number(x.value),share=v/total*100,y=pad.t+i*rowH+(rowH-20)/2,w=Math.max(2,share/100*innerW),label=String(x.label||'');return `<g><text x="${pad.l-16}" y="${y+15}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="20" rx="8" class="rchart-bar"/><text x="${Math.min(width-pad.r-78,pad.l+w+10)}" y="${y+15}" class="rchart-share">${share.toFixed(1)}%</text><text x="${width-pad.r+12}" y="${y+15}" class="rchart-value">${esc(money(v))}</text></g>`}).join('');
+ return `<svg class="report-chart-svg report-chart-revenue" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue contribution by creator')}"><text x="${pad.l}" y="24" class="rchart-title">${esc(opts.title||'Revenue contribution by creator')}</text>${grid}${rows}<text x="${width-pad.r+12}" y="24" class="rchart-axis rchart-axis-heading">Revenue</text></svg>`;
+}
+
 function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- let offset=0,colors=['#17171b','#63cbd9','#b99b5f','#7b8790'];
+ let offset=0,colors=['#2454c7','#59bfcb','#b9a06a','#8a9ae2'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
 function buildReportVisuals(snap){
- const {perf,impact,decisionRows}=snap;
+ const {perf,impact}=snap;
  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
- const byCreator={}; perf.forEach(x=>{const id=String(x.creator_id||'unknown');const o=byCreator[id]||(byCreator[id]={name:creatorName(x.creator_id),revenue:0,score:[],records:0});o.records++;if(x.revenue_thb!=null)o.revenue+=Number(x.revenue_thb)||0;if(x.metadata?.netSales!=null)o.revenue+=Number(x.metadata.netSales)||0;if(x.metadata?.gmv!=null&&x.revenue_thb==null&&x.metadata?.netSales==null)o.revenue+=Number(x.metadata.gmv)||0;if(x.actual_score!=null&&Number.isFinite(Number(x.actual_score)))o.score.push(Number(x.actual_score));});
+ const byCreator={};
+ perf.forEach(x=>{
+   const id=String(x.creator_id||'unknown');
+   const o=byCreator[id]||(byCreator[id]={name:creatorName(x.creator_id),revenue:0,score:[],records:0});
+   o.records++;
+   if(x.revenue_thb!=null)o.revenue+=Number(x.revenue_thb)||0;
+   if(x.metadata?.netSales!=null&&x.revenue_thb==null)o.revenue+=Number(x.metadata.netSales)||0;
+   if(x.metadata?.gmv!=null&&x.revenue_thb==null&&x.metadata?.netSales==null)o.revenue+=Number(x.metadata.gmv)||0;
+   if(x.actual_score!=null&&Number.isFinite(Number(x.actual_score)))o.score.push(Number(x.actual_score));
+ });
  const creators=Object.values(byCreator);
  const bars=creators.filter(x=>x.score.length).map(x=>({label:x.name,value:x.score.reduce((a,b)=>a+b,0)/x.score.length})).sort((a,b)=>b.value-a.value).slice(0,6);
  const revBars=creators.filter(x=>x.revenue>0).map(x=>({label:x.name,value:x.revenue})).sort((a,b)=>b.value-a.value).slice(0,6);
- const dated={}; perf.forEach(x=>{if(x.observed_at){const d=String(x.observed_at).slice(0,10);const q=dated[d]||(dated[d]={label:d.slice(5),a:0,b:0});if(x.revenue_thb!=null)q.a+=Number(x.revenue_thb)||0;if(x.metadata?.netSales!=null)q.a+=Number(x.metadata.netSales)||0;if(x.spend_thb!=null)q.b+=Number(x.spend_thb)||0;}});
- const trend=Object.values(dated).sort((a,b)=>a.label.localeCompare(b.label)).slice(-10);
+ const dated={};
+ perf.forEach(x=>{
+   if(!x.observed_at)return;
+   const date=String(x.observed_at).slice(0,10);
+   const q=dated[date]||(dated[date]={date,label:date.slice(5),a:null,b:null});
+   if(x.revenue_thb!=null)q.a=(q.a||0)+(Number(x.revenue_thb)||0);
+   else if(x.metadata?.netSales!=null)q.a=(q.a||0)+(Number(x.metadata.netSales)||0);
+   else if(x.metadata?.gmv!=null)q.a=(q.a||0)+(Number(x.metadata.gmv)||0);
+   if(x.spend_thb!=null)q.b=(q.b||0)+(Number(x.spend_thb)||0);
+ });
+ const trend=Object.values(dated).sort((a,b)=>a.date.localeCompare(b.date)).slice(-10);
  const mix=[{label:'Revenue',value:impact.revenue||0},{label:'Spend',value:impact.spend||0},{label:'Conversions',value:impact.conversions||0}];
  return {bars,revBars,trend,mix};
 }
+
 function reports(c){
  // HARD ROUTE GUARD: Reports is Step 07 only. If a stale/late callback reaches here on Step 06,
  // immediately restore the Business Impact renderer instead of overwriting the page.
@@ -1755,7 +1831,7 @@ function reports(c){
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">01 · Campaign & Audience</div><h2>Strategic context</h2></div></div><div class="grid g2"><div class="signal-box"><h4>Campaign</h4><p><b>${esc(S.selectedCampaign?.name||'·')}</b></p><p>${esc((p.objectives||[]).join(' · ')||p.objective||p.goal||'·')}</p><p>${esc((p.brandPersonalities||[]).join(' · ')||'·')}</p></div><div class="signal-box"><h4>Audience</h4><p><b>${esc(S.selectedAudience?.payload?.audienceType||'·')}</b></p><p>${esc(S.selectedAudience?.payload?.audiencePersona||'·')}</p></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">02 · Creator Decision</div><h2>Creator Decision Evidence</h2><p class="sub">Approval is the user decision. The decision signal below is the intelligence engine recommendation and evidence state.</p></div></div>${selected.length?`<div class="table-wrap"><table><thead><tr><th>Creator</th><th>Decision signal</th><th>Overall</th><th>Audience</th><th>Content</th><th>Brand</th><th>Performance</th><th>Commercial</th><th>Risk</th></tr></thead><tbody>${selected.map(x=>{const e=x.decision.evidence||{};return `<tr><td><b>${esc(x.creator.name)}</b></td><td>${esc(x.decision.decision||'·')}</td><td>${x.decision.score==null?'·':Math.round(x.decision.score)}</td><td>${Math.round(e.audienceFit??50)}</td><td>${Math.round(e.contentFit??50)}</td><td>${Math.round(e.brandFit??50)}</td><td>${Math.round(e.performance??0)}</td><td>${Math.round(e.commercial??50)}</td><td>${Math.round(e.risk??50)}</td></tr>`}).join('')}</tbody></table></div>` :'<div class="empty">No creators have been approved for performance tracking yet.</div>'}</section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">03 · Performance</div><h2>All observed evidence & outcomes</h2><p class="sub">Every observed record is retained and reported. Digital, e-commerce and event/offline evidence remains linked to the campaign and creator.</p></div></div><div class="grid g2"><div class="signal-box"><h4>Multi-platform digital</h4><p>${digital.length?`${digital.length} record${digital.length===1?'':'s'} · Reach ${displayMetric(sumKnown(digital,'reach'))} · Views ${displayMetric(sumKnown(digital,'views'))} · Impressions ${displayMetric(sumKnown(digital,'impressions'))} · Clicks ${displayMetric(sumKnown(digital,'clicks'))} · Conversions ${displayMetric(sumKnown(digital,'conversions'))}`:'No records'}</p></div><div class="signal-box"><h4>E-commerce</h4><p>${ecommerce.length?`${ecommerce.length} record${ecommerce.length===1?'':'s'} · GMV ${displayMetric(sumMetaKnown(ecommerce,'gmv'))} · Net sales ${displayMetric(sumMetaKnown(ecommerce,'netSales'))} · Orders ${displayMetric(sumMetaKnown(ecommerce,'orders'))} · Paid orders ${displayMetric(sumMetaKnown(ecommerce,'paidOrders'))}`:'No records'}</p></div><div class="signal-box"><h4>Event / offline</h4><p>${offline.length?`${offline.length} record${offline.length===1?'':'s'} · Attendance ${displayMetric(sumMetaKnown(offline,'attendance'))} · Capacity ${displayMetric(sumMetaKnown(offline,'capacity'))} · Qualified leads ${displayMetric(sumMetaKnown(offline,'qualifiedLeads'))} · Demos ${displayMetric(sumMetaKnown(offline,'demos'))} · Samples ${displayMetric(sumMetaKnown(offline,'samples'))} · Conversions ${displayMetric(sumKnown(offline,'conversions'))}`:'No records'}</p></div></div><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Creator</th><th>Type</th><th>Date</th><th>Outcome</th><th>Revenue</th><th>Spend</th><th>Key evidence</th></tr></thead><tbody>${perf.length?perf.map(x=>{const t=String(x.metadata?.channelType||'PERFORMANCE').toUpperCase();const key=t==='ECOMMERCE'?`GMV ${money(x.metadata?.gmv)} · Orders ${money(x.metadata?.paidOrders||x.metadata?.orders)} · Commission ${money(x.metadata?.commissionAmount)}`:t==='OFFLINE'?`Attendance ${money(x.metadata?.attendance)} · Leads ${money(x.metadata?.qualifiedLeads)} · Demos ${money(x.metadata?.demos)}`:`Reach ${x.reach==null?'Not recorded':money(x.reach)} · Views ${x.views==null?'Not recorded':money(x.views)} · Clicks ${x.clicks==null?'Not recorded':money(x.clicks)} · Conv ${x.conversions==null?'Not recorded':money(x.conversions)}`;return `<tr><td>${esc(creatorName(x.creator_id))}</td><td>${esc(t)}</td><td>${esc(x.observed_at||'·')}</td><td>${x.actual_score==null?'Pending':Math.round(x.actual_score)+'/100'}</td><td>${displayMetric(x.revenue_thb)}</td><td>${displayMetric(x.spend_thb)}</td><td>${esc(key)}</td></tr>`}).join(''):'<tr><td colspan="7">No performance records yet.</td></tr>'}</tbody></table></div></section>
- <section class="card report-visuals" style="margin-top:14px"><div class="section-head"><div><div class="label">04 · VISUAL INTELLIGENCE</div><h2>Performance at a glance</h2><p class="sub">Charts use only observed campaign evidence. Missing or insufficient evidence is never converted into invented values.</p></div></div><div class="report-chart-grid"><div class="report-chart-card"><div class="report-chart-head"><b>Outcome trend</b><span>Revenue vs Spend</span></div>${reportSvgLineChart(buildReportVisuals(snap).trend,{title:'Observed financial movement',aria:'Revenue and spend over observed dates'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Creator performance</b><span>Observed score</span></div>${reportSvgBarChart(buildReportVisuals(snap).bars,{title:'Completed outcome score',aria:'Creator observed outcome scores'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Revenue contribution</b><span>By creator</span></div>${reportSvgBarChart(buildReportVisuals(snap).revBars,{title:'Recorded revenue by creator',format:v=>money(v),aria:'Recorded revenue by creator'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Evidence mix</b><span>Observed records</span></div>${reportSvgDonut(buildReportVisuals(snap).mix,{center:perf.length?String(perf.length):'0',centerLabel:'records'})}</div></div></section>
+ <section class="card report-visuals" style="margin-top:14px"><div class="section-head"><div><div class="label">04 · VISUAL INTELLIGENCE</div><h2>Performance at a glance</h2><p class="sub">Charts use only observed campaign evidence. Missing or insufficient evidence is never converted into invented values.</p></div></div><div class="report-chart-grid"><div class="report-chart-card"><div class="report-chart-head"><b>Outcome trend</b><span>Revenue vs Spend</span></div>${reportSvgLineChart(buildReportVisuals(snap).trend,{title:'Observed financial movement',aria:'Revenue and spend over observed dates'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Creator performance</b><span>Observed score</span></div>${reportSvgBarChart(buildReportVisuals(snap).bars,{title:'Completed outcome score',aria:'Creator observed outcome scores'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Revenue contribution</b><span>By creator</span></div>${reportSvgRevenueContribution(buildReportVisuals(snap).revBars,{title:'Revenue share by creator',aria:'Revenue contribution share by creator'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Evidence mix</b><span>Observed records</span></div>${reportSvgDonut(buildReportVisuals(snap).mix,{center:perf.length?String(perf.length):'0',centerLabel:'records'})}</div></div></section>
  <section class="card report-data-quality" style="margin-top:14px"><div class="section-head"><div><div class="label">05 · DATA COVERAGE & QUALITY</div><h2>Evidence coverage</h2><p class="sub">A transparent inventory of what the report actually observed. Missing evidence remains explicitly marked as unavailable.</p></div></div><div class="grid g4"><div class="metric"><span class="label">Digital records</span><strong>${digital.length}</strong><small>Reach · views · impressions · clicks · conversions</small></div><div class="metric"><span class="label">E-commerce records</span><strong>${ecommerce.length}</strong><small>GMV · net sales · orders · paid orders</small></div><div class="metric"><span class="label">Offline records</span><strong>${offline.length}</strong><small>Attendance · leads · demos · samples</small></div><div class="metric"><span class="label">Decision records</span><strong>${selected.length}</strong><small>Approved creator decisions linked to this campaign</small></div></div><div class="evidence-status-grid"><div class="evidence-status ${impact.hasRevenue?'is-present':'is-missing'}"><b>${impact.hasRevenue?'AVAILABLE':'MISSING'}</b><span>Revenue evidence</span></div><div class="evidence-status ${impact.hasSpend?'is-present':'is-missing'}"><b>${impact.hasSpend?'AVAILABLE':'MISSING'}</b><span>Spend evidence</span></div><div class="evidence-status ${impact.hasConversionEvidence?'is-present':'is-missing'}"><b>${impact.hasConversionEvidence?'AVAILABLE':'MISSING'}</b><span>Conversion evidence</span></div><div class="evidence-status ${impact.hasImpressionEvidence?'is-present':'is-missing'}"><b>${impact.hasImpressionEvidence?'AVAILABLE':'MISSING'}</b><span>Impression evidence</span></div><div class="evidence-status ${impact.hasClickEvidence?'is-present':'is-missing'}"><b>${impact.hasClickEvidence?'AVAILABLE':'MISSING'}</b><span>Click evidence</span></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">06 · Business Impact</div><h2>Observed business effect</h2><p class="sub">Calculated live from the linked performance records.</p></div></div><div class="grid g4"><div><span class="label">Revenue</span><div class="mini-stat">${perf.some(x=>x?.revenue_thb!=null||x?.metadata?.netSales!=null||x?.metadata?.gmv!=null)?money(impact.revenue):'Not recorded'}</div></div><div><span class="label">Spend</span><div class="mini-stat">${perf.some(x=>x?.spend_thb!=null)?money(impact.spend):'Not recorded'}</div></div><div><span class="label">ROI</span><div class="mini-stat">${impact.roi==null?'Not calculable':Math.round(impact.roi)+'%'}</div><small class="formula-note">((Revenue − Spend) ÷ Spend × 100)</small></div><div><span class="label">Conversions</span><div class="mini-stat">${perf.some(x=>x?.conversions!=null||x?.metadata?.paidOrders!=null)?money(impact.conversions):'Not recorded'}</div></div></div><div class="grid g4" style="margin-top:12px"><div><span class="label">Reach</span><div class="mini-stat">${money(impact.reach)}</div></div><div><span class="label">Views</span><div class="mini-stat">${money(impact.views)}</div></div><div><span class="label">Clicks</span><div class="mini-stat">${money(impact.clicks)}</div></div><div><span class="label">Event attendance</span><div class="mini-stat">${money(impact.attendance)}</div></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">06B · PERFORMANCE LEADERBOARD</div><h2>Top 3 Performance</h2><p class="sub">Shows only creators with a completed observed outcome score. Pending records stay out of the ranking until an actual score is recorded.</p></div></div>${topByCreator.length?`<div class="grid g3">${topByCreator.map((x,i)=>`<div class="signal-box"><div style="display:flex;justify-content:space-between;gap:12px"><b>#${i+1} ${esc(x.name)}</b><strong>${Math.round(x.score)}/100</strong></div><p>${x.n} observed record${x.n===1?'':'s'}</p></div>`).join('')}</div>`:'<div class="empty">No completed performance outcomes yet.</div>'}</section>
@@ -3178,6 +3254,119 @@ tbody tr:hover td{background:#fbfdfe}
 })();
 
 
+
+/* REPORTS EDITORIAL GLASS / INSTITUTIONAL BLUE PASS · 20261006 */
+(function(){
+ const styleId='kol-ids-reports-editorial-glass-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  :root{
+    --editorial-blue:#2454c7;
+    --editorial-blue-2:#7f92e5;
+    --editorial-blue-soft:rgba(36,84,199,.075);
+    --editorial-ink:#171a1e;
+    --editorial-body:#3f474e;
+    --editorial-muted:#788189;
+    --editorial-line:rgba(32,42,52,.095);
+  }
+  /* Overall report: quiet paper, generous white space, restrained glass surfaces. */
+  .kol-report-page{
+    background:
+      radial-gradient(700px 300px at 92% 0%,rgba(125,146,229,.075),transparent 68%),
+      radial-gradient(620px 300px at 6% 8%,rgba(255,255,255,.95),transparent 72%),
+      linear-gradient(180deg,#f8f9fa 0%,#f3f5f6 100%)!important;
+  }
+  .kol-report-page>.hero{
+    background:rgba(255,255,255,.78)!important;
+    border:1px solid rgba(210,216,222,.82)!important;
+    border-radius:2px!important;
+    box-shadow:0 18px 55px rgba(27,34,42,.045)!important;
+    backdrop-filter:blur(10px)!important;
+    -webkit-backdrop-filter:blur(10px)!important;
+  }
+  .kol-report-page>.hero h2{font-size:35px!important;font-weight:760!important;letter-spacing:-.055em!important;color:var(--editorial-ink)!important}
+  .kol-report-page>.hero p{font-size:12px!important;line-height:1.75!important;color:#586169!important;max-width:720px!important}
+  .kol-report-page>.hero:after{width:48px!important;height:2px!important;background:var(--editorial-blue)!important;opacity:.8}
+
+  .kol-report-page>.card{
+    background:rgba(255,255,255,.78)!important;
+    border:1px solid rgba(214,220,225,.82)!important;
+    border-radius:2px!important;
+    box-shadow:0 16px 45px rgba(28,35,42,.035)!important;
+    backdrop-filter:blur(10px)!important;
+    -webkit-backdrop-filter:blur(10px)!important;
+  }
+  .kol-report-page>.card .section-head{margin-bottom:19px!important}
+  .kol-report-page>.card .section-head h2{font-size:18px!important;font-weight:760!important;color:var(--editorial-ink)!important;letter-spacing:-.025em!important}
+  .kol-report-page>.card .section-head .sub{font-size:10px!important;line-height:1.6!important;color:#737d84!important}
+  .kol-report-page>.card .metric{
+    background:rgba(255,255,255,.60)!important;
+    border:1px solid rgba(220,225,229,.85)!important;
+    border-radius:2px!important;
+    box-shadow:none!important;
+  }
+  .kol-report-page>.card .metric strong{font-size:29px!important;color:#15181c!important;font-weight:780!important}
+  .kol-report-page>.card .metric small{color:#7b858c!important}
+
+  /* Editorial chart cards: thin rules, blue ink, no heavy dashboard chrome. */
+  .report-chart-grid{gap:20px!important}
+  .report-chart-card{
+    border:1px solid rgba(218,223,227,.82)!important;
+    border-radius:2px!important;
+    background:rgba(255,255,255,.54)!important;
+    padding:22px 22px 18px!important;
+    box-shadow:none!important;
+  }
+  .report-chart-head{margin-bottom:11px!important;padding-bottom:11px!important;border-bottom:1px solid rgba(32,42,52,.07)!important}
+  .report-chart-head b{font-size:13px!important;font-weight:720!important;color:#171b20!important}
+  .report-chart-head span{font-size:9px!important;color:#8b949a!important}
+  .rchart-title{font-size:9px!important;fill:#7e878e!important;font-weight:650!important}
+  .rchart-value{font-size:10px!important;fill:#1e2429!important;font-weight:760!important}
+  .rchart-label{font-size:9px!important;fill:#7b858c!important}
+  .rchart-label-strong{font-size:10px!important;fill:#4a545c!important;font-weight:650!important}
+  .rchart-axis{font-size:8px!important;fill:#a0a8ad!important}
+  .rchart-legend{font-size:9px!important;fill:#707a82!important}
+  .rchart-gridline{stroke:rgba(65,76,86,.105)!important;stroke-width:.55!important}
+  .rchart-bar{fill:#2454c7!important;opacity:.92!important}
+  .rchart-line-a{stroke:#2454c7!important;stroke-width:1.45!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
+  .rchart-line-b{stroke:#8a9ae2!important;stroke-width:1.15!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
+  .rchart-dot-a{fill:#2454c7!important}
+  .rchart-dot-b{fill:#8a9ae2!important}
+  .report-chart-empty{height:230px!important;border:1px dashed rgba(170,179,186,.45)!important;background:rgba(255,255,255,.42)!important;color:#8a9399!important}
+
+  /* Thin, quiet donut. The actual segment colors are defined in JS. */
+  .report-donut-wrap{min-height:238px!important;gap:34px!important}
+  .report-donut{width:164px!important;height:164px!important;flex-basis:164px!important;box-shadow:none!important}
+  .report-donut>div{width:134px!important;height:134px!important;background:rgba(255,255,255,.90)!important}
+  .report-donut strong{font-size:24px!important;font-weight:780!important;color:#171b20!important}
+  .report-donut span{font-size:8px!important;color:#899298!important;letter-spacing:.12em!important}
+  .report-legend{gap:13px!important;min-width:180px!important}
+  .report-legend>div{font-size:10px!important;grid-template-columns:7px 1fr auto!important;gap:9px!important}
+  .report-legend i{width:7px!important;height:7px!important;border-radius:50%!important}
+  .report-legend span{color:#68737b!important}
+  .report-legend b{font-size:10px!important;color:#1b2025!important;font-weight:740!important}
+
+  /* Evidence and tables should read like an annual report, not a control panel. */
+  .evidence-status-grid{gap:8px!important}
+  .evidence-status{padding:14px!important;border:1px solid rgba(216,222,226,.85)!important;background:rgba(255,255,255,.50)!important;border-radius:2px!important;box-shadow:none!important}
+  .evidence-status.is-present{border-color:rgba(36,84,199,.18)!important;background:rgba(36,84,199,.035)!important}
+  .evidence-status.is-present b{color:#2454c7!important}
+  .evidence-status.is-missing{background:rgba(255,255,255,.34)!important}
+  .evidence-status b{font-size:8px!important;letter-spacing:.12em!important}
+  .evidence-status span{font-size:10px!important;color:#5e6971!important}
+  .kol-report-page .table-wrap{background:rgba(255,255,255,.58)!important;border:1px solid rgba(214,220,225,.82)!important;border-radius:2px!important;box-shadow:none!important}
+  .kol-report-page table{background:transparent!important}
+  .kol-report-page th{background:rgba(246,248,249,.76)!important;color:#7c858c!important;border-bottom:1px solid rgba(32,42,52,.075)!important}
+  .kol-report-page td{color:#3c454c!important;border-bottom:1px solid rgba(32,42,52,.055)!important}
+  .kol-report-page .pill{border-radius:2px!important;background:rgba(36,84,199,.065)!important;color:#3158a4!important}
+
+  @media(max-width:900px){
+    .kol-report-page>.hero,.kol-report-page>.card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  }
+ `;
+ document.head.appendChild(s);
+})();
+
 /* REPORTS LUXURY ENTERPRISE REFINEMENT · 20261006 */
 (function(){
  const styleId='kol-ids-reports-luxury-20261006';
@@ -3258,116 +3447,38 @@ tbody tr:hover td{background:#fbfdfe}
   .evidence-status b{font-size:8px!important;letter-spacing:.12em!important}
   .evidence-status span{font-size:10px!important;color:#5f6970!important}
 
+  /* FINAL READABILITY PASS · chart typography and geometry */
+  .report-chart-card{padding:22px 22px 20px!important}
+  .report-chart-head b{font-size:15px!important;font-weight:800!important}
+  .report-chart-head span{font-size:10px!important}
+  .report-chart-svg{min-height:270px!important}
+  .rchart-title{font-size:12px!important;fill:#66727a!important;font-weight:750!important}
+  .rchart-value{font-size:13px!important;fill:#171b20!important;font-weight:820!important}
+  .rchart-share{font-size:12px!important;fill:#4b5962!important;font-weight:780!important}
+  .rchart-label{font-size:11px!important;fill:#68747c!important}
+  .rchart-label-strong{font-size:12px!important;fill:#252d33!important;font-weight:720!important}
+  .rchart-axis{font-size:10px!important;fill:#7f8a91!important}
+  .rchart-axis-heading{font-size:10px!important;fill:#5e6a72!important;font-weight:760!important}
+  .rchart-legend{font-size:11px!important;fill:#5f6b73!important;font-weight:650!important}
+  .rchart-gridline{stroke:#e7ebed!important;stroke-width:.7!important}
+  .rchart-bar{fill:#2454c7!important;opacity:.88!important}
+  .rchart-line-a{stroke:#2454c7!important;stroke-width:2.1!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+  .rchart-line-b{stroke:#59bfcb!important;stroke-width:1.9!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+  .rchart-dot-a{fill:#2454c7!important}.rchart-dot-b{fill:#59bfcb!important}
+  .report-donut-wrap{min-height:260px!important;gap:38px!important}
+  .report-donut{width:176px!important;height:176px!important;flex-basis:176px!important}
+  .report-donut>div{width:132px!important;height:132px!important}
+  .report-donut strong{font-size:28px!important;font-weight:820!important}
+  .report-donut span{font-size:10px!important}
+  .report-legend{gap:15px!important;min-width:200px!important}
+  .report-legend>div{font-size:12px!important;grid-template-columns:9px 1fr auto!important;gap:10px!important}
+  .report-legend b{font-size:12px!important}
+
   @media(max-width:900px){
     .kol-report-page>.card{box-shadow:none!important}
-    .report-chart-card{padding:16px!important}
+    .report-chart-card{padding:18px!important}
   }
  `;
  document.head.appendChild(s);
 })();
 
-
-
-/* FINAL LUXURY READABILITY PASS · ORIGINAL PALETTE PRESERVED · 20261006 */
-(function(){
-  const styleId='kol-ids-luxury-readability-original-palette-20261006';
-  if(document.getElementById(styleId)) return;
-  const s=document.createElement('style'); s.id=styleId; s.textContent=`
-    /* Keep the existing KOL IDS palette; refine only material, weight and hierarchy. */
-    .kol-report-page>.hero,
-    .kol-report-page>.card,
-    .kol-report-page .report-chart-card,
-    .kol-report-page .signal-box,
-    .kol-report-page .metric,
-    .kol-report-page .table-wrap{
-      background:rgba(255,255,255,.78)!important;
-      border-color:rgba(230,231,235,.78)!important;
-      box-shadow:0 16px 44px rgba(20,22,30,.035)!important;
-      backdrop-filter:blur(10px)!important;
-      -webkit-backdrop-filter:blur(10px)!important;
-    }
-    .kol-report-page>.hero{
-      background:rgba(255,255,255,.84)!important;
-    }
-    .kol-report-page>.card .metric,
-    .kol-report-page .signal-box{
-      background:rgba(255,255,255,.68)!important;
-      box-shadow:none!important;
-    }
-
-    /* Charts: larger type, lighter geometry, same original black/cyan/gold palette. */
-    .report-chart-grid{gap:18px!important}
-    .report-chart-card{
-      padding:22px!important;
-      border-radius:18px!important;
-      background:rgba(255,255,255,.68)!important;
-      border:1px solid rgba(230,231,235,.72)!important;
-      box-shadow:0 14px 38px rgba(20,22,30,.03)!important;
-      backdrop-filter:blur(8px)!important;
-      -webkit-backdrop-filter:blur(8px)!important;
-    }
-    .report-chart-head{margin-bottom:14px!important;padding-bottom:11px!important}
-    .report-chart-head b{font-size:15px!important;font-weight:780!important;letter-spacing:-.02em!important}
-    .report-chart-head span{font-size:11px!important}
-    .report-chart-svg{min-height:280px!important}
-    .rchart-title{font-size:13px!important;fill:#6d7880!important;font-weight:700!important}
-    .rchart-value{font-size:14px!important;fill:#17171b!important;font-weight:850!important}
-    .rchart-label{font-size:12px!important;fill:#78838a!important}
-    .rchart-label-strong{font-size:13px!important;fill:#34343b!important;font-weight:700!important}
-    .rchart-axis{font-size:11px!important;fill:#8a949b!important}
-    .rchart-legend{font-size:12px!important;fill:#657078!important}
-    .rchart-gridline{stroke:#edf0f2!important;stroke-width:.7!important}
-    .rchart-bar{fill:#17171b!important}
-    .rchart-line-a{stroke:#17171b!important;stroke-width:1.65!important;stroke-linecap:round!important;stroke-linejoin:round!important}
-    .rchart-line-b{stroke:#63cbd9!important;stroke-width:1.5!important;stroke-linecap:round!important;stroke-linejoin:round!important}
-    .rchart-dot-a{fill:#17171b!important}
-    .rchart-dot-b{fill:#63cbd9!important}
-
-    /* Donut: preserve the exact existing palette, but make the ring finer and labels clearer. */
-    .report-donut-wrap{min-height:285px!important;gap:38px!important}
-    .report-donut{width:190px!important;height:190px!important;flex-basis:190px!important}
-    .report-donut>div{width:158px!important;height:158px!important;background:rgba(255,255,255,.9)!important}
-    .report-donut strong{font-size:30px!important;font-weight:850!important;color:#17171b!important}
-    .report-donut span{font-size:10px!important;color:#7a858c!important;letter-spacing:.1em!important}
-    .report-legend{gap:14px!important;min-width:190px!important}
-    .report-legend>div{font-size:12px!important;grid-template-columns:9px 1fr auto!important;gap:10px!important}
-    .report-legend i{width:8px!important;height:8px!important;border-radius:50%!important}
-    .report-legend b{font-size:12px!important;font-weight:800!important}
-
-    /* Data tables / evidence: readable at first glance without increasing visual weight. */
-    .kol-report-page>.card th{font-size:11px!important;padding:14px 15px!important}
-    .kol-report-page>.card td{font-size:13px!important;padding:14px 15px!important}
-    .kol-report-page>.card .section-head h2{font-size:23px!important}
-    .kol-report-page>.card .section-head .sub{font-size:12.5px!important}
-    .kol-report-page>.card .signal-box h4{font-size:14px!important}
-    .kol-report-page>.card .signal-box p{font-size:12.5px!important}
-    .kol-report-page>.card .metric strong{font-size:30px!important}
-    .kol-report-page>.card .metric small{font-size:11.5px!important}
-
-    @media(max-width:900px){
-      .report-chart-svg{min-height:255px!important}
-      .report-donut-wrap{gap:24px!important}
-    }
-    @media(max-width:560px){
-      .kol-report-page>.card{background:rgba(255,255,255,.86)!important}
-      .report-chart-card{padding:18px!important}
-      .report-chart-svg{min-height:245px!important}
-      .rchart-title{font-size:12px!important}
-      .rchart-value{font-size:12px!important}
-      .rchart-label{font-size:11px!important}
-      .rchart-label-strong{font-size:11px!important}
-      .rchart-axis{font-size:10px!important}
-      .rchart-legend{font-size:10px!important}
-      .report-donut-wrap{min-height:240px!important;gap:16px!important}
-      .report-donut{width:150px!important;height:150px!important;flex-basis:150px!important}
-      .report-donut>div{width:124px!important;height:124px!important}
-      .report-donut strong{font-size:24px!important}
-      .report-donut span{font-size:8px!important}
-      .report-legend{min-width:125px!important;gap:10px!important}
-      .report-legend>div{font-size:10px!important}
-      .kol-report-page>.card th{font-size:9.5px!important}
-      .kol-report-page>.card td{font-size:11px!important}
-    }
-  `;
-  document.head.appendChild(s);
-})();
