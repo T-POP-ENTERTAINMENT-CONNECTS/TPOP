@@ -1718,11 +1718,11 @@ function reportLiveSnapshot(){
 }
 
 function reportSvgBarChart(items, opts={}){
- const width=opts.width||900,height=opts.height||340,pad={l:190,r:120,t:48,b:54};
+ const width=opts.width||980,height=opts.height||400,pad={l:220,r:145,t:58,b:68};
  const valid=items.filter(x=>Number.isFinite(Number(x.value)));
  if(!valid.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const max=Math.max(...valid.map(x=>Number(x.value)),1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
- const rowH=Math.max(38,innerH/valid.length),barH=Math.min(18,rowH*.34);
+ const rowH=Math.max(48,innerH/valid.length),barH=Math.min(24,rowH*.38);
  const ticks=5;
  const grid=Array.from({length:ticks+1},(_,i)=>{const x=pad.l+innerW*i/ticks;const v=max*i/ticks;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+innerH}" class="rchart-gridline"/><text x="${x}" y="${height-15}" text-anchor="middle" class="rchart-axis">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text>`}).join('');
  const bars=valid.map((x,i)=>{
@@ -1736,7 +1736,7 @@ function reportSvgBarChart(items, opts={}){
 }
 
 function reportSvgLineChart(items, opts={}){
- const width=opts.width||980,height=opts.height||420,pad={l:128,r:48,t:78,b:72};
+ const width=opts.width||1120,height=opts.height||460,pad={l:145,r:58,t:92,b:82};
  if(!items.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const finite=[...items.map(x=>Number(x.a)),...items.map(x=>Number(x.b))].filter(Number.isFinite);
  if(!finite.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
@@ -1745,7 +1745,7 @@ function reportSvgLineChart(items, opts={}){
  const yAt=v=>pad.t+innerH-(Number(v)/max)*innerH;
  const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1000000).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
  const segments=(key,cls)=>{const out=[];let pts=[];items.forEach((x,i)=>{const v=Number(x[key]);if(Number.isFinite(v)){pts.push(`${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`)}else if(pts.length){out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});if(pts.length)out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);return out.join('')};
- const dots=(key,cls)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=yAt(v);return `<circle cx="${cx}" cy="${cy}" r="6" class="${cls}"/><text x="${cx}" y="${cy-14}" text-anchor="middle" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
+ const dots=(key,cls)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=yAt(v);return `<circle cx="${cx}" cy="${cy}" r="7" class="${cls}"/><text x="${cx}" y="${cy-14}" text-anchor="middle" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
  const grid=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4,v=max-(max*i/4);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-18}" y="${y+6}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(v))}</text>`}).join('');
  const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-25}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`).join('');
  return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}">
@@ -1759,15 +1759,15 @@ function reportSvgRevenueContribution(items, opts={}){
  const valid=items.filter(x=>Number.isFinite(Number(x.value))&&Number(x.value)>0).sort((a,b)=>Number(b.value)-Number(a.value));
  if(!valid.length)return `<div class="report-chart-empty">Not enough revenue evidence to visualize</div>`;
  const total=valid.reduce((a,x)=>a+Number(x.value),0);
- const width=opts.width||980,height=Math.max(360,82+valid.length*58),pad={l:220,r:170,t:72,b:56};
+ const width=opts.width||1120,height=Math.max(420,100+valid.length*70),pad={l:250,r:190,t:82,b:70};
  const innerW=width-pad.l-pad.r,rowH=(height-pad.t-pad.b)/valid.length;
  const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1000000).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
  const maxValue=Math.max(...valid.map(x=>Number(x.value)),1);
  const grid=Array.from({length:5},(_,i)=>{const x=pad.l+innerW*i/4;const v=maxValue*i/4;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${height-pad.b}" class="rchart-gridline"/><text x="${x}" y="${height-18}" text-anchor="middle" class="rchart-axis">${esc(moneyAxis(v))}</text>`}).join('');
  const rows=valid.map((x,i)=>{
-   const v=Number(x.value),share=v/total*100,y=pad.t+i*rowH+(rowH-28)/2,w=Math.max(3,v/maxValue*innerW),label=String(x.label||'');
+   const v=Number(x.value),share=v/total*100,y=pad.t+i*rowH+(rowH-32)/2,w=Math.max(3,v/maxValue*innerW),label=String(x.label||'');
    const shareText=`${share.toFixed(1)}% of total`;
-   return `<g><text x="${pad.l-20}" y="${y+19}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${innerW}" height="28" rx="10" class="rchart-bar-track"/><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="28" rx="10" class="rchart-bar"/><text x="${Math.min(width-pad.r-112,pad.l+w+12)}" y="${y+19}" class="rchart-share">${esc(shareText)}</text><text x="${width-pad.r+14}" y="${y+19}" class="rchart-value">${esc(money(v))}</text></g>`;
+   return `<g><text x="${pad.l-20}" y="${y+21}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${innerW}" height="32" rx="12" class="rchart-bar-track"/><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="32" rx="12" class="rchart-bar"/><text x="${Math.min(width-pad.r-112,pad.l+w+12)}" y="${y+21}" class="rchart-share">${esc(shareText)}</text><text x="${width-pad.r+14}" y="${y+21}" class="rchart-value">${esc(money(v))}</text></g>`;
  }).join('');
  return `<svg class="report-chart-svg report-chart-revenue" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue contribution by creator')}"><text x="${pad.l}" y="28" class="rchart-title">${esc(opts.title||'Revenue contribution by creator')}</text><text x="${pad.l}" y="52" class="rchart-axis rchart-axis-heading">Revenue scale · THB</text><text x="${width-pad.r+14}" y="52" class="rchart-axis rchart-axis-heading">Recorded revenue</text>${grid}${rows}<text x="${pad.l}" y="${height-2}" class="rchart-footnote">Each bar = creator revenue ÷ highest creator revenue. % = share of observed total.</text></svg>`;
 }
@@ -1775,7 +1775,7 @@ function reportSvgRevenueContribution(items, opts={}){
 function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- let offset=0,colors=['rgba(174,239,255,.95)','rgba(61,19,27,.86)','rgba(232,223,207,.92)','rgba(174,239,255,.55)'];
+ let offset=0,colors=['#aeefff','#171717','#d8d1c8','#6f7478'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]};opacity:.62"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -1919,6 +1919,68 @@ function accessGate(){
  document.getElementById('gate-home').onclick=()=>window.location.assign('/KOLIDS');
  document.getElementById('gate-signout').onclick=()=>sb.auth.signOut();
 }
+
+/* REPORTS ENTERPRISE FINAL POLISH · 20261006 */
+(function(){
+ const styleId='kol-ids-reports-enterprise-final-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  .kol-report-page{background:#fff!important;color:#171717!important}
+  .kol-report-page>.hero{background:#fff!important;border:1px solid #e7e7e7!important;box-shadow:0 18px 50px rgba(0,0,0,.045)!important}
+  .kol-report-page>.hero h2,.kol-report-page>.card .section-head h2{color:#171717!important}
+  .kol-report-page>.hero .kicker,.kol-report-page>.card .section-head .label{color:#171717!important}
+  .kol-report-page .btn.cyan,.kol-report-page .pill.cyan{background:#aeefff!important;border-color:#aeefff!important;color:#111!important}
+  .kol-report-page>.card{background:#fff!important;border:1px solid #e5e5e5!important;box-shadow:0 14px 40px rgba(0,0,0,.035)!important}
+  .report-chart-grid{gap:18px!important}
+  .report-chart-card{background:#fff!important;border:1px solid #dedede!important;border-radius:12px!important;padding:22px 22px 20px!important;box-shadow:0 10px 30px rgba(0,0,0,.035)!important}
+  .report-chart-head{padding-bottom:14px!important;margin-bottom:14px!important;border-bottom:1px solid #ededed!important}
+  .report-chart-head b{font-size:15px!important;font-weight:800!important;color:#171717!important;letter-spacing:-.02em!important}
+  .report-chart-head span{font-size:11px!important;color:#777!important}
+  .report-chart-svg{min-height:300px!important}
+  .rchart-title{font-size:13px!important;fill:#171717!important;font-weight:800!important}
+  .rchart-value{font-size:13px!important;fill:#171717!important;font-weight:850!important}
+  .rchart-share{font-size:13px!important;fill:#171717!important;font-weight:800!important}
+  .rchart-label{font-size:12px!important;fill:#555!important}
+  .rchart-label-strong{font-size:13px!important;fill:#171717!important;font-weight:750!important}
+  .rchart-axis{font-size:11px!important;fill:#777!important}
+  .rchart-axis-heading{font-size:11px!important;fill:#555!important;font-weight:700!important}
+  .rchart-legend{font-size:12px!important;fill:#333!important;font-weight:650!important}
+  .rchart-gridline{stroke:#e9e9e9!important;stroke-width:1!important}
+  .rchart-bar{fill:#171717!important}
+  .rchart-bar-track{fill:#f0f0f0!important}
+  .rchart-line-a{stroke:#171717!important;stroke-width:3.5!important}
+  .rchart-line-b{stroke:#aeefff!important;stroke-width:3.5!important}
+  .rchart-dot-a{fill:#171717!important}
+  .rchart-dot-b{fill:#aeefff!important;stroke:#171717!important;stroke-width:1!important}
+  .rchart-point-value{font-size:12px!important;font-weight:850!important}
+  .rchart-dot-a-text{fill:#171717!important}.rchart-dot-b-text{fill:#171717!important}
+  .rchart-footnote{font-size:10px!important;fill:#777!important}
+  .report-donut-wrap{min-height:285px!important;gap:42px!important}
+  .report-donut{width:190px!important;height:190px!important;flex-basis:190px!important}
+  .report-donut>div{width:124px!important;height:124px!important;background:#fff!important}
+  .report-donut strong{font-size:30px!important;color:#171717!important;font-weight:850!important}
+  .report-donut span{font-size:10px!important;color:#777!important;letter-spacing:.12em!important}
+  .report-legend{gap:15px!important;min-width:205px!important}
+  .report-legend>div{font-size:13px!important;grid-template-columns:10px 1fr auto!important;gap:10px!important}
+  .report-legend i{width:10px!important;height:10px!important;border-radius:50%!important}
+  .report-legend span{color:#444!important;font-weight:600!important}
+  .report-legend b{font-size:13px!important;color:#171717!important;font-weight:850!important}
+  .report-chart-empty{min-height:300px!important;height:300px!important;font-size:13px!important;border-color:#ddd!important;color:#777!important}
+  @media(max-width:900px){
+    .report-chart-grid{grid-template-columns:1fr!important}
+    .report-chart-svg{min-height:280px!important}
+    .report-donut-wrap{min-height:250px!important}
+  }
+  @media(max-width:560px){
+    .report-chart-card{padding:16px!important}
+    .report-chart-head b{font-size:14px!important}
+    .rchart-value{font-size:11px!important}.rchart-label,.rchart-label-strong{font-size:10px!important}.rchart-axis{font-size:9px!important}
+    .report-donut{width:150px!important;height:150px!important;flex-basis:150px!important}.report-donut>div{width:100px!important;height:100px!important}.report-donut strong{font-size:24px!important}
+    .report-legend{min-width:145px!important;gap:10px!important}.report-legend>div{font-size:11px!important}.report-legend b{font-size:11px!important}
+  }
+ `;document.head.appendChild(s);
+})();
+
 async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}const {data:{session}}=await sb.auth.getSession();S.session=session;if(!session){window.location.assign('/KOLIDS');return}try{await loadContext();if(!S.access){accessGate();return}await refresh();if(window.location.pathname!=='/KOLIDSworkspace'){window.history.replaceState({},'', '/KOLIDSworkspace');}shell()}catch(e){window.location.assign('/KOLIDS')}}if(sb)sb.auth.onAuthStateChange(e=>{if(e==='SIGNED_OUT'){S.session=null;window.location.assign('/KOLIDS')}});boot();
 })();
 /* V4 · warm Next-step treatment for creator fit action summaries */
