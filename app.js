@@ -1785,7 +1785,7 @@ function reportSvgRevenueContribution(items, opts={}){
    const v=Number(x.value),share=v/total*100,y=pad.t+i*rowH+(rowH-38)/2,w=Math.max(5,v/maxValue*innerW),label=String(x.label||'');
    const shareText=`${share.toFixed(1)}%`;
    const shareX=Math.min(width-pad.r-62,pad.l+w+14);
-   return `<g><text x="${pad.l-18}" y="${y+25}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${innerW}" height="38" rx="5" class="rchart-bar-track"/><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="38" rx="5" class="rchart-bar"/><text x="${shareX}" y="${y+25}" class="rchart-share">${esc(shareText)}</text><text x="${width-pad.r+12}" y="${y+25}" class="rchart-value">${esc(money(v))}</text></g>`;
+   return `<g><text x="${pad.l-18}" y="${y+25}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${innerW}" height="38" rx="5" class="rchart-bar-track"/><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="38" rx="5" class="rchart-bar rchart-revenue-bar-${i}"/><text x="${shareX}" y="${y+25}" class="rchart-share">${esc(shareText)}</text><text x="${width-pad.r+12}" y="${y+25}" class="rchart-value">${esc(money(v))}</text></g>`;
  }).join('');
  return `<svg class="report-chart-svg report-chart-revenue" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue contribution by creator')}">${grid}${rows}</svg>`;
 }
@@ -1793,7 +1793,8 @@ function reportSvgRevenueContribution(items, opts={}){
 function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- let offset=0,colors=['#AEEFFF','#8FD6E3','#A9DFC4','#4BAA7A'];
+ let offset=0;
+ const colors=['#69C9DB','#8DD9E5','#AFE6EE','#D0F1F5'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -4108,6 +4109,47 @@ tbody tr:hover td{background:#fbfdfe}
   @media(max-width:900px){.kol-report-page .hero-actions{gap:6px}.kol-report-page .hero-actions .btn{font-size:9px;padding:9px 10px}}
  `;
  document.head.appendChild(s);
+})();
+
+
+/* REPORT CHART PALETTE FINAL · SOFT CYAN ONLY · 20261006 */
+(function(){
+ const styleId='kol-ids-report-chart-soft-cyan-final-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  /* One family only: blue/cyan descending into lighter tints. No gold, brown or green. */
+  .kol-report-page .rchart-line-a{stroke:#2D9FB7!important;stroke-width:3.2!important;opacity:1!important;fill:none!important}
+  .kol-report-page .rchart-line-b{stroke:#8AD8E5!important;stroke-width:3!important;opacity:1!important;stroke-dasharray:8 6!important;fill:none!important}
+  .kol-report-page .rchart-dot-a{fill:#2D9FB7!important;stroke:#fff!important;stroke-width:2.5!important}
+  .kol-report-page .rchart-dot-b{fill:#8AD8E5!important;stroke:#fff!important;stroke-width:2.5!important}
+  .kol-report-page .rchart-dot-a-text,.kol-report-page .rchart-dot-b-text{fill:#111!important}
+  .kol-report-page .rchart-point-value,
+  .kol-report-page .rchart-value,
+  .kol-report-page .rchart-share,
+  .kol-report-page .rchart-label,
+  .kol-report-page .rchart-label-strong,
+  .kol-report-page .rchart-axis,
+  .kol-report-page .rchart-axis-heading,
+  .kol-report-page .rchart-legend,
+  .kol-report-page .rchart-date-label,
+  .kol-report-page .rchart-title{fill:#111!important;color:#111!important}
+  .kol-report-page .rchart-gridline{stroke:#E7F2F5!important;stroke-width:1!important}
+  .kol-report-page .rchart-bar{fill:#8FD8E5!important;opacity:1!important}
+  .kol-report-page .rchart-bar-track{fill:#F2FBFD!important;stroke:#DCEFF3!important;stroke-width:1!important}
+  .kol-report-page .report-chart-revenue .rchart-bar{fill:#8FD8E5!important;opacity:1!important}
+  .kol-report-page .report-chart-revenue .rchart-share{fill:#111!important}
+  .kol-report-page .rchart-revenue-bar-0{fill:#69C9DB!important}
+  .kol-report-page .rchart-revenue-bar-1{fill:#8DD9E5!important}
+  .kol-report-page .rchart-revenue-bar-2{fill:#AFE6EE!important}
+  .kol-report-page .rchart-revenue-bar-3{fill:#D0F1F5!important}
+  .kol-report-page .report-donut{box-shadow:0 0 0 1px #E2F1F4!important}
+  .kol-report-page .report-donut strong{color:#111!important}
+  .kol-report-page .report-donut span{color:#111!important}
+  .kol-report-page .report-legend span,.kol-report-page .report-legend b{color:#111!important}
+  .kol-report-page .report-legend i{box-shadow:0 0 0 1px rgba(17,17,17,.06)!important;border-color:#E2F1F4!important}
+  .kol-report-page .report-chart-head b{color:#315D68!important}
+  .kol-report-page .report-chart-head span{color:#6D8D97!important}
+ `;document.head.appendChild(s);
 })();
 
 /* DECISION-GRADE EXPORT HELPERS */
