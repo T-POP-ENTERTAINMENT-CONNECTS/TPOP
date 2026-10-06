@@ -1772,7 +1772,7 @@ function reportSvgRevenueContribution(items, opts={}){
 function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- let offset=0,colors=['#C8A96B','#D9B77A','#A67C52','#EAD8B8'];
+ let offset=0,colors=['#AEEFFF','#8FD6E3','#6DB8C8','#527684'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -3957,4 +3957,76 @@ tbody tr:hover td{background:#fbfdfe}
     .kol-report-page .report-legend b{font-size:12px!important}
   }
  `;document.head.appendChild(s);
+})();
+
+
+/* REPORTS SYSTEM CYAN ALIGNMENT · 20261006 */
+(function(){
+ const styleId='kol-ids-reports-system-cyan-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  :root{
+    --report-cyan-1:#AEEFFF;
+    --report-cyan-2:#D7F7FC;
+    --report-cyan-3:#8FD6E3;
+    --report-cyan-4:#6DB8C8;
+    --report-cyan-ink:#527684;
+    --report-cyan-deep:#3F6875;
+    --report-cyan-line:#DCEFF3;
+    --report-cyan-track:#EAF9FF;
+  }
+  /* Keep Reports visually consistent with the system's cyan status language. */
+  .kol-report-page .report-chart-card{
+    background:#fff!important;
+    border-color:#DCEFF3!important;
+    box-shadow:0 8px 28px rgba(82,118,132,.035)!important;
+  }
+  .kol-report-page .report-chart-head{border-bottom-color:#E6F3F6!important}
+  .kol-report-page .report-chart-head b{color:var(--report-cyan-ink)!important}
+  .kol-report-page .report-chart-head span{color:#7898A2!important}
+  .kol-report-page .rchart-title{fill:#648692!important}
+  .kol-report-page .rchart-value{fill:#3F6875!important}
+  .kol-report-page .rchart-label{fill:#6F8D96!important}
+  .kol-report-page .rchart-label-strong{fill:#527684!important}
+  .kol-report-page .rchart-axis{fill:#91AAB2!important}
+  .kol-report-page .rchart-axis-heading{fill:#6F8D96!important}
+  .kol-report-page .rchart-legend{fill:#648692!important}
+  .kol-report-page .rchart-gridline{stroke:#E3F1F4!important}
+  .kol-report-page .rchart-bar{fill:#AEEFFF!important}
+  .kol-report-page .rchart-bar-track{fill:#EAF9FF!important;stroke:#D8EEF3!important}
+  .kol-report-page .rchart-line-a{stroke:#527684!important}
+  .kol-report-page .rchart-line-b{stroke:#8FD6E3!important}
+  .kol-report-page .rchart-dot-a{fill:#527684!important}
+  .kol-report-page .rchart-dot-b{fill:#8FD6E3!important;stroke:#fff!important}
+  .kol-report-page .rchart-dot-a-text,.kol-report-page .rchart-dot-b-text{fill:#527684!important}
+  .kol-report-page .rchart-share{fill:#527684!important}
+  .kol-report-page .report-chart-revenue .rchart-bar{fill:#8FD6E3!important}
+  .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#EAF9FF!important;stroke:#D8EEF3!important}
+  .kol-report-page .report-chart-empty{
+    border-color:#BFE8F1!important;
+    background:linear-gradient(180deg,#F7FDFF,#fff)!important;
+    color:#6D8C96!important;
+  }
+  .kol-report-page .report-donut{
+    box-shadow:0 0 0 1px #DCEFF3!important;
+  }
+  .kol-report-page .report-donut>div{
+    background:#fff!important;
+    box-shadow:0 7px 24px rgba(82,118,132,.06)!important;
+  }
+  .kol-report-page .report-donut strong{color:#3F6875!important}
+  .kol-report-page .report-donut span{color:#7898A2!important}
+  .kol-report-page .report-legend i{border-color:#DCEFF3!important}
+  .kol-report-page .report-legend span{color:#648692!important}
+  .kol-report-page .report-legend b{color:#527684!important}
+
+  /* COMPLETE stays the system success state: green, not cyan. */
+  .kol-report-page .pill.good,
+  .kol-report-page .history-status.complete{
+    background:#E8F7F0!important;
+    border-color:#C7E8D8!important;
+    color:#247653!important;
+  }
+ `;
+ document.head.appendChild(s);
 })();
