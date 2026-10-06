@@ -1631,52 +1631,43 @@ function reportLiveSnapshot(){
  return {p,perf,digital,ecommerce,offline,decisionRows,impact,learning,linked};
 }
 
-function chartCompactNumber(v){
- const n=Number(v); if(!Number.isFinite(n)) return '—';
- const a=Math.abs(n);
- if(a>=1000000)return (n/1000000).toFixed(a>=10000000?0:1)+'M';
- if(a>=1000)return (n/1000).toFixed(a>=10000?0:1)+'K';
- return Math.round(n).toLocaleString();
-}
 function reportSvgBarChart(items, opts={}){
- const width=opts.width||920,height=opts.height||320,pad={l:64,r:26,t:48,b:72};
- const vals=items.map(x=>Number(x.value)).filter(Number.isFinite);
- if(!items.length||!vals.length)return `<div class="report-chart-empty"><strong>${esc(opts.emptyTitle||'No completed observed outcome yet')}</strong><span>${esc(opts.emptyText||'Record an actual outcome score to activate this visualization.')}</span></div>`;
- const max=Math.max(...vals,1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
- const gap=innerW/items.length,bw=Math.max(34,Math.min(92,gap*.54));
- const ticks=4,grid=Array.from({length:ticks+1},(_,i)=>{const v=max*i/ticks,y=pad.t+innerH-(v/max)*innerH;return `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${width-pad.r}" y2="${y.toFixed(1)}" class="rchart-gridline"/><text x="${pad.l-12}" y="${(y+5).toFixed(1)}" text-anchor="end" class="rchart-axis">${esc(chartCompactNumber(v))}</text>`}).join('');
- const bars=items.map((x,i)=>{
-   const v=Math.max(0,Number(x.value)||0),h=Math.max(3,v/max*innerH),xx=pad.l+i*gap+(gap-bw)/2,yy=pad.t+innerH-h;
-   const label=String(x.label||'Creator').slice(0,22);
-   const value=opts.format?opts.format(x.value):String(Math.round(x.value));
-   return `<g><rect x="${xx.toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="7" class="rchart-bar"/><text x="${(xx+bw/2).toFixed(1)}" y="${Math.max(30,yy-12).toFixed(1)}" text-anchor="middle" class="rchart-value">${esc(value)}</text><text x="${(xx+bw/2).toFixed(1)}" y="${height-42}" text-anchor="middle" class="rchart-label">${esc(label)}</text></g>`;
+ const width=opts.width||900,height=opts.height||300,pad={l:170,r:34,t:34,b:34};
+ const valid=items.filter(x=>Number.isFinite(Number(x.value)));
+ if(!valid.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
+ const max=Math.max(...valid.map(x=>Number(x.value)),1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
+ const rowH=Math.max(30,innerH/valid.length),barH=Math.min(18,rowH*.46);
+ const ticks=4;
+ const grid=Array.from({length:ticks+1},(_,i)=>{const x=pad.l+innerW*i/ticks;const v=max*i/ticks;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+innerH}" class="rchart-gridline"/><text x="${x}" y="${height-8}" text-anchor="middle" class="rchart-axis">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text>`}).join('');
+ const bars=valid.map((x,i)=>{
+   const v=Number(x.value)||0,y=pad.t+i*rowH+(rowH-barH)/2,w=Math.max(2,v/max*innerW);
+   const label=String(x.label||'').length>24?String(x.label).slice(0,23)+'…':String(x.label||'');
+   return `<g><text x="${pad.l-12}" y="${y+barH/2+4}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="${barH}" rx="5" class="rchart-bar"/><text x="${Math.min(width-pad.r,w+pad.l+8)}" y="${y+barH/2+4}" class="rchart-value">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text></g>`;
  }).join('');
- return `<svg class="report-chart-svg report-chart-svg-tall" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Bar chart')}"><text x="${pad.l}" y="20" class="rchart-title">${esc(opts.title||'')}</text>${grid}<line x1="${pad.l}" y1="${pad.t+innerH}" x2="${width-pad.r}" y2="${pad.t+innerH}" class="rchart-axis-line"/>${bars}</svg>`;
+ return `<svg class="report-chart-svg report-chart-horizontal" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Bar chart')}"><text x="${pad.l}" y="16" class="rchart-title">${esc(opts.title||'')}</text>${grid}${bars}</svg>`;
 }
 function reportSvgLineChart(items, opts={}){
- const width=opts.width||920,height=opts.height||320,pad={l:72,r:30,t:50,b:64};
- if(!items.length)return `<div class="report-chart-empty"><strong>No observed financial movement yet</strong><span>Record revenue and/or spend with an observation date to activate this chart.</span></div>`;
- const all=items.flatMap(x=>[Number(x.a),Number(x.b)]).filter(Number.isFinite); if(!all.length)return `<div class="report-chart-empty"><strong>No observed financial movement yet</strong><span>Record revenue and/or spend with an observation date to activate this chart.</span></div>`;
+ const width=opts.width||900,height=opts.height||300,pad={l:64,r:30,t:38,b:48};
+ if(!items.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
+ const all=items.flatMap(x=>[Number(x.a),Number(x.b)]).filter(Number.isFinite); if(!all.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const max=Math.max(...all,1),min=Math.min(0,...all),range=Math.max(max-min,1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
  const point=(v,i)=>[pad.l+(items.length===1?innerW/2:i*innerW/(items.length-1)),pad.t+innerH-(Number(v)-min)/range*innerH];
- const compact=v=>chartCompactNumber(v);
- const ticks=4;
- const grid=Array.from({length:ticks+1},(_,i)=>{const v=min+(max-min)*i/ticks,y=pad.t+innerH-(i/ticks)*innerH;return `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${width-pad.r}" y2="${y.toFixed(1)}" class="rchart-gridline"/><text x="${pad.l-14}" y="${(y+5).toFixed(1)}" text-anchor="end" class="rchart-axis">${esc(compact(v))}</text>`}).join('');
  const path=(key)=>items.map((x,i)=>point(x[key],i).map(n=>n.toFixed(1)).join(',')).join(' ');
- const line=(key,cls)=>`<polyline fill="none" class="${cls}" points="${path(key)}"/>`;
- const dots=key=>items.map((x,i)=>{const [cx,cy]=point(x[key],i);const val=Number(x[key])||0;return `<g><circle cx="${cx}" cy="${cy}" r="5" class="${key==='a'?'rchart-dot-a':'rchart-dot-b'}"/><text x="${cx}" y="${Math.max(34,cy-13)}" text-anchor="middle" class="rchart-point-value">${esc(compact(val))}</text></g>`}).join('');
- const labels=items.map((x,i)=>{const [cx]=point(x.a,i);return `<text x="${cx}" y="${height-24}" text-anchor="middle" class="rchart-label">${esc(String(x.label||'').slice(0,12))}</text>`}).join('');
- return `<svg class="report-chart-svg report-chart-svg-tall" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Line chart')}"><text x="${pad.l}" y="20" class="rchart-title">${esc(opts.title||'')}</text>${grid}<line x1="${pad.l}" y1="${pad.t+innerH}" x2="${width-pad.r}" y2="${pad.t+innerH}" class="rchart-axis-line"/>${line('a','rchart-line-a')}${line('b','rchart-line-b')}${dots('a')}${dots('b')}${labels}<g transform="translate(${width-190},14)"><circle cx="5" cy="0" r="5" class="rchart-dot-a"/><text x="16" y="4" class="rchart-legend">Revenue</text><circle cx="92" cy="0" r="5" class="rchart-dot-b"/><text x="103" y="4" class="rchart-legend">Spend</text></g></svg>`;
+ const poly=(key,cls)=>`<polyline fill="none" class="${cls}" points="${path(key)}"/>`;
+ const dots=key=>items.map((x,i)=>{const [cx,cy]=point(x[key],i);return `<circle cx="${cx}" cy="${cy}" r="4" class="${key==='a'?'rchart-dot-a':'rchart-dot-b'}"/>`}).join('');
+ const grid=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4;const v=max-(max-min)*i/4;return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-10}" y="${y+4}" text-anchor="end" class="rchart-axis">${esc(opts.formatAxis?opts.formatAxis(v):money(v))}</text>`}).join('');
+ const labels=items.map((x,i)=>{const [cx]=point(x.a,i);return `<text x="${cx}" y="${height-14}" text-anchor="middle" class="rchart-label">${esc(String(x.label||'').slice(0,12))}</text>`}).join('');
+ return `<svg class="report-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Line chart')}">${grid}${poly('a','rchart-line-a')}${poly('b','rchart-line-b')}${dots('a')}${dots('b')}${labels}<g transform="translate(${width-180},12)"><circle cx="4" cy="4" r="4" class="rchart-dot-a"/><text x="12" y="8" class="rchart-legend">Revenue</text><circle cx="80" cy="4" r="4" class="rchart-dot-b"/><text x="88" y="8" class="rchart-legend">Spend</text></g><text x="${pad.l}" y="18" class="rchart-title">${esc(opts.title||'')}</text></svg>`;
 }
 function reportSvgDonut(parts, opts={}){
- const valid=parts.filter(x=>Number(x.value)>0); const total=valid.reduce((a,x)=>a+Number(x.value),0);
- if(!total)return `<div class="report-chart-empty"><strong>No observed evidence mix yet</strong><span>Record performance evidence to activate this visualization.</span></div>`;
- let offset=0,colors=['#17171b','#63cbd9','#b99b5f','#aeb7bd'];
+ const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
+ if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
+ let offset=0,colors=['#17171b','#63cbd9','#b99b5f','#7b8790'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
- return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed records')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
+ return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
 function buildReportVisuals(snap){
- const {perf,impact}=snap;
+ const {perf,impact,decisionRows}=snap;
  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
  const byCreator={}; perf.forEach(x=>{const id=String(x.creator_id||'unknown');const o=byCreator[id]||(byCreator[id]={name:creatorName(x.creator_id),revenue:0,score:[],records:0});o.records++;if(x.revenue_thb!=null)o.revenue+=Number(x.revenue_thb)||0;if(x.metadata?.netSales!=null)o.revenue+=Number(x.metadata.netSales)||0;if(x.metadata?.gmv!=null&&x.revenue_thb==null&&x.metadata?.netSales==null)o.revenue+=Number(x.metadata.gmv)||0;if(x.actual_score!=null&&Number.isFinite(Number(x.actual_score)))o.score.push(Number(x.actual_score));});
  const creators=Object.values(byCreator);
@@ -1684,12 +1675,9 @@ function buildReportVisuals(snap){
  const revBars=creators.filter(x=>x.revenue>0).map(x=>({label:x.name,value:x.revenue})).sort((a,b)=>b.value-a.value).slice(0,6);
  const dated={}; perf.forEach(x=>{if(x.observed_at){const d=String(x.observed_at).slice(0,10);const q=dated[d]||(dated[d]={label:d.slice(5),a:0,b:0});if(x.revenue_thb!=null)q.a+=Number(x.revenue_thb)||0;if(x.metadata?.netSales!=null)q.a+=Number(x.metadata.netSales)||0;if(x.spend_thb!=null)q.b+=Number(x.spend_thb)||0;}});
  const trend=Object.values(dated).sort((a,b)=>a.label.localeCompare(b.label)).slice(-10);
- const channelCount={DIGITAL:0,ECOMMERCE:0,OFFLINE:0};
- perf.forEach(x=>{const k=String(x.metadata?.channelType||'').toUpperCase();if(k==='DIGITAL'||k==='ECOMMERCE'||k==='OFFLINE')channelCount[k]++;});
- const mix=[{label:'Digital',value:channelCount.DIGITAL},{label:'E-commerce',value:channelCount.ECOMMERCE},{label:'Offline / Event',value:channelCount.OFFLINE}];
+ const mix=[{label:'Revenue',value:impact.revenue||0},{label:'Spend',value:impact.spend||0},{label:'Conversions',value:impact.conversions||0}];
  return {bars,revBars,trend,mix};
 }
-
 function reports(c){
  // HARD ROUTE GUARD: Reports is Step 07 only. If a stale/late callback reaches here on Step 06,
  // immediately restore the Business Impact renderer instead of overwriting the page.
@@ -1707,11 +1695,12 @@ function reports(c){
  <div class="grid g4"><div class="metric"><span class="label">Creators approved</span><strong>${active.length}</strong><small>User-approved for performance tracking</small></div><div class="metric"><span class="label">Performance records</span><strong>${perf.length}</strong><small>All outcome types</small></div><div class="metric"><span class="label">Impact score</span><strong>${impact.score==null?'Not scored':Math.round(impact.score)}</strong><small>Recorded outcome score</small></div><div class="metric"><span class="label">ROAS</span><strong>${impact.roas==null?'Not calculable':Number(impact.roas).toFixed(2)+'x'}</strong><small>(Revenue ÷ Spend)</small></div></div>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">01 · Campaign & Audience</div><h2>Strategic context</h2></div></div><div class="grid g2"><div class="signal-box"><h4>Campaign</h4><p><b>${esc(S.selectedCampaign?.name||'·')}</b></p><p>${esc((p.objectives||[]).join(' · ')||p.objective||p.goal||'·')}</p><p>${esc((p.brandPersonalities||[]).join(' · ')||'·')}</p></div><div class="signal-box"><h4>Audience</h4><p><b>${esc(S.selectedAudience?.payload?.audienceType||'·')}</b></p><p>${esc(S.selectedAudience?.payload?.audiencePersona||'·')}</p></div></div></section>
  <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">02 · Creator Decision</div><h2>Creator Decision Evidence</h2><p class="sub">Approval is the user decision. The decision signal below is the intelligence engine recommendation and evidence state.</p></div></div>${selected.length?`<div class="table-wrap"><table><thead><tr><th>Creator</th><th>Decision signal</th><th>Overall</th><th>Audience</th><th>Content</th><th>Brand</th><th>Performance</th><th>Commercial</th><th>Risk</th></tr></thead><tbody>${selected.map(x=>{const e=x.decision.evidence||{};return `<tr><td><b>${esc(x.creator.name)}</b></td><td>${esc(x.decision.decision||'·')}</td><td>${x.decision.score==null?'·':Math.round(x.decision.score)}</td><td>${Math.round(e.audienceFit??50)}</td><td>${Math.round(e.contentFit??50)}</td><td>${Math.round(e.brandFit??50)}</td><td>${Math.round(e.performance??0)}</td><td>${Math.round(e.commercial??50)}</td><td>${Math.round(e.risk??50)}</td></tr>`}).join('')}</tbody></table></div>` :'<div class="empty">No creators have been approved for performance tracking yet.</div>'}</section>
- <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">03 · Performance</div><h2>All observed outcomes</h2><p class="sub">No record is omitted: digital, e-commerce and event/offline observations are linked to the creator and campaign.</p></div></div><div class="grid g2"><div class="signal-box"><h4>Multi-platform digital</h4><p>${digital.length?`${digital.length} record${digital.length===1?'':'s'} · Reach ${displayMetric(sumKnown(digital,'reach'))} · Views ${displayMetric(sumKnown(digital,'views'))} · Impressions ${displayMetric(sumKnown(digital,'impressions'))} · Clicks ${displayMetric(sumKnown(digital,'clicks'))} · Conversions ${displayMetric(sumKnown(digital,'conversions'))}`:'No records'}</p></div><div class="signal-box"><h4>E-commerce</h4><p>${ecommerce.length?`${ecommerce.length} record${ecommerce.length===1?'':'s'} · GMV ${displayMetric(sumMetaKnown(ecommerce,'gmv'))} · Net sales ${displayMetric(sumMetaKnown(ecommerce,'netSales'))} · Orders ${displayMetric(sumMetaKnown(ecommerce,'orders'))} · Paid orders ${displayMetric(sumMetaKnown(ecommerce,'paidOrders'))}`:'No records'}</p></div><div class="signal-box"><h4>Event / offline</h4><p>${offline.length?`${offline.length} record${offline.length===1?'':'s'} · Attendance ${displayMetric(sumMetaKnown(offline,'attendance'))} · Capacity ${displayMetric(sumMetaKnown(offline,'capacity'))} · Qualified leads ${displayMetric(sumMetaKnown(offline,'qualifiedLeads'))} · Demos ${displayMetric(sumMetaKnown(offline,'demos'))} · Samples ${displayMetric(sumMetaKnown(offline,'samples'))} · Conversions ${displayMetric(sumKnown(offline,'conversions'))}`:'No records'}</p></div></div><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Creator</th><th>Type</th><th>Date</th><th>Outcome</th><th>Revenue</th><th>Spend</th><th>Key evidence</th></tr></thead><tbody>${perf.length?perf.map(x=>{const t=String(x.metadata?.channelType||'PERFORMANCE').toUpperCase();const key=t==='ECOMMERCE'?`GMV ${money(x.metadata?.gmv)} · Orders ${money(x.metadata?.paidOrders||x.metadata?.orders)} · Commission ${money(x.metadata?.commissionAmount)}`:t==='OFFLINE'?`Attendance ${money(x.metadata?.attendance)} · Leads ${money(x.metadata?.qualifiedLeads)} · Demos ${money(x.metadata?.demos)}`:`Reach ${x.reach==null?'Not recorded':money(x.reach)} · Views ${x.views==null?'Not recorded':money(x.views)} · Clicks ${x.clicks==null?'Not recorded':money(x.clicks)} · Conv ${x.conversions==null?'Not recorded':money(x.conversions)}`;return `<tr><td>${esc(creatorName(x.creator_id))}</td><td>${esc(t)}</td><td>${esc(x.observed_at||'·')}</td><td>${x.actual_score==null?'Pending':Math.round(x.actual_score)+'/100'}</td><td>${displayMetric(x.revenue_thb)}</td><td>${displayMetric(x.spend_thb)}</td><td>${esc(key)}</td></tr>`}).join(''):'<tr><td colspan="7">No performance records yet.</td></tr>'}</tbody></table></div></section>
- <section class="card report-visuals" style="margin-top:14px"><div class="section-head"><div><div class="label">04 · VISUAL INTELLIGENCE</div><h2>Performance at a glance</h2><p class="sub">Decision-grade visuals built from observed campaign evidence. Every chart states what is measured, how to read it and when evidence is insufficient.</p></div></div><div class="report-chart-grid"><div class="report-chart-card report-chart-card-wide"><div class="report-chart-head"><div><b>Outcome trend</b><small>Revenue and spend over observed dates</small></div><span>THB</span></div>${reportSvgLineChart(buildReportVisuals(snap).trend,{title:'Observed financial movement',aria:'Revenue and spend over observed dates'})}<div class="chart-reading"><b>How to read</b><span>Revenue above spend indicates stronger observed financial movement. This is descriptive evidence, not a forecast.</span></div></div><div class="report-chart-card"><div class="report-chart-head"><div><b>Creator performance</b><small>Average completed observed outcome score</small></div><span>0–100</span></div>${reportSvgBarChart(buildReportVisuals(snap).bars,{title:'Completed outcome score by creator',aria:'Creator observed outcome scores',emptyTitle:'No completed outcome scores',emptyText:'Add an actual performance outcome score for a creator to rank observed performance.'})}<div class="chart-reading"><b>How to read</b><span>Only creators with an actual recorded outcome score appear here.</span></div></div><div class="report-chart-card"><div class="report-chart-head"><div><b>Revenue contribution</b><small>Recorded revenue attributed to creator evidence</small></div><span>THB</span></div>${reportSvgBarChart(buildReportVisuals(snap).revBars,{title:'Recorded revenue by creator',format:v=>money(v),aria:'Recorded revenue by creator',emptyTitle:'No recorded revenue',emptyText:'Add observed revenue evidence to compare creator contribution.'})}<div class="chart-reading"><b>How to read</b><span>Bars represent recorded revenue only. Missing attribution is not estimated.</span></div></div><div class="report-chart-card"><div class="report-chart-head"><div><b>Evidence mix</b><small>Observed records by performance channel</small></div><span>RECORDS</span></div>${reportSvgDonut(buildReportVisuals(snap).mix,{center:perf.length?String(perf.length):'0',centerLabel:'observed records'})}<div class="chart-reading"><b>How to read</b><span>Shows the mix of observed Digital, E-commerce and Offline/Event evidence records.</span></div></div></div></section>
- <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">04 · Business Impact</div><h2>Observed business effect</h2><p class="sub">Calculated live from the linked performance records.</p></div></div><div class="grid g4"><div><span class="label">Revenue</span><div class="mini-stat">${perf.some(x=>x?.revenue_thb!=null||x?.metadata?.netSales!=null||x?.metadata?.gmv!=null)?money(impact.revenue):'Not recorded'}</div></div><div><span class="label">Spend</span><div class="mini-stat">${perf.some(x=>x?.spend_thb!=null)?money(impact.spend):'Not recorded'}</div></div><div><span class="label">ROI</span><div class="mini-stat">${impact.roi==null?'Not calculable':Math.round(impact.roi)+'%'}</div><small class="formula-note">((Revenue − Spend) ÷ Spend × 100)</small></div><div><span class="label">Conversions</span><div class="mini-stat">${perf.some(x=>x?.conversions!=null||x?.metadata?.paidOrders!=null)?money(impact.conversions):'Not recorded'}</div></div></div><div class="grid g4" style="margin-top:12px"><div><span class="label">Reach</span><div class="mini-stat">${money(impact.reach)}</div></div><div><span class="label">Views</span><div class="mini-stat">${money(impact.views)}</div></div><div><span class="label">Clicks</span><div class="mini-stat">${money(impact.clicks)}</div></div><div><span class="label">Event attendance</span><div class="mini-stat">${money(impact.attendance)}</div></div></div></section>
- <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">04B · PERFORMANCE LEADERBOARD</div><h2>Top 3 Performance</h2><p class="sub">Shows only creators with a completed observed outcome score. Pending records stay out of the ranking until an actual score is recorded.</p></div></div>${topByCreator.length?`<div class="grid g3">${topByCreator.map((x,i)=>`<div class="signal-box"><div style="display:flex;justify-content:space-between;gap:12px"><b>#${i+1} ${esc(x.name)}</b><strong>${Math.round(x.score)}/100</strong></div><p>${x.n} observed record${x.n===1?'':'s'}</p></div>`).join('')}</div>`:'<div class="empty">No completed performance outcomes yet.</div>'}</section>
- <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">05 · Learning & Next Actions</div><h2>What should happen next?</h2><p class="sub">Generated from the same live evidence chain; stored text is used only when you explicitly saved an edited version.</p></div></div><div class="grid g2 reports-next-cards"><div class="signal-box"><h4>What worked</h4><p>${esc(learning.worked||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Friction / what did not work</h4><p>${esc(learning.friction||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Next hypothesis</h4><p>${esc(learning.hypothesis||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Calculated next actions</h4><p>${(learning.nextActions||[]).map((x,i)=>`${i+1}. ${esc(x)}`).join('<br>')||'No saved next actions; Step 06 can calculate them.'}</p></div></div></section></div>`;
+ <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">03 · Performance</div><h2>All observed evidence & outcomes</h2><p class="sub">Every observed record is retained and reported. Digital, e-commerce and event/offline evidence remains linked to the campaign and creator.</p></div></div><div class="grid g2"><div class="signal-box"><h4>Multi-platform digital</h4><p>${digital.length?`${digital.length} record${digital.length===1?'':'s'} · Reach ${displayMetric(sumKnown(digital,'reach'))} · Views ${displayMetric(sumKnown(digital,'views'))} · Impressions ${displayMetric(sumKnown(digital,'impressions'))} · Clicks ${displayMetric(sumKnown(digital,'clicks'))} · Conversions ${displayMetric(sumKnown(digital,'conversions'))}`:'No records'}</p></div><div class="signal-box"><h4>E-commerce</h4><p>${ecommerce.length?`${ecommerce.length} record${ecommerce.length===1?'':'s'} · GMV ${displayMetric(sumMetaKnown(ecommerce,'gmv'))} · Net sales ${displayMetric(sumMetaKnown(ecommerce,'netSales'))} · Orders ${displayMetric(sumMetaKnown(ecommerce,'orders'))} · Paid orders ${displayMetric(sumMetaKnown(ecommerce,'paidOrders'))}`:'No records'}</p></div><div class="signal-box"><h4>Event / offline</h4><p>${offline.length?`${offline.length} record${offline.length===1?'':'s'} · Attendance ${displayMetric(sumMetaKnown(offline,'attendance'))} · Capacity ${displayMetric(sumMetaKnown(offline,'capacity'))} · Qualified leads ${displayMetric(sumMetaKnown(offline,'qualifiedLeads'))} · Demos ${displayMetric(sumMetaKnown(offline,'demos'))} · Samples ${displayMetric(sumMetaKnown(offline,'samples'))} · Conversions ${displayMetric(sumKnown(offline,'conversions'))}`:'No records'}</p></div></div><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Creator</th><th>Type</th><th>Date</th><th>Outcome</th><th>Revenue</th><th>Spend</th><th>Key evidence</th></tr></thead><tbody>${perf.length?perf.map(x=>{const t=String(x.metadata?.channelType||'PERFORMANCE').toUpperCase();const key=t==='ECOMMERCE'?`GMV ${money(x.metadata?.gmv)} · Orders ${money(x.metadata?.paidOrders||x.metadata?.orders)} · Commission ${money(x.metadata?.commissionAmount)}`:t==='OFFLINE'?`Attendance ${money(x.metadata?.attendance)} · Leads ${money(x.metadata?.qualifiedLeads)} · Demos ${money(x.metadata?.demos)}`:`Reach ${x.reach==null?'Not recorded':money(x.reach)} · Views ${x.views==null?'Not recorded':money(x.views)} · Clicks ${x.clicks==null?'Not recorded':money(x.clicks)} · Conv ${x.conversions==null?'Not recorded':money(x.conversions)}`;return `<tr><td>${esc(creatorName(x.creator_id))}</td><td>${esc(t)}</td><td>${esc(x.observed_at||'·')}</td><td>${x.actual_score==null?'Pending':Math.round(x.actual_score)+'/100'}</td><td>${displayMetric(x.revenue_thb)}</td><td>${displayMetric(x.spend_thb)}</td><td>${esc(key)}</td></tr>`}).join(''):'<tr><td colspan="7">No performance records yet.</td></tr>'}</tbody></table></div></section>
+ <section class="card report-visuals" style="margin-top:14px"><div class="section-head"><div><div class="label">04 · VISUAL INTELLIGENCE</div><h2>Performance at a glance</h2><p class="sub">Charts use only observed campaign evidence. Missing or insufficient evidence is never converted into invented values.</p></div></div><div class="report-chart-grid"><div class="report-chart-card"><div class="report-chart-head"><b>Outcome trend</b><span>Revenue vs Spend</span></div>${reportSvgLineChart(buildReportVisuals(snap).trend,{title:'Observed financial movement',aria:'Revenue and spend over observed dates'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Creator performance</b><span>Observed score</span></div>${reportSvgBarChart(buildReportVisuals(snap).bars,{title:'Completed outcome score',aria:'Creator observed outcome scores'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Revenue contribution</b><span>By creator</span></div>${reportSvgBarChart(buildReportVisuals(snap).revBars,{title:'Recorded revenue by creator',format:v=>money(v),aria:'Recorded revenue by creator'})}</div><div class="report-chart-card"><div class="report-chart-head"><b>Evidence mix</b><span>Observed records</span></div>${reportSvgDonut(buildReportVisuals(snap).mix,{center:perf.length?String(perf.length):'0',centerLabel:'records'})}</div></div></section>
+ <section class="card report-data-quality" style="margin-top:14px"><div class="section-head"><div><div class="label">05 · DATA COVERAGE & QUALITY</div><h2>Evidence coverage</h2><p class="sub">A transparent inventory of what the report actually observed. Missing evidence remains explicitly marked as unavailable.</p></div></div><div class="grid g4"><div class="metric"><span class="label">Digital records</span><strong>${digital.length}</strong><small>Reach · views · impressions · clicks · conversions</small></div><div class="metric"><span class="label">E-commerce records</span><strong>${ecommerce.length}</strong><small>GMV · net sales · orders · paid orders</small></div><div class="metric"><span class="label">Offline records</span><strong>${offline.length}</strong><small>Attendance · leads · demos · samples</small></div><div class="metric"><span class="label">Decision records</span><strong>${selected.length}</strong><small>Approved creator decisions linked to this campaign</small></div></div><div class="evidence-status-grid"><div class="evidence-status ${impact.hasRevenue?'is-present':'is-missing'}"><b>${impact.hasRevenue?'AVAILABLE':'MISSING'}</b><span>Revenue evidence</span></div><div class="evidence-status ${impact.hasSpend?'is-present':'is-missing'}"><b>${impact.hasSpend?'AVAILABLE':'MISSING'}</b><span>Spend evidence</span></div><div class="evidence-status ${impact.hasConversionEvidence?'is-present':'is-missing'}"><b>${impact.hasConversionEvidence?'AVAILABLE':'MISSING'}</b><span>Conversion evidence</span></div><div class="evidence-status ${impact.hasImpressionEvidence?'is-present':'is-missing'}"><b>${impact.hasImpressionEvidence?'AVAILABLE':'MISSING'}</b><span>Impression evidence</span></div><div class="evidence-status ${impact.hasClickEvidence?'is-present':'is-missing'}"><b>${impact.hasClickEvidence?'AVAILABLE':'MISSING'}</b><span>Click evidence</span></div></div></section>
+ <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">06 · Business Impact</div><h2>Observed business effect</h2><p class="sub">Calculated live from the linked performance records.</p></div></div><div class="grid g4"><div><span class="label">Revenue</span><div class="mini-stat">${perf.some(x=>x?.revenue_thb!=null||x?.metadata?.netSales!=null||x?.metadata?.gmv!=null)?money(impact.revenue):'Not recorded'}</div></div><div><span class="label">Spend</span><div class="mini-stat">${perf.some(x=>x?.spend_thb!=null)?money(impact.spend):'Not recorded'}</div></div><div><span class="label">ROI</span><div class="mini-stat">${impact.roi==null?'Not calculable':Math.round(impact.roi)+'%'}</div><small class="formula-note">((Revenue − Spend) ÷ Spend × 100)</small></div><div><span class="label">Conversions</span><div class="mini-stat">${perf.some(x=>x?.conversions!=null||x?.metadata?.paidOrders!=null)?money(impact.conversions):'Not recorded'}</div></div></div><div class="grid g4" style="margin-top:12px"><div><span class="label">Reach</span><div class="mini-stat">${money(impact.reach)}</div></div><div><span class="label">Views</span><div class="mini-stat">${money(impact.views)}</div></div><div><span class="label">Clicks</span><div class="mini-stat">${money(impact.clicks)}</div></div><div><span class="label">Event attendance</span><div class="mini-stat">${money(impact.attendance)}</div></div></div></section>
+ <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">06B · PERFORMANCE LEADERBOARD</div><h2>Top 3 Performance</h2><p class="sub">Shows only creators with a completed observed outcome score. Pending records stay out of the ranking until an actual score is recorded.</p></div></div>${topByCreator.length?`<div class="grid g3">${topByCreator.map((x,i)=>`<div class="signal-box"><div style="display:flex;justify-content:space-between;gap:12px"><b>#${i+1} ${esc(x.name)}</b><strong>${Math.round(x.score)}/100</strong></div><p>${x.n} observed record${x.n===1?'':'s'}</p></div>`).join('')}</div>`:'<div class="empty">No completed performance outcomes yet.</div>'}</section>
+ <section class="card" style="margin-top:14px"><div class="section-head"><div><div class="label">07 · Learning & Next Actions</div><h2>What should happen next?</h2><p class="sub">Generated from the same live evidence chain; stored text is used only when you explicitly saved an edited version.</p></div></div><div class="grid g2 reports-next-cards"><div class="signal-box"><h4>What worked</h4><p>${esc(learning.worked||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Friction / what did not work</h4><p>${esc(learning.friction||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Next hypothesis</h4><p>${esc(learning.hypothesis||'Not recorded yet.')}</p></div><div class="signal-box"><h4>Calculated next actions</h4><p>${(learning.nextActions||[]).map((x,i)=>`${i+1}. ${esc(x)}`).join('<br>')||'No saved next actions; Step 06 can calculate them.'}</p></div></div></section></div>`;
  document.getElementById('report-campaign-intelligence-csv').onclick=downloadReportCSV;document.getElementById('report-performance-csv').onclick=downloadPerformanceCSV;document.getElementById('report-decision-csv').onclick=downloadDecisionCSV;document.getElementById('report-impact-csv').onclick=downloadImpactCSV;document.getElementById('report-full-pdf').onclick=downloadFullPDF;
  const completeBtn=document.getElementById('complete-campaign');
  if(completeBtn){completeBtn.onclick=async()=>{
@@ -2345,48 +2334,95 @@ async function boot(){styles();if(!sb){window.location.assign('/KOLIDS');return}
  const styleId='kol-ids-reports-visuals-20261006';
  if(document.getElementById(styleId))return;
  const s=document.createElement('style');s.id=styleId;s.textContent=`
- .report-chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
- .report-chart-card{min-width:0;border:1px solid #dfe4e8;border-radius:16px;background:#fff;padding:20px 20px 18px;overflow:hidden;box-shadow:0 1px 0 rgba(15,23,30,.02)}
- .report-chart-card-wide{grid-column:span 2}
- .report-chart-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:8px;padding-bottom:12px;border-bottom:1px solid #edf0f2}
- .report-chart-head>div{min-width:0}
- .report-chart-head b{display:block;font-size:15px;line-height:1.25;color:#111318;letter-spacing:-.01em}
- .report-chart-head small{display:block;margin-top:4px;font-size:11px;line-height:1.45;color:#68737b}
- .report-chart-head>span{flex:0 0 auto;font-size:10px;font-weight:700;letter-spacing:.08em;color:#7b858c;text-transform:uppercase;padding-top:2px}
- .report-chart-svg{width:100%;height:auto;display:block;overflow:visible}
- .report-chart-svg-tall{min-height:270px}
- .rchart-title{font-size:12px;fill:#53616a;font-weight:700}
- .rchart-value{font-size:12px;fill:#111318;font-weight:800}
- .rchart-point-value{font-size:11px;fill:#46535b;font-weight:700}
- .rchart-label{font-size:11px;fill:#56636b;font-weight:600}
- .rchart-axis{font-size:10px;fill:#7b858c;font-weight:600}
- .rchart-legend{font-size:11px;fill:#53616a;font-weight:700}
- .rchart-gridline{stroke:#e9edef;stroke-width:1}
- .rchart-axis-line{stroke:#cfd6da;stroke-width:1.2}
- .rchart-bar{fill:#17171b}
- .rchart-line-a{stroke:#17171b;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
- .rchart-line-b{stroke:#63cbd9;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
- .rchart-dot-a{fill:#17171b}.rchart-dot-b{fill:#63cbd9}
- .report-chart-empty{min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px dashed #d4dce0;border-radius:12px;background:#fbfcfc;padding:24px;color:#6e7a82}
- .report-chart-empty strong{font-size:15px;line-height:1.35;color:#22272b}
- .report-chart-empty span{max-width:390px;margin-top:8px;font-size:11px;line-height:1.55;color:#7c878e}
- .chart-reading{display:flex;gap:10px;align-items:flex-start;margin-top:8px;padding-top:11px;border-top:1px solid #edf0f2;font-size:11px;line-height:1.5;color:#68737b}
- .chart-reading b{flex:0 0 auto;color:#20262b;font-size:10px;text-transform:uppercase;letter-spacing:.07em}
- .chart-reading span{min-width:0}
- .report-donut-wrap{min-height:260px;display:flex;align-items:center;justify-content:center;gap:38px}
- .report-donut{width:180px;height:180px;border-radius:50%;display:grid;place-items:center;flex:0 0 180px}
- .report-donut>div{width:116px;height:116px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 1px #eef1f2}
- .report-donut strong{font-size:28px;line-height:1;color:#111318;letter-spacing:-.04em}
- .report-donut span{margin-top:6px;font-size:9px;color:#7a858c;letter-spacing:.1em;text-transform:uppercase;text-align:center}
- .report-legend{display:grid;gap:14px;min-width:190px}
- .report-legend>div{display:grid;grid-template-columns:10px 1fr auto;gap:9px;align-items:center;font-size:12px}
- .report-legend i{width:9px;height:9px;border-radius:50%}
- .report-legend span{color:#5f6b73}.report-legend b{color:#111318;font-size:12px}
- @media(max-width:900px){.report-chart-grid{grid-template-columns:1fr}.report-chart-card-wide{grid-column:auto}}
- @media(max-width:560px){.report-chart-grid{gap:12px}.report-chart-card{padding:14px 13px}.report-chart-head b{font-size:14px}.report-chart-head small{font-size:10px}.report-chart-svg-tall{min-height:230px}.rchart-label{font-size:9px}.rchart-axis{font-size:9px}.rchart-value{font-size:10px}.rchart-point-value{font-size:9px}.report-donut-wrap{min-height:210px;gap:16px}.report-donut{width:138px;height:138px;flex-basis:138px}.report-donut>div{width:90px;height:90px}.report-donut strong{font-size:23px}.report-legend{min-width:120px;gap:9px}.report-legend>div{font-size:10px}.report-legend b{font-size:10px}.chart-reading{display:block}.chart-reading b{display:block;margin-bottom:4px}}
+ .report-chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+ .report-chart-card{min-width:0;border:1px solid #e3e7ea;border-radius:14px;background:linear-gradient(180deg,#fff,#fafcfd);padding:14px;overflow:hidden}
+ .report-chart-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:5px}
+ .report-chart-head b{font-size:10px;color:#17171b}
+ .report-chart-head span{font-size:8px;color:#7a858c}
+ .report-chart-svg{width:100%;height:auto;display:block}
+ .rchart-title{font-size:8px;fill:#6d7880;font-weight:700}
+ .rchart-value{font-size:8px;fill:#17171b;font-weight:800}
+ .rchart-label{font-size:7px;fill:#78838a}
+ .rchart-legend{font-size:7px;fill:#78838a}
+ .report-chart-empty{height:180px;display:grid;place-items:center;border:1px dashed #dfe4e7;border-radius:10px;color:#8a949b;font-size:9px}
+ .report-donut-wrap{min-height:205px;display:flex;align-items:center;justify-content:center;gap:22px}
+ .report-donut{width:142px;height:142px;border-radius:50%;display:grid;place-items:center;flex:0 0 142px}
+ .report-donut>div{width:86px;height:86px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+ .report-donut strong{font-size:20px;color:#17171b}
+ .report-donut span{font-size:7px;color:#7a858c;letter-spacing:.08em;text-transform:uppercase}
+ .report-legend{display:grid;gap:9px;min-width:130px}
+ .report-legend>div{display:grid;grid-template-columns:9px 1fr auto;gap:7px;align-items:center;font-size:8px}
+ .report-legend i{width:8px;height:8px;border-radius:2px}
+ .report-legend span{color:#69747b}.report-legend b{color:#17171b}
+ @media(max-width:900px){.report-chart-grid{grid-template-columns:1fr}}
+ @media(max-width:560px){.report-chart-card{padding:10px}.report-donut-wrap{min-height:180px;gap:12px}.report-donut{width:118px;height:118px;flex-basis:118px}.report-donut>div{width:72px;height:72px}.report-donut strong{font-size:17px}.report-legend{min-width:100px;gap:7px}}
  `;
  document.head.appendChild(s);
 })();
+
+/* REPORTS ENTERPRISE VISUAL SYSTEM · 20261006 */
+(function(){
+ const styleId='kol-ids-reports-enterprise-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+ .kol-report-page,.kol-report-page *{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important}
+ .kol-report-page{font-size:13px!important;color:#20262b!important;letter-spacing:0!important}
+ .kol-report-page>.hero{padding:42px 48px!important;border-radius:20px!important;background:linear-gradient(135deg,#fff 0%,#fbfcfd 58%,#f1fbfd 100%)!important}
+ .kol-report-page>.hero h2{font-size:34px!important;line-height:1.08!important;letter-spacing:-.045em!important;font-weight:800!important}
+ .kol-report-page>.hero p{font-size:13px!important;line-height:1.7!important;color:#59656d!important}
+ .kol-report-page>.hero .kicker,.kol-report-page>.card .section-head .label{font-size:10px!important;letter-spacing:.16em!important;font-weight:800!important}
+ .kol-report-page>.card{padding:26px 28px!important;border-radius:18px!important}
+ .kol-report-page>.card .section-head h2{font-size:22px!important;line-height:1.2!important;letter-spacing:-.025em!important;font-weight:780!important}
+ .kol-report-page>.card .section-head .sub{font-size:12px!important;line-height:1.6!important;color:#68747c!important}
+ .kol-report-page>.card .signal-box{padding:18px!important;border-radius:14px!important}
+ .kol-report-page>.card .signal-box h4{font-size:13px!important;font-weight:750!important}
+ .kol-report-page>.card .signal-box p{font-size:12px!important;line-height:1.65!important;color:#556169!important}
+ .kol-report-page>.card th{font-size:10px!important;letter-spacing:.08em!important;padding:13px 14px!important;white-space:nowrap!important}
+ .kol-report-page>.card td{font-size:12px!important;line-height:1.5!important;padding:13px 14px!important}
+ .kol-report-page>.card .metric{padding:18px!important;border:1px solid #e3e7ea!important;border-radius:14px!important;background:#fbfcfd!important}
+ .kol-report-page>.card .metric .label{font-size:10px!important;letter-spacing:.08em!important;font-weight:750!important}
+ .kol-report-page>.card .metric strong{font-size:28px!important;line-height:1.05!important;letter-spacing:-.035em!important}
+ .kol-report-page>.card .metric small{font-size:11px!important;line-height:1.45!important;color:#707b82!important}
+ .report-chart-grid{gap:16px!important}
+ .report-chart-card{padding:18px!important;border-radius:16px!important;background:#fff!important;box-shadow:0 8px 24px rgba(20,30,35,.035)!important}
+ .report-chart-head{margin-bottom:12px!important}
+ .report-chart-head b{font-size:13px!important;font-weight:750!important}
+ .report-chart-head span{font-size:10px!important;color:#78838a!important}
+ .report-chart-svg{min-height:230px!important}
+ .rchart-title{font-size:11px!important;fill:#65727a!important;font-weight:750!important}
+ .rchart-value{font-size:11px!important;fill:#1b2024!important;font-weight:800!important}
+ .rchart-label{font-size:10px!important;fill:#707b82!important}
+ .rchart-label-strong{font-size:11px!important;fill:#4d5960!important;font-weight:650!important}
+ .rchart-axis{font-size:9px!important;fill:#8a949b!important}
+ .rchart-legend{font-size:10px!important;fill:#657078!important}
+ .rchart-gridline{stroke:#edf0f2!important;stroke-width:1!important}
+ .rchart-bar{fill:#17171b!important}
+ .rchart-line-a{stroke:#17171b!important;stroke-width:3!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+ .rchart-line-b{stroke:#63cbd9!important;stroke-width:3!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+ .rchart-dot-a{fill:#17171b!important}.rchart-dot-b{fill:#63cbd9!important}
+ .report-chart-empty{height:230px!important;font-size:12px!important;color:#7b868d!important;background:#fbfcfd!important}
+ .report-donut-wrap{min-height:240px!important;gap:30px!important}
+ .report-donut{width:166px!important;height:166px!important;flex-basis:166px!important}
+ .report-donut>div{width:104px!important;height:104px!important}
+ .report-donut strong{font-size:25px!important;font-weight:800!important}
+ .report-donut span{font-size:9px!important}
+ .report-legend{gap:12px!important;min-width:170px!important}
+ .report-legend>div{font-size:11px!important;grid-template-columns:10px 1fr auto!important;gap:9px!important}
+ .report-legend b{font-size:11px!important}
+ .evidence-status-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:16px}
+ .evidence-status{padding:13px 14px;border-radius:12px;border:1px solid #e2e7e9;background:#fafbfc;display:flex;flex-direction:column;gap:5px}
+ .evidence-status b{font-size:9px;letter-spacing:.08em}
+ .evidence-status span{font-size:11px;color:#59656d}
+ .evidence-status.is-present{border-color:#cfecef;background:#f5fcfd}
+ .evidence-status.is-present b{color:#167584}
+ .evidence-status.is-missing{border-color:#e5e7e9;background:#fafafa}
+ .evidence-status.is-missing b{color:#8a9298}
+ @media(max-width:900px){.evidence-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kol-report-page>.hero{padding:30px!important}}
+ @media(max-width:560px){.kol-report-page>.hero{padding:22px!important}.kol-report-page>.hero h2{font-size:27px!important}.kol-report-page>.hero p{font-size:12px!important}.kol-report-page>.card{padding:18px!important}.kol-report-page>.card .section-head h2{font-size:19px!important}.kol-report-page>.card .section-head .sub{font-size:11px!important}.kol-report-page>.card .signal-box p{font-size:11px!important}.kol-report-page>.card th{font-size:9px!important}.kol-report-page>.card td{font-size:11px!important}.evidence-status-grid{grid-template-columns:1fr 1fr}.evidence-status span{font-size:10px!important}.report-donut-wrap{gap:14px!important}.report-donut{width:128px!important;height:128px!important;flex-basis:128px!important}.report-donut>div{width:80px!important;height:80px!important}.report-donut strong{font-size:20px!important}.report-legend{min-width:110px!important}.report-legend>div{font-size:9px!important}}
+ `;
+ document.head.appendChild(s);
+})();
+
 /* FINAL MOBILE CREATOR FIT · 3-UP METRICS / COMPACT REFERENCE */
 (function(){
   const styleId='kol-ids-creator-mobile-3up-final';
