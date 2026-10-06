@@ -14,3 +14,9 @@
 
 ## Deployment
 Replace the previous build with this ZIP and hard refresh after deployment.
+
+
+## Report chart palette update — 2026-10-06
+- Updated report charts to use the reference UI palette: cyan as the primary data color and green as the success/secondary color.
+- Applied the palette to bars, trend lines, points, revenue bars, labels, and chart empty states.
+- No chart data, scoring, or report logic changed.

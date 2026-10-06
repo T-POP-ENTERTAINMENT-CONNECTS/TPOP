@@ -3968,12 +3968,16 @@ tbody tr:hover td{background:#fbfdfe}
   :root{
     --report-cyan-1:#AEEFFF;
     --report-cyan-2:#D7F7FC;
-    --report-cyan-3:#8FD6E3;
-    --report-cyan-4:#6DB8C8;
-    --report-cyan-ink:#527684;
-    --report-cyan-deep:#3F6875;
+    --report-cyan-3:#69D2E2;
+    --report-cyan-4:#39B8CC;
+    --report-cyan-ink:#287D8B;
+    --report-cyan-deep:#216A75;
     --report-cyan-line:#DCEFF3;
     --report-cyan-track:#EAF9FF;
+    --report-green:#35A879;
+    --report-green-deep:#247653;
+    --report-green-soft:#E8F7F0;
+    --report-green-line:#C7E8D8;
   }
   /* Keep Reports visually consistent with the system's cyan status language. */
   .kol-report-page .report-chart-card{
@@ -3994,19 +3998,24 @@ tbody tr:hover td{background:#fbfdfe}
   .kol-report-page .rchart-gridline{stroke:#E3F1F4!important}
   .kol-report-page .rchart-bar{fill:#AEEFFF!important}
   .kol-report-page .rchart-bar-track{fill:#EAF9FF!important;stroke:#D8EEF3!important}
-  .kol-report-page .rchart-line-a{stroke:#527684!important}
-  .kol-report-page .rchart-line-b{stroke:#8FD6E3!important}
-  .kol-report-page .rchart-dot-a{fill:#527684!important}
-  .kol-report-page .rchart-dot-b{fill:#8FD6E3!important;stroke:#fff!important}
-  .kol-report-page .rchart-dot-a-text,.kol-report-page .rchart-dot-b-text{fill:#527684!important}
-  .kol-report-page .rchart-share{fill:#527684!important}
-  .kol-report-page .report-chart-revenue .rchart-bar{fill:#8FD6E3!important}
-  .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#EAF9FF!important;stroke:#D8EEF3!important}
+  .kol-report-page .rchart-line-a{stroke:#287D8B!important}
+  .kol-report-page .rchart-line-b{stroke:#35A879!important}
+  .kol-report-page .rchart-dot-a{fill:#287D8B!important}
+  .kol-report-page .rchart-dot-b{fill:#35A879!important;stroke:#fff!important}
+  .kol-report-page .rchart-dot-a-text{fill:#287D8B!important}
+  .kol-report-page .rchart-dot-b-text{fill:#247653!important}
+  .kol-report-page .rchart-share{fill:#287D8B!important}
+  .kol-report-page .report-chart-revenue .rchart-bar{fill:#8FDDB9!important}
+  .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#E8F7F0!important;stroke:#C7E8D8!important}
   .kol-report-page .report-chart-empty{
     border-color:#BFE8F1!important;
-    background:linear-gradient(180deg,#F7FDFF,#fff)!important;
+    background:linear-gradient(135deg,#F7FDFF 0%,#F4FCF7 100%)!important;
     color:#6D8C96!important;
   }
+  /* Cyan + success green palette, matched to the saved/confirmed UI states. */
+  .kol-report-page .report-chart-card{border-color:#DCEFF3!important}
+  .kol-report-page .report-chart-head{border-bottom-color:#E6F3F0!important}
+  .kol-report-page .report-chart-revenue .rchart-share{fill:#247653!important}
   .kol-report-page .report-donut{
     box-shadow:0 0 0 1px #DCEFF3!important;
   }
