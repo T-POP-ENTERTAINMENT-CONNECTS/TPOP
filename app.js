@@ -1794,7 +1794,7 @@ function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  let offset=0;
- const colors=['#AEEFFF','#C8F4FF','#DDF8FF','#EEF BFF'.replace(' ', '')];
+ const colors=['#2454C7','#4B73D5','#6D8DDF','#91A9E9','#B4C4F2','#D7E0FA'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -4539,4 +4539,238 @@ function downloadImpactCSV(){exportGateOr(()=>{
   .kol-report-page .report-donut{box-shadow:inset 0 0 0 1px rgba(255,255,255,.8)!important}
   .kol-report-page .report-legend i{border:1px solid rgba(91,157,173,.12)!important}
  `;document.head.appendChild(st);
+})();
+
+
+/* V6 · Report visual system — premium KOL IDS blue intelligence palette */
+(function(){
+  const styleId='kol-ids-report-premium-blue-v6';
+  if(document.getElementById(styleId)) return;
+  const s=document.createElement('style');
+  s.id=styleId;
+  s.textContent=`
+    /* Report page hierarchy */
+    .kol-report-page{
+      --report-blue:#2454C7;
+      --report-blue-2:#4B73D5;
+      --report-blue-3:#6D8DDF;
+      --report-blue-4:#91A9E9;
+      --report-blue-5:#B4C4F2;
+      --report-blue-6:#D7E0FA;
+      --report-ink:#101827;
+      --report-muted:#68758A;
+      --report-line:#DCE4F2;
+      --report-surface:#FFFFFF;
+      --report-soft:#F7F9FD;
+    }
+
+    .kol-report-page > .hero{
+      position:relative!important;
+      margin-bottom:22px!important;
+      padding:30px 32px!important;
+      border:1px solid var(--report-line)!important;
+      border-radius:22px!important;
+      background:
+        radial-gradient(circle at 92% 10%,rgba(36,84,199,.10),transparent 34%),
+        linear-gradient(135deg,#fff 0%,#fbfcff 100%)!important;
+      box-shadow:0 18px 55px rgba(31,55,98,.07)!important;
+      overflow:hidden!important;
+    }
+    .kol-report-page > .hero:before{
+      content:""!important;
+      position:absolute!important;
+      left:0!important;top:0!important;bottom:0!important;
+      width:4px!important;
+      background:#2454C7!important;
+    }
+    .kol-report-page > .hero h2{
+      color:var(--report-ink)!important;
+      font-size:30px!important;
+      letter-spacing:-.035em!important;
+      line-height:1.08!important;
+    }
+    .kol-report-page > .hero p{
+      color:var(--report-muted)!important;
+      max-width:760px!important;
+      line-height:1.65!important;
+    }
+
+    /* Top metrics */
+    .kol-report-page > .grid.g4{
+      gap:14px!important;
+      margin-bottom:4px!important;
+    }
+    .kol-report-page > .grid.g4 .metric{
+      border:1px solid var(--report-line)!important;
+      border-radius:18px!important;
+      background:#fff!important;
+      box-shadow:0 10px 32px rgba(31,55,98,.055)!important;
+      padding:19px 20px!important;
+      min-height:108px!important;
+    }
+    .kol-report-page > .grid.g4 .metric .label{
+      color:#718096!important;
+      letter-spacing:.08em!important;
+    }
+    .kol-report-page > .grid.g4 .metric strong{
+      color:#14213A!important;
+      font-size:28px!important;
+      letter-spacing:-.035em!important;
+    }
+    .kol-report-page > .grid.g4 .metric small{
+      color:#8A95A6!important;
+    }
+
+    /* All report sections */
+    .kol-report-page > section.card{
+      border:1px solid var(--report-line)!important;
+      border-radius:20px!important;
+      background:#fff!important;
+      box-shadow:0 12px 38px rgba(31,55,98,.055)!important;
+      padding:24px!important;
+    }
+    .kol-report-page .section-head{
+      margin-bottom:18px!important;
+    }
+    .kol-report-page .section-head .label{
+      color:#2454C7!important;
+      font-weight:850!important;
+      letter-spacing:.12em!important;
+    }
+    .kol-report-page .section-head h2{
+      color:var(--report-ink)!important;
+      letter-spacing:-.025em!important;
+    }
+    .kol-report-page .section-head .sub{
+      color:#738095!important;
+      line-height:1.6!important;
+    }
+
+    /* Visual intelligence gets premium treatment */
+    .kol-report-page .report-visuals{
+      padding:26px!important;
+      background:
+        linear-gradient(180deg,#FCFDFF 0%,#F8FAFE 100%)!important;
+      border-color:#D6E0F2!important;
+    }
+    .kol-report-page .report-visuals .section-head{
+      padding-bottom:18px!important;
+      border-bottom:1px solid #E6EBF4!important;
+    }
+    .kol-report-page .report-chart-grid{
+      display:grid!important;
+      grid-template-columns:repeat(2,minmax(0,1fr))!important;
+      gap:18px!important;
+      align-items:stretch!important;
+    }
+    .kol-report-page .report-chart-card{
+      min-width:0!important;
+      border:1px solid #DCE4F2!important;
+      border-radius:18px!important;
+      padding:22px 22px 18px!important;
+      background:#fff!important;
+      box-shadow:0 10px 30px rgba(31,55,98,.055)!important;
+      transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important;
+    }
+    .kol-report-page .report-chart-card:hover{
+      transform:translateY(-2px)!important;
+      border-color:#C8D5EE!important;
+      box-shadow:0 16px 38px rgba(31,55,98,.09)!important;
+    }
+    .kol-report-page .report-chart-head{
+      display:flex!important;
+      align-items:flex-end!important;
+      justify-content:space-between!important;
+      gap:16px!important;
+      margin-bottom:10px!important;
+      padding-bottom:12px!important;
+      border-bottom:1px solid #EEF1F6!important;
+    }
+    .kol-report-page .report-chart-head b{
+      color:#15213A!important;
+      font-size:16px!important;
+      font-weight:850!important;
+      letter-spacing:-.02em!important;
+    }
+    .kol-report-page .report-chart-head span{
+      color:#7A879A!important;
+      font-size:11px!important;
+      font-weight:650!important;
+      letter-spacing:.07em!important;
+      text-transform:uppercase!important;
+    }
+
+    /* SVG typography */
+    .kol-report-page .rchart-label-strong{fill:#26344C!important}
+    .kol-report-page .rchart-label{fill:#68758A!important}
+    .kol-report-page .rchart-axis{fill:#8A96A8!important}
+    .kol-report-page .rchart-value{fill:#2454C7!important}
+    .kol-report-page .rchart-share{fill:#2454C7!important}
+    .kol-report-page .rchart-legend{fill:#536176!important}
+    .kol-report-page .rchart-gridline{stroke:#E8EDF5!important;stroke-width:1!important}
+
+    /* Main bar chart — primary to progressively lighter blue */
+    .kol-report-page .rchart-bar{fill:#2454C7!important}
+    .kol-report-page .report-chart-horizontal > g:nth-of-type(2) .rchart-bar{fill:#4B73D5!important}
+    .kol-report-page .report-chart-horizontal > g:nth-of-type(3) .rchart-bar{fill:#6D8DDF!important}
+    .kol-report-page .report-chart-horizontal > g:nth-of-type(4) .rchart-bar{fill:#91A9E9!important}
+    .kol-report-page .report-chart-horizontal > g:nth-of-type(5) .rchart-bar{fill:#B4C4F2!important}
+    .kol-report-page .report-chart-horizontal > g:nth-of-type(6) .rchart-bar{fill:#D7E0FA!important}
+
+    /* Revenue contribution — track + tiered bars */
+    .kol-report-page .report-chart-revenue .rchart-bar-track{fill:#EEF2F9!important}
+    .kol-report-page .report-chart-revenue .rchart-revenue-bar-0{fill:#2454C7!important}
+    .kol-report-page .report-chart-revenue .rchart-revenue-bar-1{fill:#4B73D5!important}
+    .kol-report-page .report-chart-revenue .rchart-revenue-bar-2{fill:#6D8DDF!important}
+    .kol-report-page .report-chart-revenue .rchart-revenue-bar-3{fill:#91A9E9!important}
+    .kol-report-page .report-chart-revenue .rchart-revenue-bar-4{fill:#B4C4F2!important}
+    .kol-report-page .report-chart-revenue .rchart-revenue-bar-5{fill:#D7E0FA!important}
+
+    /* Trend chart — primary revenue, lighter spend */
+    .kol-report-page .rchart-line-a{stroke:#2454C7!important;stroke-width:4!important}
+    .kol-report-page .rchart-dot-a{fill:#2454C7!important}
+    .kol-report-page .rchart-dot-a-text{fill:#2454C7!important}
+    .kol-report-page .rchart-line-b{stroke:#91A9E9!important;stroke-width:3.5!important;stroke-dasharray:8 7!important}
+    .kol-report-page .rchart-dot-b{fill:#91A9E9!important;stroke:#fff!important;stroke-width:3!important}
+    .kol-report-page .rchart-dot-b-text{fill:#6D8DDF!important}
+
+    /* Donut / evidence mix */
+    .kol-report-page .report-donut{
+      box-shadow:0 0 0 1px #D7E1F2,0 14px 38px rgba(36,84,199,.08)!important;
+    }
+    .kol-report-page .report-donut>div{
+      background:#fff!important;
+      box-shadow:0 7px 26px rgba(36,84,199,.08)!important;
+    }
+    .kol-report-page .report-donut strong{
+      color:#17243C!important;
+    }
+    .kol-report-page .report-donut span{
+      color:#7B8799!important;
+    }
+    .kol-report-page .report-legend span{color:#5E6B7F!important}
+    .kol-report-page .report-legend b{color:#2454C7!important}
+
+    /* Blue evidence/status accents */
+    .kol-report-page .evidence-status.is-present{
+      border-color:#D5E0F4!important;
+      background:#F7F9FD!important;
+    }
+    .kol-report-page .evidence-status.is-present b{
+      color:#2454C7!important;
+    }
+
+    @media(max-width:900px){
+      .kol-report-page .report-chart-grid{grid-template-columns:1fr!important}
+      .kol-report-page > .hero{padding:24px!important}
+      .kol-report-page > .hero h2{font-size:26px!important}
+    }
+    @media(max-width:560px){
+      .kol-report-page > section.card{padding:18px!important;border-radius:16px!important}
+      .kol-report-page .report-chart-card{padding:16px!important;border-radius:15px!important}
+      .kol-report-page .report-chart-head{align-items:flex-start!important;flex-direction:column!important;gap:4px!important}
+      .kol-report-page > .hero{padding:20px!important;border-radius:17px!important}
+    }
+  `;
+  document.head.appendChild(s);
 })();
