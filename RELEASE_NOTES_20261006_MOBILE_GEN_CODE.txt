@@ -1,0 +1,18 @@
+KOL IDS™ · MOBILE GEN CODE POLISH · 2026-10-06
+
+Source:
+KOL_IDS_CAMPAIGN_COMPLETE_BUGFIX_20261005(1)(1).zip
+
+Changes:
+- Fixed Step 05 Gen Code / Attribution mobile overflow.
+- Converted Creator-specific commercial terms from a fixed-width table into stacked creator cards on mobile.
+- Kept desktop table layout intact.
+- Made Gen Code inputs/selects/date controls width-safe at mobile breakpoints.
+- Improved section-head wrapping so the generated counter cannot push content outside the viewport.
+- Shortened Gen Code explanatory copy for a cleaner business-facing UI.
+- Renamed generation mode wording to clearer commercial terminology.
+- Kept existing IDs, data model, save/update behavior and Gen Code logic unchanged.
+- Existing generated-code result table remains horizontally scrollable as data, but stays contained inside the card.
+
+Validation:
+- app.js passed Node syntax check.
