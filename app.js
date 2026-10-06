@@ -1794,7 +1794,7 @@ function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  let offset=0;
- const colors=['#69C9DB','#8DD9E5','#AFE6EE','#D0F1F5'];
+ const colors=['#39AFC4','#78CDDA','#A7E2E9','#D6F2F5'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
  return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
@@ -4369,3 +4369,51 @@ function downloadImpactCSV(){exportGateOr(()=>{
  downloadEnterpriseCSV(`KOL-IDS_Business-Impact_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,pairs.map(x=>[S.selectedCampaign?.name,S.selectedCampaign?.id,...x]),'Business impact');toast(`Impact CSV saved · ${d.action}`,'good')
 })}
 
+
+
+/* KOL IDS · REPORT CHARTS PREMIUM SOFT CYAN · 20261006 */
+(function(){
+ const styleId='kol-ids-report-charts-premium-soft-cyan-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  .kol-report-page .report-chart-card{
+    background:linear-gradient(145deg,#FFFFFF 0%,#FCFEFF 72%,#F8FCFD 100%)!important;
+    border:1px solid #E1EAED!important;border-radius:12px!important;
+    box-shadow:0 4px 16px rgba(25,55,65,.025)!important;
+    padding:22px 22px 20px!important;
+  }
+  .kol-report-page .report-chart-head{border-bottom:1px solid #EDF2F4!important;padding-bottom:13px!important;margin-bottom:14px!important}
+  .kol-report-page .report-chart-head b{color:#171A1D!important;font-size:12px!important;font-weight:800!important;letter-spacing:.045em!important}
+  .kol-report-page .report-chart-head span{color:#7C8A92!important;font-size:11px!important;font-weight:500!important}
+  .kol-report-page .rchart-title{fill:#71818A!important}
+  .kol-report-page .rchart-value,.kol-report-page .rchart-share{fill:#20272B!important;font-weight:750!important}
+  .kol-report-page .rchart-label,.kol-report-page .rchart-date-label{fill:#71818A!important}
+  .kol-report-page .rchart-label-strong{fill:#39474E!important;font-weight:700!important}
+  .kol-report-page .rchart-axis{fill:#9AA8AE!important;font-weight:500!important}
+  .kol-report-page .rchart-axis-heading{fill:#71818A!important}
+  .kol-report-page .rchart-legend{fill:#586A72!important;font-weight:650!important}
+  .kol-report-page .rchart-gridline{stroke:#EAF0F2!important;stroke-width:1!important}
+  .kol-report-page .rchart-line-a{stroke:#319FB4!important;stroke-width:2.6!important;fill:none!important}
+  .kol-report-page .rchart-line-b{stroke:#A1DDE5!important;stroke-width:2.4!important;stroke-dasharray:6 5!important;fill:none!important}
+  .kol-report-page .rchart-dot-a{fill:#319FB4!important;stroke:#FFFFFF!important;stroke-width:2.5!important}
+  .kol-report-page .rchart-dot-b{fill:#A1DDE5!important;stroke:#FFFFFF!important;stroke-width:2.5!important}
+  .kol-report-page .rchart-dot-a-text{fill:#267F91!important}
+  .kol-report-page .rchart-dot-b-text{fill:#648D95!important}
+  .kol-report-page .rchart-point-value{font-size:12px!important;font-weight:750!important}
+  .kol-report-page .rchart-bar{fill:#83D2DE!important}
+  .kol-report-page .rchart-bar-track{fill:#F5FBFC!important;stroke:#E2EEF1!important;stroke-width:1!important}
+  .kol-report-page .rchart-revenue-bar-0{fill:#42B4C7!important}
+  .kol-report-page .rchart-revenue-bar-1{fill:#76CCD9!important}
+  .kol-report-page .rchart-revenue-bar-2{fill:#A5E0E8!important}
+  .kol-report-page .rchart-revenue-bar-3{fill:#D2EFF3!important}
+  .kol-report-page .report-donut{box-shadow:0 0 0 1px #E4EDF0!important}
+  .kol-report-page .report-donut>div{background:#FFFFFF!important;box-shadow:0 3px 14px rgba(30,70,80,.045)!important}
+  .kol-report-page .report-donut strong{color:#171A1D!important}
+  .kol-report-page .report-donut span{color:#7C8A92!important}
+  .kol-report-page .report-legend i{border:1px solid #E1EAED!important;box-shadow:none!important}
+  .kol-report-page .report-legend span{color:#71818A!important}
+  .kol-report-page .report-legend b{color:#20272B!important;font-weight:750!important}
+  .kol-report-page .report-chart-empty{border-color:#E1EAED!important;background:#FCFEFF!important;color:#71818A!important;border-radius:10px!important}
+  @media(max-width:900px){.kol-report-page .report-chart-card{padding:16px!important}}
+ `;document.head.appendChild(s);
+})();
