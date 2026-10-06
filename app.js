@@ -1718,25 +1718,25 @@ function reportLiveSnapshot(){
 }
 
 function reportSvgBarChart(items, opts={}){
- const width=opts.width||760,height=opts.height||350,pad={l:190,r:105,t:50,b:58};
+ const width=opts.width||760,height=opts.height||390,pad={l:205,r:92,t:44,b:56};
  const valid=items.filter(x=>Number.isFinite(Number(x.value)));
  if(!valid.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const max=Math.max(...valid.map(x=>Number(x.value)),1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
- const rowH=Math.max(48,innerH/valid.length),barH=Math.min(24,rowH*.38);
- const ticks=5;
- const grid=Array.from({length:ticks+1},(_,i)=>{const x=pad.l+innerW*i/ticks;const v=max*i/ticks;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+innerH}" class="rchart-gridline"/><text x="${x}" y="${height-15}" text-anchor="middle" class="rchart-axis">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text>`}).join('');
+ const rowH=Math.max(62,innerH/valid.length),barH=Math.min(34,rowH*.42);
+ const ticks=4;
+ const grid=Array.from({length:ticks+1},(_,i)=>{const x=pad.l+innerW*i/ticks;const v=max*i/ticks;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t+innerH}" class="rchart-gridline"/><text x="${x}" y="${height-18}" text-anchor="middle" class="rchart-axis">${esc(opts.format?opts.format(v):String(Math.round(v)))}</text>`}).join('');
  const bars=valid.map((x,i)=>{
-   const v=Number(x.value)||0,y=pad.t+i*rowH+(rowH-barH)/2,w=Math.max(2,v/max*innerW);
+   const v=Number(x.value)||0,y=pad.t+i*rowH+(rowH-barH)/2,w=Math.max(4,v/max*innerW);
    const label=String(x.label||'');
    const value=opts.format?opts.format(v):String(Math.round(v));
-   const valueX=Math.min(width-pad.r+4,pad.l+w+10);
-   return `<g><text x="${pad.l-16}" y="${y+barH/2+6}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="${barH}" rx="7" class="rchart-bar"/><text x="${valueX}" y="${y+barH/2+6}" class="rchart-value">${esc(value)}</text></g>`;
+   const valueX=Math.min(width-pad.r+5,pad.l+w+12);
+   return `<g><text x="${pad.l-18}" y="${y+barH/2+6}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="${barH}" rx="5" class="rchart-bar"/><text x="${valueX}" y="${y+barH/2+6}" class="rchart-value">${esc(value)}</text></g>`;
  }).join('');
- return `<svg class="report-chart-svg report-chart-horizontal" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Bar chart')}"><text x="${pad.l}" y="24" class="rchart-title">${esc(opts.title||'')}</text>${grid}${bars}</svg>`;
+ return `<svg class="report-chart-svg report-chart-horizontal" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Bar chart')}">${grid}${bars}</svg>`;
 }
 
 function reportSvgLineChart(items, opts={}){
- const width=opts.width||760,height=opts.height||350,pad={l:88,r:34,t:66,b:60};
+ const width=opts.width||760,height=opts.height||390,pad={l:92,r:34,t:48,b:64};
  if(!items.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const finite=[...items.map(x=>Number(x.a)),...items.map(x=>Number(x.b))].filter(Number.isFinite);
  if(!finite.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
@@ -1745,39 +1745,36 @@ function reportSvgLineChart(items, opts={}){
  const yAt=v=>pad.t+innerH-(Number(v)/max)*innerH;
  const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1000000).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
  const segments=(key,cls)=>{const out=[];let pts=[];items.forEach((x,i)=>{const v=Number(x[key]);if(Number.isFinite(v)){pts.push(`${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`)}else if(pts.length){out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});if(pts.length)out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);return out.join('')};
- const dots=(key,cls)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=yAt(v);return `<circle cx="${cx}" cy="${cy}" r="7" class="${cls}"/><text x="${cx}" y="${cy-14}" text-anchor="middle" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
- const grid=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4,v=max-(max*i/4);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-18}" y="${y+6}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(v))}</text>`}).join('');
- const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-25}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`).join('');
- return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}">
- <text x="${pad.l}" y="28" class="rchart-title">${esc(opts.title||'Observed financial movement')}</text>
- <text x="${pad.l}" y="55" class="rchart-axis rchart-axis-heading">THB · shared scale</text>
- ${grid}${segments('a','rchart-line-a')}${segments('b','rchart-line-b')}${dots('a','rchart-dot-a')}${dots('b','rchart-dot-b')}${labels}
- <g transform="translate(${Math.max(pad.l,width-300)},28)"><circle cx="5" cy="0" r="6" class="rchart-dot-a"/><text x="19" y="5" class="rchart-legend">Revenue</text><circle cx="124" cy="0" r="6" class="rchart-dot-b"/><text x="138" y="5" class="rchart-legend">Spend</text></g>
- </svg>`;
+ const dots=(key,cls,offset)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=yAt(v);return `<circle cx="${cx}" cy="${cy}" r="7" class="${cls}"/><text x="${cx}" y="${cy+offset}" text-anchor="middle" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
+ const grid=Array.from({length:5},(_,i)=>{const y=pad.t+innerH*i/4,v=max-(max*i/4);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-16}" y="${y+5}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(v))}</text>`}).join('');
+ const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-24}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`).join('');
+ const legendX=Math.max(pad.l,width-220);
+ return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}">${grid}${segments('a','rchart-line-a')}${segments('b','rchart-line-b')}${dots('a','rchart-dot-a',-16)}${dots('b','rchart-dot-b',25)}${labels}<g transform="translate(${legendX},24)"><circle cx="5" cy="0" r="6" class="rchart-dot-a"/><text x="19" y="5" class="rchart-legend">Revenue</text><circle cx="110" cy="0" r="6" class="rchart-dot-b"/><text x="124" y="5" class="rchart-legend">Spend</text></g></svg>`;
 }
 function reportSvgRevenueContribution(items, opts={}){
  const valid=items.filter(x=>Number.isFinite(Number(x.value))&&Number(x.value)>0).sort((a,b)=>Number(b.value)-Number(a.value));
  if(!valid.length)return `<div class="report-chart-empty">Not enough revenue evidence to visualize</div>`;
  const total=valid.reduce((a,x)=>a+Number(x.value),0);
- const width=opts.width||760,height=Math.max(300,92+valid.length*58),pad={l:185,r:125,t:62,b:54};
+ const width=opts.width||760,height=Math.max(330,105+valid.length*72),pad={l:205,r:128,t:48,b:56};
  const innerW=width-pad.l-pad.r,rowH=(height-pad.t-pad.b)/valid.length;
  const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1000000).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
  const maxValue=Math.max(...valid.map(x=>Number(x.value)),1);
  const grid=Array.from({length:5},(_,i)=>{const x=pad.l+innerW*i/4;const v=maxValue*i/4;return `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${height-pad.b}" class="rchart-gridline"/><text x="${x}" y="${height-18}" text-anchor="middle" class="rchart-axis">${esc(moneyAxis(v))}</text>`}).join('');
  const rows=valid.map((x,i)=>{
-   const v=Number(x.value),share=v/total*100,y=pad.t+i*rowH+(rowH-32)/2,w=Math.max(3,v/maxValue*innerW),label=String(x.label||'');
-   const shareText=`${share.toFixed(1)}% of total`;
-   return `<g><text x="${pad.l-20}" y="${y+21}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${innerW}" height="32" rx="12" class="rchart-bar-track"/><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="32" rx="12" class="rchart-bar"/><text x="${Math.min(width-pad.r-112,pad.l+w+12)}" y="${y+21}" class="rchart-share">${esc(shareText)}</text><text x="${width-pad.r+14}" y="${y+21}" class="rchart-value">${esc(money(v))}</text></g>`;
+   const v=Number(x.value),share=v/total*100,y=pad.t+i*rowH+(rowH-38)/2,w=Math.max(5,v/maxValue*innerW),label=String(x.label||'');
+   const shareText=`${share.toFixed(1)}%`;
+   const shareX=Math.min(width-pad.r-62,pad.l+w+14);
+   return `<g><text x="${pad.l-18}" y="${y+25}" text-anchor="end" class="rchart-label rchart-label-strong">${esc(label)}</text><rect x="${pad.l}" y="${y}" width="${innerW}" height="38" rx="5" class="rchart-bar-track"/><rect x="${pad.l}" y="${y}" width="${w.toFixed(1)}" height="38" rx="5" class="rchart-bar"/><text x="${shareX}" y="${y+25}" class="rchart-share">${esc(shareText)}</text><text x="${width-pad.r+12}" y="${y+25}" class="rchart-value">${esc(money(v))}</text></g>`;
  }).join('');
- return `<svg class="report-chart-svg report-chart-revenue" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue contribution by creator')}"><text x="${pad.l}" y="28" class="rchart-title">${esc(opts.title||'Revenue contribution by creator')}</text><text x="${pad.l}" y="52" class="rchart-axis rchart-axis-heading">Revenue scale · THB</text><text x="${width-pad.r+14}" y="52" class="rchart-axis rchart-axis-heading">Recorded revenue</text>${grid}${rows}<text x="${pad.l}" y="${height-2}" class="rchart-footnote">Each bar = creator revenue ÷ highest creator revenue. % = share of observed total.</text></svg>`;
+ return `<svg class="report-chart-svg report-chart-revenue" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue contribution by creator')}">${grid}${rows}</svg>`;
 }
 
 function reportSvgDonut(parts, opts={}){
  const valid=parts.filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);
  if(!total)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- let offset=0,colors=['#aeefff','#171717','#d8d1c8','#6f7478'];
+ let offset=0,colors=['#171717','#777777','#c9c9c9','#a5a5a5'];
  const stops=valid.map((x,i)=>{const pct=Number(x.value)/total*100,s=`${colors[i%colors.length]} ${offset}% ${offset+pct}%`;offset+=pct;return s}).join(',');
- return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]};opacity:.62"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
+ return `<div class="report-donut-wrap"><div class="report-donut" style="background:conic-gradient(${stops})"><div><strong>${esc(opts.center||'100%')}</strong><span>${esc(opts.centerLabel||'observed mix')}</span></div></div><div class="report-legend">${valid.map((x,i)=>`<div><i style="background:${colors[i%colors.length]}"></i><span>${esc(x.label)}</span><b>${Number(x.value).toLocaleString()}</b></div>`).join('')}</div></div>`;
 }
 function buildReportVisuals(snap){
  const {perf,impact,digital,ecommerce,offline}=snap;
@@ -3826,4 +3823,64 @@ tbody tr:hover td{background:#fbfdfe}
     .kol-report-page .report-legend span{font-size:11px!important}.kol-report-page .report-legend b{font-size:12px!important}
   }
  `; document.head.appendChild(s);
+})();
+
+
+/* REPORTS · LUXURY MONOCHROME CHART SYSTEM · 20261006 */
+(function(){
+ const styleId='kol-ids-reports-luxury-monochrome-20261006';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+ .kol-report-page .report-chart-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:20px!important}
+ .kol-report-page .report-chart-card{min-width:0!important;min-height:430px!important;padding:22px 22px 20px!important;background:#fff!important;border:1px solid #d8d8d8!important;border-radius:18px!important;box-shadow:0 12px 35px rgba(0,0,0,.055)!important;overflow:hidden!important}
+ .kol-report-page .report-chart-head{display:flex!important;justify-content:space-between!important;align-items:baseline!important;gap:18px!important;margin:0 0 14px!important;padding:0 0 15px!important;border-bottom:1px solid #e6e6e6!important}
+ .kol-report-page .report-chart-head b{font-size:16px!important;line-height:1.2!important;font-weight:800!important;letter-spacing:-.025em!important;color:#111!important}
+ .kol-report-page .report-chart-head span{font-size:11px!important;line-height:1.2!important;font-weight:650!important;letter-spacing:.08em!important;text-transform:uppercase!important;color:#777!important;white-space:nowrap!important}
+ .kol-report-page .report-chart-svg{width:100%!important;height:auto!important;min-height:350px!important;display:block!important;overflow:visible!important}
+ .kol-report-page .rchart-title{font-size:15px!important;fill:#111!important;font-weight:800!important}
+ .kol-report-page .rchart-value{font-size:15px!important;fill:#111!important;font-weight:850!important}
+ .kol-report-page .rchart-share{font-size:14px!important;fill:#333!important;font-weight:800!important}
+ .kol-report-page .rchart-label{font-size:14px!important;fill:#555!important;font-weight:600!important}
+ .kol-report-page .rchart-label-strong{font-size:15px!important;fill:#111!important;font-weight:750!important}
+ .kol-report-page .rchart-axis{font-size:13px!important;fill:#777!important;font-weight:550!important}
+ .kol-report-page .rchart-axis-heading{font-size:13px!important;fill:#555!important;font-weight:700!important}
+ .kol-report-page .rchart-legend{font-size:13px!important;fill:#333!important;font-weight:700!important}
+ .kol-report-page .rchart-point-value{font-size:14px!important;fill:#111!important;font-weight:850!important}
+ .kol-report-page .rchart-gridline{stroke:#e3e3e3!important;stroke-width:1!important}
+ .kol-report-page .rchart-bar{fill:#111!important}
+ .kol-report-page .rchart-bar-track{fill:#eeeeee!important}
+ .kol-report-page .rchart-line-a{stroke:#111!important;stroke-width:4!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+ .kol-report-page .rchart-line-b{stroke:#777!important;stroke-width:3.5!important;stroke-linecap:round!important;stroke-linejoin:round!important;stroke-dasharray:9 7!important}
+ .kol-report-page .rchart-dot-a{fill:#111!important}
+ .kol-report-page .rchart-dot-b{fill:#fff!important;stroke:#555!important;stroke-width:2.5!important}
+ .kol-report-page .rchart-footnote{font-size:12px!important;fill:#777!important}
+ .kol-report-page .report-chart-empty{height:350px!important;min-height:350px!important;display:grid!important;place-items:center!important;border:1px dashed #cfcfcf!important;border-radius:12px!important;color:#777!important;background:#fafafa!important;font-size:14px!important}
+ .kol-report-page .report-donut-wrap{min-height:350px!important;height:350px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:42px!important}
+ .kol-report-page .report-donut{width:205px!important;height:205px!important;flex:0 0 205px!important;border-radius:50%!important;display:grid!important;place-items:center!important}
+ .kol-report-page .report-donut>div{width:126px!important;height:126px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 0 0 1px #eee!important}
+ .kol-report-page .report-donut strong{font-size:34px!important;line-height:1!important;font-weight:850!important;letter-spacing:-.04em!important;color:#111!important}
+ .kol-report-page .report-donut span{font-size:11px!important;color:#777!important;letter-spacing:.12em!important;text-transform:uppercase!important;font-weight:700!important}
+ .kol-report-page .report-legend{display:grid!important;gap:17px!important;min-width:185px!important}
+ .kol-report-page .report-legend>div{display:grid!important;grid-template-columns:12px 1fr auto!important;gap:11px!important;align-items:center!important;font-size:14px!important}
+ .kol-report-page .report-legend i{width:11px!important;height:11px!important;border-radius:50%!important;box-shadow:0 0 0 1px rgba(0,0,0,.08)!important}
+ .kol-report-page .report-legend span{color:#555!important;font-weight:650!important}
+ .kol-report-page .report-legend b{color:#111!important;font-size:15px!important;font-weight:850!important}
+ @media(max-width:1100px){
+   .kol-report-page .report-chart-grid{grid-template-columns:1fr!important}
+   .kol-report-page .report-chart-card{min-height:410px!important}
+ }
+ @media(max-width:560px){
+   .kol-report-page .report-chart-card{padding:16px!important;min-height:350px!important;border-radius:15px!important}
+   .kol-report-page .report-chart-head b{font-size:14px!important}
+   .kol-report-page .report-chart-head span{font-size:9px!important}
+   .kol-report-page .report-chart-svg{min-height:300px!important}
+   .kol-report-page .report-donut-wrap{height:290px!important;min-height:290px!important;gap:18px!important}
+   .kol-report-page .report-donut{width:145px!important;height:145px!important;flex-basis:145px!important}
+   .kol-report-page .report-donut>div{width:90px!important;height:90px!important}
+   .kol-report-page .report-donut strong{font-size:25px!important}
+   .kol-report-page .report-legend{min-width:115px!important;gap:11px!important}
+   .kol-report-page .report-legend>div{font-size:11px!important}
+   .kol-report-page .report-legend b{font-size:12px!important}
+ }
+ `;document.head.appendChild(s);
 })();
