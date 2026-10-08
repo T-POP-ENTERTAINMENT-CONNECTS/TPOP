@@ -1747,7 +1747,7 @@ function reportSvgLineChart(items, opts={}){
  const yA=v=>pad.t+innerH-(Number(v)/maxA)*innerH,yB=v=>pad.t+innerH-(Number(v)/maxB)*innerH;
  const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1000000).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
  const path=(key,fn,cls)=>{let pts=[];const out=[];items.forEach((x,i)=>{const v=Number(x[key]);if(Number.isFinite(v))pts.push(`${xAt(i).toFixed(1)},${fn(v).toFixed(1)}`);else if(pts.length){out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});if(pts.length)out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);return out.join('')};
- const pointLabels=(key,fn,cls)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';let y=fn(v)+(key==='a'?-15:23);if(y<pad.t+10)y=fn(v)+25;if(y>pad.t+innerH-2)y=fn(v)-18;return `<circle cx="${xAt(i)}" cy="${fn(v)}" r="5.5" class="${cls}"/><text x="${xAt(i)}" y="${y}" text-anchor="middle" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
+ const pointLabels=(key,fn,cls)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const px=xAt(i),py=fn(v);let y=py+(key==='a'?-18:27);let tx=px+(key==='a'?-10:10);let anchor=key==='a'?'end':'start';if(y<pad.t+18)y=py+28;if(y>pad.t+innerH-4)y=py-20;return `<circle cx="${px}" cy="${py}" r="4.5" class="${cls}"/><text x="${tx}" y="${y}" text-anchor="${anchor}" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
  const grid=Array.from({length:5},(_,i)=>{const frac=i/4,y=pad.t+innerH*frac;const av=maxA*(1-frac),bv=maxB*(1-frac);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-14}" y="${y+5}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(av))}</text><text x="${width-pad.r+14}" y="${y+5}" class="rchart-axis">${esc(moneyAxis(bv))}</text>`}).join('');
  const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-24}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`).join('');
  const legendX=Math.max(pad.l,width-240);
@@ -2006,6 +2006,65 @@ function accessGate(){
     .rchart-value{font-size:11px!important}.rchart-label,.rchart-label-strong{font-size:10px!important}.rchart-axis{font-size:9px!important}
     .report-donut{width:150px!important;height:150px!important;flex-basis:150px!important}.report-donut>div{width:100px!important;height:100px!important}.report-donut strong{font-size:24px!important}
     .report-legend{min-width:145px!important;gap:10px!important}.report-legend>div{font-size:11px!important}.report-legend b{font-size:11px!important}
+  }
+ `;document.head.appendChild(s);
+})();
+
+
+/* REPORT UI CLEAN PASS · 20261008 · final CI alignment */
+(function(){
+ const styleId='kol-ids-reports-clean-pass-20261008';
+ if(document.getElementById(styleId))return;
+ const s=document.createElement('style');s.id=styleId;s.textContent=`
+  .kol-report-page{background:#f8fbfc!important;color:#172126!important}
+  .kol-report-page>.hero{background:linear-gradient(135deg,#ffffff 0%,#fbfeff 72%,#f2fbfd 100%)!important;border:1px solid #d9e9ed!important;box-shadow:0 12px 36px rgba(23,33,38,.045)!important}
+  .kol-report-page>.hero h2,.kol-report-page>.card .section-head h2{color:#172126!important}
+  .kol-report-page>.hero .kicker,.kol-report-page>.card .section-head .label{color:#657981!important}
+  .kol-report-page .report-brandline{color:#30454d!important}
+  .kol-report-page .report-brandline span+span{color:#80929a!important}
+  .kol-report-page .btn.cyan,.kol-report-page .pill.cyan{background:#e9faff!important;border-color:#bdebf5!important;color:#24515d!important}
+  .kol-report-page>.card{background:#fff!important;border:1px solid #dfecef!important;box-shadow:0 10px 30px rgba(23,33,38,.035)!important}
+  .kol-report-page .report-chart-grid{gap:16px!important}
+  .kol-report-page .report-chart-card{background:#fff!important;border:1px solid #dbe9ed!important;border-top:3px solid #b8eef8!important;border-radius:16px!important;padding:20px 20px 18px!important;box-shadow:0 8px 24px rgba(23,33,38,.035)!important}
+  .kol-report-page .report-chart-head{padding-bottom:12px!important;margin-bottom:8px!important;border-bottom:1px solid #e5eff2!important;display:flex!important;align-items:baseline!important;justify-content:space-between!important;gap:16px!important}
+  .kol-report-page .report-chart-head b{font-size:16px!important;font-weight:800!important;color:#203139!important;letter-spacing:-.02em!important}
+  .kol-report-page .report-chart-head span{font-size:11px!important;color:#80929a!important;font-weight:700!important;letter-spacing:.08em!important;text-transform:uppercase!important;white-space:nowrap!important}
+  .kol-report-page .report-chart-svg{min-height:300px!important;height:auto!important;display:block!important;width:100%!important;max-width:100%!important;overflow:visible!important}
+  .kol-report-page .rchart-gridline{stroke:#e4eef1!important;stroke-width:1!important}
+  .kol-report-page .rchart-axis{font-size:12px!important;fill:#81939b!important;font-weight:650!important}
+  .kol-report-page .rchart-label{font-size:12px!important;fill:#657981!important}
+  .kol-report-page .rchart-label-strong{font-size:13px!important;fill:#30454d!important;font-weight:800!important}
+  .kol-report-page .rchart-value{font-size:14px!important;fill:#263a42!important;font-weight:850!important}
+  .kol-report-page .rchart-point-value{font-size:13px!important;font-weight:900!important;paint-order:stroke!important;stroke:#fff!important;stroke-width:4px!important;stroke-linejoin:round!important}
+  .kol-report-page .rchart-legend{font-size:11px!important;fill:#526870!important;font-weight:800!important}
+  .kol-report-page .rchart-line-a{stroke:#263a42!important;stroke-width:2.4!important}
+  .kol-report-page .rchart-line-b{stroke:#9ee8f5!important;stroke-width:2.4!important;stroke-dasharray:7 6!important}
+  .kol-report-page .rchart-dot-a{fill:#263a42!important}
+  .kol-report-page .rchart-dot-b{fill:#9ee8f5!important;stroke:#fff!important;stroke-width:2.5!important}
+  .kol-report-page .rchart-dot-a-text{fill:#263a42!important}
+  .kol-report-page .rchart-dot-b-text{fill:#52727b!important}
+  .kol-report-page .rchart-bar{fill:#9ee8f5!important}
+  .kol-report-page .rchart-bar-track{fill:#edf8fa!important}
+  .kol-report-page .rchart-share{font-size:13px!important;fill:#30454d!important;font-weight:850!important}
+  .kol-report-page .report-chart-empty{min-height:300px!important;height:300px!important;border-color:#dbe9ed!important;color:#80929a!important;background:#fbfeff!important}
+  .kol-report-page .report-donut-wrap{min-height:290px!important;gap:34px!important}
+  .kol-report-page .report-donut{box-shadow:0 0 0 1px #dbe9ed!important}
+  .kol-report-page .report-donut>div{background:#fff!important;box-shadow:0 5px 20px rgba(23,33,38,.05)!important}
+  .kol-report-page .report-donut strong{color:#263a42!important}
+  .kol-report-page .report-donut span{color:#80929a!important}
+  .kol-report-page .report-legend span{color:#657981!important}
+  .kol-report-page .report-legend b{color:#30454d!important}
+  .kol-report-page .evidence-status,.kol-report-page .metric,.kol-report-page .signal-box{border-color:#dfecef!important}
+  @media(max-width:900px){
+    .kol-report-page .report-chart-grid{grid-template-columns:1fr!important}
+    .kol-report-page .report-chart-svg{min-height:270px!important}
+  }
+  @media(max-width:560px){
+    .kol-report-page .report-chart-card{padding:16px!important}
+    .kol-report-page .report-chart-head{align-items:flex-start!important;flex-direction:column!important;gap:4px!important}
+    .kol-report-page .rchart-value,.kol-report-page .rchart-point-value{font-size:11px!important}
+    .kol-report-page .rchart-label,.kol-report-page .rchart-label-strong{font-size:10px!important}
+    .kol-report-page .rchart-axis{font-size:9px!important}
   }
  `;document.head.appendChild(s);
 })();
