@@ -5105,3 +5105,177 @@ function downloadFullPDF(){if(reportExportIsTrial()){showPaidExportGate();return
   }
  `;document.head.appendChild(s);
 })();
+
+
+/* ENTERPRISE PDF REBUILD · CREATOR FIT 2-UP + REPORT CHARTS · 20261008 */
+function kolPdfText(v, fallback='—'){
+  const t=String(v??'').replace(/\s+/g,' ').trim();
+  return t||fallback;
+}
+function kolPdfWrap(doc,v,w){return doc.splitTextToSize(kolPdfText(v),Math.max(8,w));}
+function kolPdfMoney(v){return v==null||!Number.isFinite(Number(v))?'—':Number(v).toLocaleString('en-US',{maximumFractionDigits:0});}
+function kolPdfPct(v){return v==null||!Number.isFinite(Number(v))?'—':`${Number(v).toFixed(1)}%`;}
+function kolPdfScore(v){return v==null||!Number.isFinite(Number(v))?'—':String(Math.round(Number(v)));}
+
+function downloadCreatorFitPDF(){
+  if(!S.creators.length){toast('Save creators before exporting the PDF.','error');return}
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const rows=latestDecisionRows();
+  if(!rows.length){toast('Run Creator Fit calculation before exporting the PDF.','error');return}
+  const doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const W=297,H=210,M=10,G=7,HEADER=19,FOOT=7,PANEL_H=(H-HEADER-FOOT-G-M*2)/2;
+  const C={ink:[27,29,32],muted:[104,111,118],soft:[248,250,251],line:[218,224,228],cyan:[207,245,255],cyanStrong:[70,201,232],cream:[255,248,231],creamLine:[242,216,164],good:[34,139,104],warn:[215,132,43],risk:[194,88,74],white:[255,255,255]};
+  const fill=(c)=>doc.setFillColor(...c),stroke=(c)=>doc.setDrawColor(...c),text=(c)=>doc.setTextColor(...c);
+  const box=(x,y,w,h,r,fc=C.white,lc=C.line)=>{fill(fc);stroke(lc);doc.setLineWidth(.28);doc.roundedRect(x,y,w,h,r,r,'FD')};
+  const header=(pageNo,total)=>{
+    fill(C.white);doc.rect(0,0,W,H,'F');
+    text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.text('KOL IDS™',M,9.5);
+    text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(5.4);doc.text('INVESTMENT DECISION INTELLIGENCE',M,14.1);
+    text(C.muted);doc.setFontSize(6.3);doc.text(`CREATOR FIT & DECISION READINESS  ·  ${kolPdfText(S.selectedCampaign?.name)}`,W-M,9.5,{align:'right'});
+    stroke(C.line);doc.setLineWidth(.25);doc.line(M,18,W-M,18);
+    text(C.muted);doc.setFontSize(5.4);doc.text('Evidence-led decision view · Saved creator profile + current campaign / audience context',M,H-3.5);
+    doc.text(`Page ${pageNo} / ${total}`,W-M,H-3.5,{align:'right'});
+  };
+  const statusFor=(score)=>score==null?'Awaiting fit':score>=85?'Strong consider':score>=70?'Consider':score>=55?'Review':'Needs work';
+  const statusColor=(score)=>score==null?C.muted:score>=70?C.good:score>=55?C.warn:C.risk;
+  const dimension=(e,key,legacy)=>{const de=e?.dimensionEvidence||{};const obj=de[key]||de[legacy]||{};const v=e?.[key];return {score:v==null?(obj.score==null?null:Number(obj.score)):Number(v),reason:obj.reason||e?.[`${key}Reason`]||'Based on available evidence.',action:obj.action||e?.[`${key}Action`]||'Refine the brief and validate evidence.'};};
+  const drawMetric=(x,y,w,h,label,v,insight,action,isRisk)=>{
+    box(x,y,w,h,2.2,C.soft,C.line);
+    text(C.muted);doc.setFont('helvetica','bold');doc.setFontSize(5.1);doc.text(label.toUpperCase(),x+2.4,y+4.3);
+    text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8.8);doc.text(kolPdfScore(v),x+w-2.4,y+4.8,{align:'right'});
+    const n=Math.max(0,Math.min(100,Number(v)||0));fill(isRisk?[244,184,169]:C.cyanStrong);doc.roundedRect(x+2.4,y+7,w-4.8,1.8,.9,.9,'F');
+    fill(isRisk?[222,119,99]:[104,214,238]);doc.roundedRect(x+2.4,y+7,(w-4.8)*n/100,1.8,.9,.9,'F');
+    text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(4.7);doc.text(kolPdfWrap(insight,w-4.8).slice(0,1),x+2.4,y+12.7);
+    stroke(C.line);doc.line(x+2.4,y+h-6,x+w-2.4,y+h-6);
+    text(isRisk?C.risk:C.cyanStrong);doc.setFontSize(4.6);doc.text(kolPdfWrap(action,w-4.8).slice(0,1),x+2.4,y+h-2.5);
+  };
+  const drawGuidance=(x,y,w,h,label,value)=>{
+    box(x,y,w,h,2.2,C.cream,C.creamLine);text([94,74,40]);doc.setFont('helvetica','bold');doc.setFontSize(4.9);doc.text(label.toUpperCase(),x+2.6,y+4.1);text(C.ink);doc.setFont('helvetica','normal');doc.setFontSize(5.1);doc.text(kolPdfWrap(value,w-5).slice(0,2),x+2.6,y+8.6);
+  };
+  const drawCreator=(row,idx,total,y)=>{
+    const r=row.creator,d=row.decision||{},e=d.evidence||{},p=r.payload||{};
+    const score=d.score==null?null:Math.round(Number(d.score)),conf=e.confidence==null?null:Math.round(Number(e.confidence));
+    const dims=[
+      ['Audience',dimension(e,'audienceFit','audience'),false],['Campaign',dimension(e,'contentFit','campaign'),false],['Brand',dimension(e,'brandFit','brand'),false],['Evidence',dimension(e,'performance','performance'),false],['Efficiency',dimension(e,'commercial','commercial'),false],['Risk',dimension(e,'risk','risk'),true]
+    ];
+    const gaps=dims.filter(x=>x[1].score!=null).sort((a,b)=>{const av=a[0]==='Risk'?100-a[1].score:a[1].score;const bv=b[0]==='Risk'?100-b[1].score:b[1].score;return av-bv});
+    const priority=gaps[0];
+    const status=statusFor(score);
+    const reason=priority?({'Audience':'Audience match needs work.','Campaign':'Campaign objective fit needs work.','Brand':'Brand alignment needs work.','Evidence':'More performance evidence is needed.','Efficiency':'Fee / budget fit needs review.','Risk':'Execution risk needs tighter controls.'}[priority[0]]||'Fit is based on available evidence.'):'Fit is based on the available evidence.';
+    const next=priority?({'Audience':'Refine audience + content examples.','Campaign':'Tighten brief, message + CTA.','Brand':'Set 2–3 brand cues.','Evidence':'Add recent reach + conversions.','Efficiency':'Adjust scope or test budget.','Risk':'Add tighter review controls.'}[priority[0]]||'Keep the brief aligned and test.'):'Keep the brief aligned and validate the next evidence point.';
+    const st=decisionStrategy(e,r,S.selectedCampaign);
+    box(M,y,W-2*M,PANEL_H,4,C.white,C.line);
+    text(C.muted);doc.setFont('helvetica','bold');doc.setFontSize(4.9);doc.text(`CREATOR ${idx+1} / ${total}`,M+4,y+6.5);
+    text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(kolPdfText(r.name,'Creator'),M+4,y+13.2);
+    text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(5.2);doc.text(`${kolPdfText(p.channel)}  ·  ${p.followers==null?'—':kolPdfMoney(p.followers)} followers  ·  ${p.er==null?'—':kolPdfPct(p.er)} ER`,M+4,y+18);
+    // top metrics
+    const mx=M+73,mw=39,mh=17,g=3;
+    [['FIT',score],['EVIDENCE',dimension(e,'performance','performance').score],['CONFIDENCE',conf]].forEach((it,i)=>{const xx=mx+i*(mw+g);box(xx,y+4,mw,mh,2.4,C.soft,C.line);text(C.muted);doc.setFont('helvetica','bold');doc.setFontSize(4.7);doc.text(it[0],xx+2.4,y+8.3);text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(9.3);doc.text(kolPdfScore(it[1]),xx+2.4,y+15);});
+    const dx=M+205;box(dx,y+4,78,mh,2.4,C.cyan,C.line);text(statusColor(score));doc.setFont('helvetica','bold');doc.setFontSize(6.1);doc.text(status.toUpperCase(),dx+3,y+10);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(4.7);doc.text(priority?`Gap: ${priority[0]}`:'No priority gap identified',dx+3,y+15);
+    // six dimensions
+    const gy=y+24, gap=2.3, cardW=(W-2*M-8-5*gap)/6, cardH=26;
+    dims.forEach((m,i)=>drawMetric(M+4+i*(cardW+gap),gy,cardW,cardH,m[0],m[1].score,m[1].reason,m[1].action,m[2]));
+    // decision read
+    const sy=y+54,sw=(W-2*M-8)/3;
+    drawGuidance(M+4,sy,sw,19,'Why',reason);
+    drawGuidance(M+4+sw+4,sy,sw,19,'If selected',next);
+    drawGuidance(M+4+(sw+4)*2,sy,sw,19,'Campaign move',st?.deployment||'Align content to the campaign objective and validate the next outcome.');
+    text(C.muted);doc.setFont('helvetica','bold');doc.setFontSize(4.7);doc.text('DECISION GUIDANCE',M+4,y+78);
+    text(C.ink);doc.setFont('helvetica','normal');doc.setFontSize(5.1);doc.text(kolPdfWrap(`Role: ${st?.bestRole||'—'}  ·  Gap: ${st?.fitGap||'—'}  ·  Format: ${st?.contentFormat||'—'}  ·  Plan: ${st?.deployment||'—'}`,W-2*M-12).slice(0,1),M+4,y+82);
+  };
+  const pages=Math.ceil(rows.length/2);
+  for(let pi=0;pi<pages;pi++){
+    if(pi)doc.addPage();
+    header(pi+1,pages);
+    const slice=rows.slice(pi*2,pi*2+2);
+    slice.forEach((row,i)=>drawCreator(row,pi*2+i,rows.length,M+HEADER+i*(PANEL_H+G)));
+  }
+  const slug=String(S.selectedCampaign?.name||'Creator-Fit').trim().replace(/[^A-Za-z0-9-_]+/g,'-').replace(/^-+|-+$/g,'')||'Creator-Fit';
+  doc.save(`KOL-IDS_Creator-Fit-Decision-Readiness_${slug}.pdf`);
+  toast('Creator Fit PDF saved · 2 creators per A4 landscape page.','good');
+}
+
+function kolReportChartSvg(type,items){
+  const W=1100,H=470,ink='#1B1D20',muted='#69727A',grid='#E9EEF1',cyan='#46C9E8',cyanSoft='#CFF6FF',cream='#FFF8E7',maroon='#3D131B';
+  const escText=(v)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const fmt=(v)=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1e6).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
+  const base=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="2200" height="940"><rect width="${W}" height="${H}" fill="#FFFFFF"/><style>text{font-family:Arial,sans-serif}.axis{font-size:20px;fill:${muted};font-weight:600}.label{font-size:21px;fill:${ink};font-weight:700}.value{font-size:23px;fill:${ink};font-weight:800}.legend{font-size:20px;fill:${ink};font-weight:700}.grid{stroke:${grid};stroke-width:1}.lineA{stroke:${maroon};stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.lineB{stroke:${cyan};stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}.dotA{fill:${maroon};stroke:#fff;stroke-width:3}.dotB{fill:${cyan};stroke:#fff;stroke-width:3}.bar{fill:${cyan};opacity:.68}.track{fill:${cyanSoft};opacity:.5}.share{fill:${maroon};font-size:20px;font-weight:800}.small{font-size:18px;fill:${muted};font-weight:600}</style>`;
+  if(type==='trend'){
+    const valid=items||[], finite=[...valid.map(x=>Number(x.a)),...valid.map(x=>Number(x.b))].filter(Number.isFinite),max=Math.max(...finite,1),l=100,r=35,t=65,b=75,iw=W-l-r,ih=H-t-b;
+    const xAt=i=>l+(valid.length===1?iw/2:i*iw/(Math.max(1,valid.length-1))),yAt=v=>t+ih-(Number(v)/max)*ih;
+    const path=(k)=>{let p=[];valid.forEach((x,i)=>{const v=Number(x[k]);if(Number.isFinite(v))p.push(`${xAt(i)},${yAt(v)}`)});return p.length>1?`<polyline class="${k==='a'?'lineA':'lineB'}" points="${p.join(' ')}"/>`:''};
+    const gridlines=Array.from({length:5},(_,i)=>{const y=t+ih*i/4,v=max-(max*i/4);return `<line class="grid" x1="${l}" y1="${y}" x2="${W-r}" y2="${y}"/><text class="axis" x="${l-15}" y="${y+7}" text-anchor="end">${escText(fmt(v))}</text>`}).join('');
+    const dots=(k,cls,offset)=>valid.map((x,i)=>{const v=Number(x[k]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=yAt(v),ly=Math.max(t+22,Math.min(H-b-8,cy+offset));return `<circle class="${cls}" cx="${cx}" cy="${cy}" r="7"/><text class="value" x="${cx}" y="${ly}" text-anchor="middle">${escText(fmt(v))}</text>`}).join('');
+    const labels=valid.map((x,i)=>`<text class="axis" x="${xAt(i)}" y="${H-30}" text-anchor="middle">${escText(x.label)}</text>`).join('');
+    return base+`<text class="label" x="${l}" y="28">Observed financial movement</text><circle class="dotA" cx="810" cy="24" r="7"/><text class="legend" x="828" y="31">Revenue</text><circle class="dotB" cx="950" cy="24" r="7"/><text class="legend" x="968" y="31">Spend</text>${gridlines}${path('a')}${path('b')}${dots('a','dotA',-18)}${dots('b','dotB',24)}${labels}</svg>`;
+  }
+  if(type==='revenue'){
+    const valid=(items||[]).filter(x=>Number(x.value)>0).sort((a,b)=>Number(b.value)-Number(a.value)),total=valid.reduce((a,x)=>a+Number(x.value),0),l=235,r=120,t=62,b=55,iw=W-l-r,rowH=Math.max(58,(H-t-b)/Math.max(1,valid.length)),max=Math.max(...valid.map(x=>Number(x.value)),1);
+    const ticks=Array.from({length:5},(_,i)=>{const x=l+iw*i/4,v=max*i/4;return `<line class="grid" x1="${x}" y1="${t}" x2="${x}" y2="${H-b}"/><text class="axis" x="${x}" y="${H-20}" text-anchor="middle">${escText(fmt(v))}</text>`}).join('');
+    const rows=valid.map((x,i)=>{const v=Number(x.value),share=v/total*100,y=t+i*rowH+(rowH-30)/2,w=iw*v/max;return `<text class="label" x="${l-18}" y="${y+21}" text-anchor="end">${escText(x.label)}</text><rect class="track" x="${l}" y="${y}" width="${iw}" height="30" rx="10"/><rect class="bar" x="${l}" y="${y}" width="${w}" height="30" rx="10"/><text class="value" x="${Math.min(l+w+12,l+iw-70)}" y="${y+21}">${escText(fmt(v))}</text><text class="share" x="${W-r+18}" y="${y+21}">${share.toFixed(1)}%</text>`}).join('');
+    return base+`<text class="label" x="${l}" y="28">Recorded revenue by creator</text>${ticks}${rows}</svg>`;
+  }
+  if(type==='bar'){
+    const valid=(items||[]).filter(x=>Number.isFinite(Number(x.value))),l=235,r=100,t=62,b=55,iw=W-l-r,rowH=Math.max(58,(H-t-b)/Math.max(1,valid.length)),max=Math.max(...valid.map(x=>Number(x.value)),1);
+    const ticks=Array.from({length:5},(_,i)=>{const x=l+iw*i/4,v=max*i/4;return `<line class="grid" x1="${x}" y1="${t}" x2="${x}" y2="${H-b}"/><text class="axis" x="${x}" y="${H-20}" text-anchor="middle">${Math.round(v)}</text>`}).join('');
+    const rows=valid.map((x,i)=>{const v=Number(x.value),y=t+i*rowH+(rowH-30)/2,w=iw*v/max;return `<text class="label" x="${l-18}" y="${y+21}" text-anchor="end">${escText(x.label)}</text><rect class="track" x="${l}" y="${y}" width="${iw}" height="30" rx="10"/><rect class="bar" x="${l}" y="${y}" width="${w}" height="30" rx="10"/><text class="value" x="${Math.min(l+w+12,l+iw-60)}" y="${y+21}">${Math.round(v)}</text>`}).join('');
+    return base+`<text class="label" x="${l}" y="28">Observed outcome score</text>${ticks}${rows}</svg>`;
+  }
+  return '';
+}
+function kolReportDonutSvg(parts){
+  const valid=(parts||[]).filter(x=>Number(x.value)>0),total=valid.reduce((a,x)=>a+Number(x.value),0);if(!total)return '';
+  const W=900,H=470,cx=275,cy=245,r=145,inner=92,colors=['#46C9E8','#3D131B','#C9B58A','#9FDDEA'];let angle=-Math.PI/2,paths='';
+  valid.forEach((x,i)=>{const a0=angle,a1=angle+Number(x.value)/total*Math.PI*2,x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),ix1=cx+inner*Math.cos(a1),iy1=cy+inner*Math.sin(a1),ix0=cx+inner*Math.cos(a0),iy0=cy+inner*Math.sin(a0),large=a1-a0>Math.PI?1:0;paths+=`<path d="M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} L ${ix1} ${iy1} A ${inner} ${inner} 0 ${large} 0 ${ix0} ${iy0} Z" fill="${colors[i%colors.length]}" opacity=".72"/>`;angle=a1});
+  const legend=valid.map((x,i)=>{const y=105+i*58;return `<circle cx="585" cy="${y}" r="8" fill="${colors[i%colors.length]}" opacity=".75"/><text x="605" y="${y+7}" class="legend">${esc(x.label)}</text><text x="850" y="${y+7}" text-anchor="end" class="value">${Number(x.value).toLocaleString()}</text>`}).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="1800" height="940"><rect width="${W}" height="${H}" fill="#FFFFFF"/><style>text{font-family:Arial,sans-serif}.label{font-size:21px;fill:#1B1D20;font-weight:700}.legend{font-size:21px;fill:#1B1D20;font-weight:700}.value{font-size:23px;fill:#1B1D20;font-weight:800}.center{font-size:38px;fill:#1B1D20;font-weight:900}.small{font-size:16px;fill:#69727A;font-weight:700;letter-spacing:2px}</style><text class="label" x="70" y="45">Observed records by evidence type</text><circle cx="${cx}" cy="${cy}" r="${r+2}" fill="none" stroke="#E6ECEF" stroke-width="2"/>${paths}<circle cx="${cx}" cy="${cy}" r="${inner}" fill="#FFFFFF"/><text class="center" x="${cx}" y="${cy+6}" text-anchor="middle">${total.toLocaleString()}</text><text class="small" x="${cx}" y="${cy+31}" text-anchor="middle">RECORDS</text>${legend}</svg>`;
+}
+
+async function buildPremiumFullPDF(){
+  if(!window.jspdf?.jsPDF){window.print();return}
+  const snap=reportLiveSnapshot(),{p,perf,digital,ecommerce,offline,decisionRows,impact,learning}=snap,visuals=buildReportVisuals(snap);
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+  const C={ink:[27,29,32],muted:[103,112,120],line:[218,225,229],cyan:[70,201,232],cyanSoft:[239,251,254],cream:[255,248,231],creamLine:[242,216,164],maroon:[61,19,27],white:[255,255,255]};
+  const fill=c=>doc.setFillColor(...c),stroke=c=>doc.setDrawColor(...c),text=c=>doc.setTextColor(...c);
+  const pageChrome=(title,sub)=>{fill(C.white);doc.rect(0,0,W,H,'F');text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('KOL IDS™',14,9);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(5.6);doc.text('INVESTMENT DECISION INTELLIGENCE',W-14,9,{align:'right'});stroke(C.line);doc.setLineWidth(.25);doc.line(14,13,W-14,13);text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(pdfSafeText(title),14,23);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text(pdfSafeText(sub||''),14,29);stroke(C.line);doc.line(14,H-11,W-14,H-11);doc.setFontSize(5.5);doc.text('Confidential · Evidence-led decision report · Observed data only',14,H-7);doc.text(`Page ${doc.internal.getNumberOfPages()}`,W-14,H-7,{align:'right'});};
+  const section=(title,kicker)=>{text(C.cyan);doc.setFont('helvetica','bold');doc.setFontSize(6);doc.text(String(kicker||'SECTION').toUpperCase(),14,37);text(C.ink);doc.setFontSize(12);doc.text(pdfSafeText(title),14,44);stroke(C.line);doc.setLineWidth(.3);doc.line(14,48,W-14,48);};
+  const metricCards=(items,y)=>{const gap=4,w=(W-28-gap*3)/4,h=23;items.slice(0,4).forEach((it,i)=>{const x=14+i*(w+gap);fill([248,250,251]);stroke(C.line);doc.setLineWidth(.28);doc.roundedRect(x,y,w,h,2.5,2.5,'FD');text(C.muted);doc.setFont('helvetica','bold');doc.setFontSize(5.3);doc.text(String(it.label||'').toUpperCase(),x+4,y+6);text(C.ink);doc.setFontSize(11);doc.text(kolPdfText(it.value),x+4,y+15);});};
+  // cover / executive summary
+  pageChrome('Campaign Intelligence Report',`Executive decision pack · ${kolPdfText(p?.name)} · observed evidence, creator decisions, performance and business impact`);
+  section('Executive snapshot','01 · DECISION CONTEXT');
+  metricCards([{label:'Creators evaluated',value:decisionRows.length||S.creators.length},{label:'Evidence records',value:perf.length},{label:'Revenue',value:impact.revenue==null?'Not recorded':pdfFmt(impact.revenue,'THB')},{label:'ROAS',value:impact.roas==null?'Not calculable':pdfFmt(impact.roas,'x')}],55);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Campaign objective',14,90);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text(doc.splitTextToSize(pdfSafeText(p?.objective||p?.campaignObjective||'Not recorded.'),W-28),14,96);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Decision context',14,116);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text(doc.splitTextToSize(`Audience: ${kolPdfText(S.selectedAudience?.name)} · Selected creators: ${(p?.selectedCreatorIds||[]).length||0} · Evidence classes: ${digital.length} digital / ${ecommerce.length} commerce / ${offline.length} event`,W-28),14,122);
+  fill(C.cream);stroke(C.creamLine);doc.roundedRect(14,145,W-28,29,3,3,'FD');text([94,74,40]);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('GOVERNANCE NOTE',18,153);text(C.ink);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text(doc.splitTextToSize('KOL IDS uses observed evidence only. Missing evidence remains missing and is not converted into invented values. Forecast-like language is treated as a hypothesis until supported by campaign observations.',W-40),18,160);
+  // creator decision register
+  doc.addPage();pageChrome('Creator decision register','Fit, evidence, confidence and recommended campaign move');section('Creator decision register','02 · CREATOR INTELLIGENCE');
+  if(decisionRows.length){const tctx={W,H,y:53,header:()=>{pageChrome('Creator decision register','Fit, evidence, confidence and recommended campaign move');tctx.y=53},footer:()=>{}};pdfRows(doc,tctx,['Creator','Channel','Fit','Evidence','Confidence','Decision','Gap'],decisionRows.map(({creator:r,decision:d})=>{const e=d.evidence||{};const dims=[['Audience',e.audienceFit],['Campaign',e.contentFit],['Brand',e.brandFit],['Evidence',e.performance],['Efficiency',e.commercial],['Risk',e.risk]];const gaps=dims.filter(x=>x[1]!=null).sort((a,b)=>Number(a[1])-Number(b[1]));return [r.name,r.payload?.channel||'—',kolPdfScore(d.score),kolPdfScore(e.performance),kolPdfScore(e.confidence),String(d.decision||'REVIEW').replace(/_/g,' '),gaps[0]?.[0]||'—']}),[48,26,18,20,24,42,20]);}
+  else {text(C.muted);doc.setFontSize(8);doc.text('No calculated creator decisions are available.',14,58)}
+  // charts - one large professional chart per page
+  const chartPages=[['Outcome trend','Revenue vs spend across observed dates',kolReportChartSvg('trend',visuals.trend)],['Creator performance','Observed outcome score by creator',kolReportChartSvg('bar',visuals.bars)],['Revenue contribution','Observed revenue contribution by creator',kolReportChartSvg('revenue',visuals.revBars)],['Evidence mix','Observed records by evidence type',kolReportDonutSvg(visuals.mix)]];
+  for(const [title,note,svg] of chartPages){doc.addPage();pageChrome(title,note);if(svg){await pdfAddSvgImage(doc,svg,14,43,W-28,115);}else{text(C.muted);doc.setFontSize(9);doc.text('Not enough evidence to visualize',14,55);} }
+  // performance detail
+  doc.addPage();pageChrome('Performance evidence','Observed records with source transparency and commercial outcomes');section('Performance evidence','07 · PERFORMANCE');
+  if(perf.length){const pctx={W,H,y:53,header:()=>{pageChrome('Performance evidence','Observed records with source transparency and commercial outcomes');pctx.y=53},footer:()=>{}};pdfRows(doc,pctx,['Creator','Type','Observed','Source','Score','Spend','Revenue','ROAS'],pdfObservationRows(snap).map(r=>[r[0],r[1],r[2],r[4],r[5],r[6],r[7],r[8]]),[40,24,25,26,18,27,30,24]);}
+  else {text(C.muted);doc.setFontSize(8);doc.text('No observed performance records are available.',14,58)}
+  // impact and learning
+  doc.addPage();pageChrome('Business impact & learning','Observed outcomes, unit economics and next investment decision');section('Business impact','08 · COMMERCIAL OUTCOME');
+  metricCards([{label:'Revenue',value:impact.revenue==null?'Not recorded':pdfFmt(impact.revenue,'THB')},{label:'Spend',value:impact.spend==null?'Not recorded':pdfFmt(impact.spend,'THB')},{label:'ROAS',value:impact.roas==null?'Not calculable':pdfFmt(impact.roas,'x')},{label:'Conversions',value:impact.conversions==null?'Not recorded':Number(impact.conversions).toLocaleString()}],55);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('What worked',14,92);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.text(doc.splitTextToSize(kolPdfText(learning.worked,'Not recorded yet.'),W-28),14,98);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Friction / what did not work',14,120);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.text(doc.splitTextToSize(kolPdfText(learning.friction,'Not recorded yet.'),W-28),14,126);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Next hypothesis',14,148);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.text(doc.splitTextToSize(kolPdfText(learning.hypothesis,'Not recorded yet.'),W-28),14,154);
+  // audit-ready evidence ledger and next decision
+  doc.addPage();pageChrome('Evidence ledger','Complete recorded performance fields for auditability');section('Evidence ledger','09 · GOVERNANCE');
+  if(perf.length){perf.forEach((x,i)=>{if(i){doc.addPage();pageChrome('Evidence ledger','Complete recorded performance fields for auditability');section(`Evidence record ${i+1}`,'09 · GOVERNANCE')}const nm=S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator';const ectx={W,H,y:53,header:()=>{pageChrome(`Evidence record ${i+1}`,'Complete recorded performance fields for auditability');ectx.y=53},footer:()=>{}};pdfRows(doc,ectx,['Recorded field','Value'],pdfCompleteEvidenceRows(x),[58,122]);});}else{text(C.muted);doc.setFontSize(8);doc.text('No complete evidence records are available.',14,58)}
+  doc.addPage();pageChrome('Next investment decision','Learning memory and recommended next actions');section('Next investment decision','10 · LEARNING MEMORY');
+  const next=learning.nextInvestmentDecision||{};
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Recommendation',14,57);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text(doc.splitTextToSize(kolPdfText(next.recommendation,'Not recorded yet.'),W-28),14,63);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Confidence / rationale',14,83);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text(doc.splitTextToSize(`${kolPdfText(next.confidence,'—')} · ${kolPdfText(next.reason,'No rationale recorded.')}`,W-28),14,89);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Success threshold',14,110);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text(doc.splitTextToSize(kolPdfText(next.threshold,'Not recorded yet.'),W-28),14,116);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Next actions',14,137);
+  (learning.nextActions||[]).slice(0,5).forEach((a,i)=>{text(C.cyan);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text(`${i+1}`,16,146+i*11);text(C.ink);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text(doc.splitTextToSize(kolPdfText(a),W-40).slice(0,2),24,146+i*11)});
+  doc.save(pdfSaveName('KOL-IDS_Enterprise-Campaign-Intelligence',S.selectedCampaign?.name));
+  toast('Enterprise report PDF saved · professional chart pages included.','good');
+}
+function downloadFullPDF(){if(reportExportIsTrial()){showPaidExportGate();return}buildPremiumFullPDF().catch(err=>{console.error(err);toast('Could not generate the detailed PDF. Please try again.','error')})}
