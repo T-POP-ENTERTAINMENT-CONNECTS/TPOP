@@ -1,13 +1,18 @@
-# Complete Report PDF readability and analysis upgrade — 2026-10-10
+# Complete Report PDF — readability and deep analysis update
 
-## Changes
-- Removed dark/black-looking table header treatment in the shared PDF table renderer; uses a pale blue header with dark readable labels.
-- Normalized table column widths to the available A4 content width so wide tables do not run off the page.
-- Increased table row spacing and cell line-height; wrapped content is allowed more lines before truncation.
-- Added a Deep Campaign Performance Analysis section to the Complete Report PDF with derived metrics where source data permits: revenue less recorded spend, budget utilization, click-to-conversion rate, cost per conversion, cost per qualified lead, and attendee-to-qualified-lead yield.
-- Added interpretation guardrails for missing reach, self-reported/pending evidence, attribution consistency, and the difference between ROAS and profit.
-- No campaign source records or recorded metric values are fabricated or overwritten. Missing values remain explicitly unavailable.
+## Visual and table improvements
+- Standardized the shared PDF table renderer to use pale blue headers with dark readable text; removed dark/black header-band styling from the shared renderer.
+- Increased header height, body font size, line spacing and cell padding for easier reading.
+- Added subtle alternating row backgrounds and clearer cell borders for dense evidence tables.
+- Improved wrapping capacity for long values while retaining normalized column widths within the A4 content area.
+
+## Campaign analysis and evidence governance
+- Complete report includes derived metrics only when required source values are available: revenue less recorded spend, budget utilization, click-to-conversion rate, cost per conversion, cost per qualified lead, and attendee-to-qualified-lead yield.
+- Adds interpretation notes for missing reach, self-reported/pending evidence, attribution consistency, and the difference between ROAS and profit.
+- Shows evidence-source counts and clarifies that a source label alone is not independent verification.
+- Missing values remain unavailable; the report does not fabricate or overwrite source campaign records.
 
 ## Validation
 - `node --check app.js` passed.
-- Generate a fresh Complete Report PDF after deploying this bundle to verify the visual result against live campaign data.
+- ZIP archive integrity checked.
+- A fresh PDF must still be generated after deployment to visually verify the output against live campaign data.
