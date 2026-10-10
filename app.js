@@ -1738,7 +1738,7 @@ function reportSvgBarChart(items, opts={}){
 }
 
 function reportSvgLineChart(items, opts={}){
- const width=opts.width||760,height=opts.height||390,pad={l:92,r:92,t:48,b:64};
+ const width=opts.width||760,height=opts.height||390,pad={l:92,r:92,t:76,b:64};
  if(!items.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const aVals=items.map(x=>Number(x.a)).filter(Number.isFinite),bVals=items.map(x=>Number(x.b)).filter(Number.isFinite);
  if(!aVals.length&&!bVals.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
@@ -1747,11 +1747,14 @@ function reportSvgLineChart(items, opts={}){
  const yA=v=>pad.t+innerH-(Number(v)/maxA)*innerH,yB=v=>pad.t+innerH-(Number(v)/maxB)*innerH;
  const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1000000).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
  const path=(key,fn,cls)=>{let pts=[];const out=[];items.forEach((x,i)=>{const v=Number(x[key]);if(Number.isFinite(v))pts.push(`${xAt(i).toFixed(1)},${fn(v).toFixed(1)}`);else if(pts.length){out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});if(pts.length)out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);return out.join('')};
- const pointLabels=(key,fn,cls)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const px=xAt(i),py=fn(v);let y=py+(key==='a'?-18:27);let tx=px+(key==='a'?-10:10);let anchor=key==='a'?'end':'start';if(y<pad.t+18)y=py+28;if(y>pad.t+innerH-4)y=py-20;return `<circle cx="${px}" cy="${py}" r="4.5" class="${cls}"/><text x="${tx}" y="${y}" text-anchor="${anchor}" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
+ const pointLabels=(key,fn,cls)=>items.map((x,i)=>{const v=Number(x[key]);if(!Number.isFinite(v))return '';const px=xAt(i),py=fn(v),atLeft=i===0,atRight=i===items.length-1;let tx=px,anchor='middle';if(atLeft){tx=px+10;anchor='start'}else if(atRight){tx=px-10;anchor='end'}let y=py+(key==='a'?-17:24);if(y<pad.t+10)y=py+27;if(y>pad.t+innerH-3)y=py-19;
+ /* Offset paired labels in opposite horizontal directions when series share an x coordinate. */
+ if(items.length===1){tx=px+(key==='a'?-10:10);anchor=key==='a'?'end':'start';}
+ return `<circle cx="${px}" cy="${py}" r="4" class="${cls}"/><text x="${tx}" y="${y}" text-anchor="${anchor}" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`}).join('');
  const grid=Array.from({length:5},(_,i)=>{const frac=i/4,y=pad.t+innerH*frac;const av=maxA*(1-frac),bv=maxB*(1-frac);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-14}" y="${y+5}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(av))}</text><text x="${width-pad.r+14}" y="${y+5}" class="rchart-axis">${esc(moneyAxis(bv))}</text>`}).join('');
  const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-24}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`).join('');
- const legendX=Math.max(pad.l,width-240);
- return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}">${grid}<text x="${pad.l}" y="22" class="rchart-axis">Revenue · THB</text><text x="${width-pad.r}" y="22" text-anchor="end" class="rchart-axis">Spend · THB</text>${path('a',yA,'rchart-line-a')}${path('b',yB,'rchart-line-b')}${pointLabels('a',yA,'rchart-dot-a')}${pointLabels('b',yB,'rchart-dot-b')}${labels}<g transform="translate(${legendX},24)"><circle cx="5" cy="0" r="5.5" class="rchart-dot-a"/><text x="18" y="5" class="rchart-legend">Revenue</text><circle cx="110" cy="0" r="5.5" class="rchart-dot-b"/><text x="123" y="5" class="rchart-legend">Spend</text></g></svg>`;
+ const legendX=(width-240)/2;
+ return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}"><g transform="translate(${legendX},25)"><circle cx="5" cy="0" r="4.5" class="rchart-dot-a"/><text x="16" y="4" class="rchart-legend">Revenue</text><circle cx="112" cy="0" r="4.5" class="rchart-dot-b"/><text x="123" y="4" class="rchart-legend">Spend</text></g><text x="${pad.l}" y="49" class="rchart-axis">Revenue · THB</text><text x="${width-pad.r}" y="49" text-anchor="end" class="rchart-axis">Spend · THB</text>${grid}${path('a',yA,'rchart-line-a')}${path('b',yB,'rchart-line-b')}${pointLabels('a',yA,'rchart-dot-a')}${pointLabels('b',yB,'rchart-dot-b')}${labels}</svg>`;
 }
 
 function reportSvgRevenueContribution(items, opts={}){
@@ -5251,19 +5254,19 @@ function downloadCreatorFitPDF(){
 }
 
 function kolReportChartSvg(type,items){
- const W=1100,H=470,ink='#1B1D20',muted='#69727A',grid='#E9EEF1',cyan='#55CDE8',cyanSoft='#EAF9FC',maroon='#3D131B';
+ const W=1100,H=470,ink='#1B1D20',muted='#69727A',grid='#E9EEF1',cyan='#55CDE8',cyanSoft='#EAF9FC',maroon='#1B1D20';
  const escText=(v)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
  const fmt=(v)=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1e6).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
  const base=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="2200" height="940"><rect width="${W}" height="${H}" fill="#FFFFFF"/><style>text{font-family:Arial,sans-serif}.axis{font-size:20px;fill:${muted};font-weight:650}.label{font-size:21px;fill:${ink};font-weight:750}.value{font-size:23px;fill:${maroon};font-weight:850}.legend{font-size:20px;fill:${ink};font-weight:700}.grid{stroke:${grid};stroke-width:1}.lineA{stroke:${maroon};stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round}.lineB{stroke:${cyan};stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round}.dotA{fill:${maroon};stroke:#fff;stroke-width:3}.dotB{fill:${cyan};stroke:#fff;stroke-width:3}.small{font-size:18px;fill:${muted};font-weight:600}</style>`;
  if(type==='trend'){
    const valid=items||[],aVals=valid.map(x=>Number(x.a)).filter(Number.isFinite),bVals=valid.map(x=>Number(x.b)).filter(Number.isFinite);if(!aVals.length&&!bVals.length)return '';
-   const maxA=Math.max(...aVals,1),maxB=Math.max(...bVals,1),l=105,r=105,t=65,b=75,iw=W-l-r,ih=H-t-b;
+   const maxA=Math.max(...aVals,1),maxB=Math.max(...bVals,1),l=105,r=105,t=88,b=75,iw=W-l-r,ih=H-t-b;
    const xAt=i=>l+(valid.length===1?iw/2:i*iw/(Math.max(1,valid.length-1))),yA=v=>t+ih-(Number(v)/maxA)*ih,yB=v=>t+ih-(Number(v)/maxB)*ih;
    const path=(k,fn,cls)=>{let pts=[];const out=[];valid.forEach((x,i)=>{const v=Number(x[k]);if(Number.isFinite(v))pts.push(`${xAt(i)},${fn(v)}`);else if(pts.length){out.push(`<polyline class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});if(pts.length)out.push(`<polyline class="${cls}" points="${pts.join(' ')}"/>`);return out.join('')};
-   const dots=(k,fn,cls,offset)=>valid.map((x,i)=>{const v=Number(x[k]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=fn(v),ly=Math.max(t+22,Math.min(H-b-8,cy+offset));return `<circle class="${cls}" cx="${cx}" cy="${cy}" r="7"/><text class="value" x="${cx}" y="${ly}" text-anchor="middle">${escText(fmt(v))}</text>`}).join('');
+   const dots=(k,fn,cls,offset)=>valid.map((x,i)=>{const v=Number(x[k]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=fn(v),ly=Math.max(t+18,Math.min(H-b-8,cy+offset));let tx=cx,anchor='middle';if(i===0){tx=cx+(k==='a'?10:10);anchor='start'}else if(i===valid.length-1){tx=cx-(k==='a'?10:10);anchor='end'}if(valid.length===1){tx=cx+(k==='a'?-10:10);anchor=k==='a'?'end':'start'}return `<circle class="${cls}" cx="${cx}" cy="${cy}" r="6"/><text class="value" x="${tx}" y="${ly}" text-anchor="${anchor}">${escText(fmt(v))}</text>`}).join('');
    const gridlines=Array.from({length:5},(_,i)=>{const f=i/4,y=t+ih*f,av=maxA*(1-f),bv=maxB*(1-f);return `<line class="grid" x1="${l}" y1="${y}" x2="${W-r}" y2="${y}"/><text class="axis" x="${l-16}" y="${y+7}" text-anchor="end">${escText(fmt(av))}</text><text class="axis" x="${W-r+16}" y="${y+7}">${escText(fmt(bv))}</text>`}).join('');
    const labels=valid.map((x,i)=>`<text class="axis" x="${xAt(i)}" y="${H-30}" text-anchor="middle">${escText(x.label)}</text>`).join('');
-   return base+`<text class="label" x="${l}" y="31">Observed financial movement</text><text class="axis" x="${l}" y="51">Revenue · THB</text><text class="axis" x="${W-r}" y="51" text-anchor="end">Spend · THB</text><circle class="dotA" cx="790" cy="27" r="7"/><text class="legend" x="808" y="34">Revenue</text><circle class="dotB" cx="935" cy="27" r="7"/><text class="legend" x="953" y="34">Spend</text>${gridlines}${path('a',yA,'lineA')}${path('b',yB,'lineB')}${dots('a',yA,'dotA',-18)}${dots('b',yB,'dotB',24)}${labels}</svg>`;
+   return base+`<text class="label" x="${l}" y="27">Observed financial movement</text><text class="axis" x="${l}" y="52">Revenue · THB</text><text class="axis" x="${W-r}" y="52" text-anchor="end">Spend · THB</text><circle class="dotA" cx="790" cy="25" r="6"/><text class="legend" x="805" y="32">Revenue</text><circle class="dotB" cx="935" cy="25" r="6"/><text class="legend" x="950" y="32">Spend</text>${gridlines}${path('a',yA,'lineA')}${path('b',yB,'lineB')}${dots('a',yA,'dotA',-18)}${dots('b',yB,'dotB',24)}${labels}</svg>`;
  }
  if(type==='revenue'){
    const valid=(items||[]).filter(x=>Number(x.value)>0).sort((a,b)=>Number(b.value)-Number(a.value)),total=valid.reduce((a,x)=>a+Number(x.value),0),l=235,r=150,t=62,b=55,iw=W-l-r,rowH=Math.max(58,(H-t-b)/Math.max(1,valid.length)),max=Math.max(...valid.map(x=>Number(x.value)),1);
@@ -5328,6 +5331,27 @@ async function buildPremiumFullPDF(){
   text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('What worked',14,92);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.text(doc.splitTextToSize(kolPdfText(learning.worked,'Not recorded yet.'),W-28),14,98);
   text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Friction / what did not work',14,120);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.text(doc.splitTextToSize(kolPdfText(learning.friction,'Not recorded yet.'),W-28),14,126);
   text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Next hypothesis',14,148);text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.text(doc.splitTextToSize(kolPdfText(learning.hypothesis,'Not recorded yet.'),W-28),14,154);
+  // executive interpretation: distinguish observed facts from data gaps
+  doc.addPage();pageChrome('Outcome interpretation','Observed signals, limitations and decision implications');section('Outcome interpretation','08A · PERFORMANCE ANALYSIS');
+  const interp=[
+    ['Revenue recorded',impact.revenue==null?'Not recorded':pdfFmt(impact.revenue,'THB')],
+    ['Spend recorded',impact.spend==null?'Not recorded':pdfFmt(impact.spend,'THB')],
+    ['ROAS',impact.roas==null?'Not calculable from the available evidence':pdfFmt(impact.roas,'x')],
+    ['Evidence volume',`${perf.length} performance records (${digital.length} digital · ${ecommerce.length} commerce · ${offline.length} offline/event)`],
+    ['Creator decisions',`${decisionRows.length} creator decision records`],
+    ['Evidence confidence',`${reportDecisionQuality(snap).avgConfidence==null?'Not enough evidence':Math.round(reportDecisionQuality(snap).avgConfidence)+' / 100'}`],
+    ['Interpretation boundary','Recorded values describe the evidence supplied; they do not independently verify third-party platform analytics.']
+  ];
+  const ictx={W,H,y:53,header:()=>{pageChrome('Outcome interpretation','Observed signals, limitations and decision implications');ictx.y=53},footer:()=>{}};
+  pdfRows(doc,ictx,['Measure','Observed value / interpretation'],interp,[55,125]);
+  text(C.ink);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Decision implications',14,ictx.y+10);
+  text(C.muted);doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+  const implications=[
+    impact.roas==null?'Do not compare commercial efficiency until spend and attributable revenue are both recorded.':`Use the observed ROAS of ${pdfFmt(impact.roas,'x')} as a campaign-specific signal, not as a guaranteed future return.`,
+    perf.length?'Check evidence provenance, observation dates and attribution scope before reallocating budget.':'Collect platform, source, observation date, spend and outcome evidence before drawing performance conclusions.',
+    decisionRows.length?'Review fit, confidence and evidence gaps together; confidence is not a substitute for fit.':'Complete creator decision records to make selection rationale and trade-offs auditable.'
+  ];
+  implications.forEach((v,i)=>{text(C.cyan);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text(String(i+1),16,ictx.y+19+i*15);text(C.ink);doc.setFont('helvetica','normal');doc.setFontSize(7.2);doc.text(doc.splitTextToSize(v,W-42),24,ictx.y+19+i*15);});
   // audit-ready evidence ledger and next decision
   doc.addPage();pageChrome('Evidence ledger','Complete recorded performance fields for auditability');section('Evidence ledger','09 · GOVERNANCE');
   if(perf.length){perf.forEach((x,i)=>{if(i){doc.addPage();pageChrome('Evidence ledger','Complete recorded performance fields for auditability');section(`Evidence record ${i+1}`,'09 · GOVERNANCE')}const nm=S.creators.find(c=>String(c.id)===String(x.creator_id))?.name||'Creator';const ectx={W,H,y:53,header:()=>{pageChrome(`Evidence record ${i+1}`,'Complete recorded performance fields for auditability');ectx.y=53},footer:()=>{}};pdfRows(doc,ectx,['Recorded field','Value'],pdfCompleteEvidenceRows(x),[58,122]);});}else{text(C.muted);doc.setFontSize(8);doc.text('No complete evidence records are available.',14,58)}

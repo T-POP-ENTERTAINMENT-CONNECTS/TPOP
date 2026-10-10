@@ -1209,6 +1209,34 @@ boot();
 .trial-offer-primary h2 { color: #AEEFFF !important; }
 </style>
 
+
+<style>
+#tpop-language-switch{position:fixed;right:18px;top:88px;z-index:99999;display:flex;gap:3px;padding:4px;border:1px solid rgba(120,150,160,.28);border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 5px 22px rgba(15,30,35,.10);backdrop-filter:blur(12px);font:700 12px/1 system-ui,sans-serif}
+#tpop-language-switch button{border:0;background:transparent;color:#53636a;padding:8px 11px;border-radius:999px;cursor:pointer;font:inherit}
+#tpop-language-switch button[aria-pressed="true"]{background:#1b1d20;color:#fff}
+@media(max-width:700px){#tpop-language-switch{top:76px;right:10px}}
+</style>
+<div id="tpop-language-switch" aria-label="Language"><button type="button" data-lang="th">ไทย</button><button type="button" data-lang="en">EN</button></div>
+<script>
+(()=>{
+ const dict={"Sign in to your intelligence workspace": "เข้าสู่พื้นที่ทำงานอัจฉริยะของคุณ", "Use your KOL IDS account Email + Password. Your organization workspace, plan and user seats are managed securely in the cloud.": "ใช้ Email และ Password ของบัญชี KOL IDS พื้นที่ทำงาน แพ็กเกจ และสิทธิ์ผู้ใช้ขององค์กรจัดการอย่างปลอดภัยบนคลาวด์", "Stop choosing creators by instinct.": "หยุดเลือกครีเอเตอร์ด้วยความรู้สึกเพียงอย่างเดียว", "KOL IDS turns creator selection into an evidence based decision process · combining fit, impact, commercial efficiency, confidence, risk and post campaign learning in one intelligence workspace.": "KOL IDS เปลี่ยนการเลือกครีเอเตอร์ให้เป็นกระบวนการตัดสินใจจากหลักฐาน รวมความเหมาะสม ผลลัพธ์ ประสิทธิภาพเชิงพาณิชย์ ความเชื่อมั่น ความเสี่ยง และการเรียนรู้หลังแคมเปญไว้ในที่เดียว", "WHO should we choose?": "เราควรเลือกใคร?", "Rank creators against the campaign context, not follower count alone.": "จัดอันดับครีเอเตอร์ตามบริบทแคมเปญ ไม่ใช่จำนวนผู้ติดตามอย่างเดียว", "WHY should we choose them?": "ทำไมจึงควรเลือก?", "Expose decision signals, evidence gaps and confidence instead of hiding the reasoning.": "แสดงสัญญาณการตัดสินใจ ช่องว่างของหลักฐาน และระดับความเชื่อมั่นอย่างโปร่งใส", "WHAT did we learn?": "เราเรียนรู้อะไร?", "Compare predicted decisions with actual outcomes and feed the learning loop.": "เปรียบเทียบการคาดการณ์กับผลจริง แล้วนำข้อมูลกลับไปพัฒนาการตัดสินใจ", "DECISION DEMO": "ตัวอย่างการตัดสินใจ", "See the decision logic before using your own campaign data.": "ดูตรรกะการตัดสินใจก่อนใช้ข้อมูลแคมเปญจริง", "Illustrative example": "ตัวอย่างจำลอง", "Show how KOL IDS decides": "ดูวิธีที่ KOL IDS ใช้ตัดสินใจ", "No customer data is used in this demo.": "ตัวอย่างนี้ไม่ใช้ข้อมูลลูกค้า", "Make the budget exposure around creator decision uncertainty visible.": "ทำให้ความเสี่ยงด้านงบประมาณจากความไม่แน่นอนในการเลือกครีเอเตอร์มองเห็นได้", "What the number means": "ตัวเลขนี้หมายถึงอะไร", "Illustrative budget exposure": "งบประมาณที่อาจได้รับผลกระทบ (ตัวอย่าง)", "Assumption used": "สมมติฐานที่ใช้", "This is not business value, ROI, savings, revenue uplift, or a forecast. It is a transparent scenario calculation: campaign budget × the user-selected uncertainty assumption.": "ตัวเลขนี้ไม่ใช่มูลค่าทางธุรกิจ ROI เงินประหยัด รายได้ที่เพิ่มขึ้น หรือการพยากรณ์ แต่เป็นการคำนวณสถานการณ์อย่างโปร่งใส: งบแคมเปญ × สมมติฐานความไม่แน่นอนที่เลือก", "ACCOUNT LOGIN": "เข้าสู่ระบบบัญชี", "Open your organization workspace": "เปิดพื้นที่ทำงานขององค์กร", "Sign in": "เข้าสู่ระบบ", "Show Password": "แสดงรหัสผ่าน", "Organization Workspace": "พื้นที่ทำงานองค์กร", "Owner/Admin can invite members. Available seats are verified from cloud data.": "Owner/Admin สามารถเชิญสมาชิกได้ จำนวนที่นั่งตรวจสอบจากข้อมูลบนคลาวด์", "KOL IDS™ · 7 DAY FREE TRIAL": "KOL IDS™ · ทดลองใช้งานฟรี 7 วัน", "Start Free Trial / Request Access": "เริ่มทดลองใช้ฟรี / ขอสิทธิ์เข้าใช้งาน", "7 days · 1 user seat. Your organization workspace and account are created in the cloud.": "7 วัน · 1 ผู้ใช้ ระบบจะสร้างบัญชีและพื้นที่ทำงานองค์กรบนคลาวด์", "Start Free Trial": "เริ่มทดลองใช้ฟรี", "Create Account": "สร้างบัญชี", "Back": "กลับ", "Show": "แสดง", "Password": "รหัสผ่าน", "Selected Plan": "แพ็กเกจที่เลือก", "BILLING / DOCUMENT REQUEST": "ข้อมูลใบแจ้งหนี้ / เอกสาร", "PAYMENT": "การชำระเงิน", "Complete your payment": "ดำเนินการชำระเงิน", "Your workspace will be activated after we verify your payment.": "พื้นที่ทำงานจะเปิดใช้งานหลังตรวจสอบการชำระเงินแล้ว", "KOL IDS™ · CREATOR DECISION INTELLIGENCE": "KOL IDS™ · ระบบอัจฉริยะเพื่อการตัดสินใจเลือกครีเอเตอร์", "SELECTED PLAN": "แพ็กเกจที่เลือก", "3 Months": "3 เดือน", "6 Months": "6 เดือน", "12 Months": "12 เดือน", "Illustrative only": "ตัวอย่างเพื่ออธิบายเท่านั้น", "FREE TRIAL": "ทดลองใช้ฟรี", "Create Account & Submit Payment": "สร้างบัญชีและส่งข้อมูลการชำระเงิน", "7 Day Trial": "ทดลองใช้ 7 วัน", "No customer access code.": "ไม่ต้องใช้รหัสเข้าใช้งานจากลูกค้า", "Decision logic": "ตรรกะการตัดสินใจ"}; const inverse=Object.fromEntries(Object.entries(dict).map(([en,th])=>[th,en]));
+ const originals=new WeakMap(); let current='en',busy=false;
+ const translateNode=n=>{
+   if(!n||n.nodeType!==3||!n.nodeValue.trim())return;
+   if(!originals.has(n)) originals.set(n,n.nodeValue);
+   const raw=originals.get(n); let out=raw;
+   const map=current==='th'?dict:inverse;
+   for(const [from,to] of Object.entries(map)){if(from && out.includes(from))out=out.split(from).join(to);}
+   if(n.nodeValue!==out)n.nodeValue=out;
+ };
+ const scan=root=>{if(root.nodeType===3)translateNode(root);else if(root.querySelectorAll){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())translateNode(n);}};
+ const setLang=lang=>{current=lang==='th'?'th':'en';document.documentElement.lang=current==='th'?'th':'en';document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===current)));scan(document.body);try{localStorage.setItem('tpop-language',current)}catch(e){}};
+ document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+ const obs=new MutationObserver(ms=>{if(busy)return;busy=true;for(const m of ms){if(m.type==='childList')m.addedNodes.forEach(scan);else if(m.type==='characterData')translateNode(m.target)}busy=false;});
+ obs.observe(document.body,{subtree:true,childList:true,characterData:true});
+ let saved='en';try{saved=localStorage.getItem('tpop-language')||'en'}catch(e){}setLang(saved);
+})();
+</script>
 </body>
 
 <style id="KOL_IDS_REFERENCE_SIZE_ONLY_V2">
