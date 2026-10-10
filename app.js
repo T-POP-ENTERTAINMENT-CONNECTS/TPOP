@@ -1738,7 +1738,7 @@ function reportSvgBarChart(items, opts={}){
 }
 
 function reportSvgLineChart(items, opts={}){
- const width=opts.width||760,height=opts.height||390,pad={l:92,r:92,t:94,b:64};
+ const width=opts.width||760,height=opts.height||420,pad={l:104,r:104,t:104,b:72};
  if(!items.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
  const aVals=items.map(x=>Number(x.a)).filter(Number.isFinite),bVals=items.map(x=>Number(x.b)).filter(Number.isFinite);
  if(!aVals.length&&!bVals.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
@@ -1755,12 +1755,14 @@ function reportSvgLineChart(items, opts={}){
   let y=py+(key==='a'?-15:20);
   if(y<pad.t+12)y=py+22;
   if(y>pad.t+innerH-4)y=py-17;
-  if(Number.isFinite(Number(x.a))&&Number.isFinite(Number(x.b))&&Math.abs(yA(Number(x.a))-yB(Number(x.b)))<31){
-    y=py+(key==='a'?-21:27);
-    if(y<pad.t+12)y=py+24;
-    if(y>pad.t+innerH-4)y=py-18;
+  if(Number.isFinite(Number(x.a))&&Number.isFinite(Number(x.b))&&Math.abs(yA(Number(x.a))-yB(Number(x.b)))<42){
+    y=py+(key==='a'?-28:34);
+    if(y<pad.t+18)y=py+30;
+    if(y>pad.t+innerH-10)y=py-27;
   }
-  if(items.length===1){tx=px+(key==='a'?-9:9);anchor=key==='a'?'end':'start';}
+  // Keep labels from colliding when dates/values are close together.
+  if(items.length>2 && i>0 && i<items.length-1){tx=px+(i%2===0?10:-10);anchor=i%2===0?'start':'end';}
+  if(items.length===1){tx=px+(key==='a'?-12:12);anchor=key==='a'?'end':'start';}
   return `<circle cx="${px}" cy="${py}" r="4" class="${cls}"/><text x="${tx}" y="${y}" text-anchor="${anchor}" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`;
  }).join('');
  const grid=Array.from({length:5},(_,i)=>{const frac=i/4,y=pad.t+innerH*frac;const av=maxA*(1-frac),bv=maxB*(1-frac);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-14}" y="${y+5}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(av))}</text><text x="${width-pad.r+14}" y="${y+5}" class="rchart-axis">${esc(moneyAxis(bv))}</text>`}).join('');
