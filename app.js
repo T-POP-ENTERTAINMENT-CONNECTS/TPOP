@@ -1755,15 +1755,17 @@ function reportSvgLineChart(items, opts={}){
   const dense=items.length>5;
   const showLabel=!dense || i%2===0 || i===items.length-1;
   let tx=px,anchor='middle';
-  if(atLeft){tx=px+9;anchor='start'}else if(atRight){tx=px-9;anchor='end'}
-  let y=py+(key==='a'?-16:22);
+  // Increase horizontal separation between adjacent value labels to avoid overlap.
+  const labelGap=items.length>4?22:14;
+  if(atLeft){tx=px+labelGap;anchor='start'}else if(atRight){tx=px-labelGap;anchor='end'}
+  let y=py+(key==='a'?-20:26);
   if(Number.isFinite(Number(x.a))&&Number.isFinite(Number(x.b))&&Math.abs(yA(Number(x.a))-yB(Number(x.b)))<42){
-    y=py+(key==='a'?-30:36);
+    y=py+(key==='a'?-38:44);
   }
   if(y<pad.t+12)y=Math.min(pad.t+innerH-8,py+28);
   if(y>pad.t+innerH-4)y=Math.max(pad.t+14,py-28);
   // For dense data, nudge visible labels outward from alternating points.
-  if(dense && i>0 && i<items.length-1){tx=px+(i%2===0?7:-7);anchor=i%2===0?'start':'end';}
+  if(dense && i>0 && i<items.length-1){tx=px+(i%2===0?labelGap:-labelGap);anchor=i%2===0?'start':'end';}
   if(items.length===1){tx=px+(key==='a'?-12:12);anchor=key==='a'?'end':'start';}
   return `<circle cx="${px}" cy="${py}" r="4" class="${cls}"/>${showLabel?`<text x="${tx}" y="${y}" text-anchor="${anchor}" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`:''}`;
  }).join('');
