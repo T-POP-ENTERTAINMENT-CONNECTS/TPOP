@@ -1750,20 +1750,22 @@ function reportSvgLineChart(items, opts={}){
  const pointLabels=(key,fn,cls)=>items.map((x,i)=>{
   const v=Number(x[key]);if(!Number.isFinite(v))return '';
   const px=xAt(i),py=fn(v),atLeft=i===0,atRight=i===items.length-1;
+  // Dense timelines keep every point and line, but label alternate dates (plus the final date).
+  // This prevents adjacent currency values from becoming an unreadable block.
+  const dense=items.length>5;
+  const showLabel=!dense || i%2===0 || i===items.length-1;
   let tx=px,anchor='middle';
   if(atLeft){tx=px+9;anchor='start'}else if(atRight){tx=px-9;anchor='end'}
-  let y=py+(key==='a'?-15:20);
-  if(y<pad.t+12)y=py+22;
-  if(y>pad.t+innerH-4)y=py-17;
+  let y=py+(key==='a'?-16:22);
   if(Number.isFinite(Number(x.a))&&Number.isFinite(Number(x.b))&&Math.abs(yA(Number(x.a))-yB(Number(x.b)))<42){
-    y=py+(key==='a'?-28:34);
-    if(y<pad.t+18)y=py+30;
-    if(y>pad.t+innerH-10)y=py-27;
+    y=py+(key==='a'?-30:36);
   }
-  // Keep labels from colliding when dates/values are close together.
-  if(items.length>2 && i>0 && i<items.length-1){tx=px+(i%2===0?10:-10);anchor=i%2===0?'start':'end';}
+  if(y<pad.t+12)y=Math.min(pad.t+innerH-8,py+28);
+  if(y>pad.t+innerH-4)y=Math.max(pad.t+14,py-28);
+  // For dense data, nudge visible labels outward from alternating points.
+  if(dense && i>0 && i<items.length-1){tx=px+(i%2===0?7:-7);anchor=i%2===0?'start':'end';}
   if(items.length===1){tx=px+(key==='a'?-12:12);anchor=key==='a'?'end':'start';}
-  return `<circle cx="${px}" cy="${py}" r="4" class="${cls}"/><text x="${tx}" y="${y}" text-anchor="${anchor}" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`;
+  return `<circle cx="${px}" cy="${py}" r="4" class="${cls}"/>${showLabel?`<text x="${tx}" y="${y}" text-anchor="${anchor}" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`:''}`;
  }).join('');
  const grid=Array.from({length:5},(_,i)=>{const frac=i/4,y=pad.t+innerH*frac;const av=maxA*(1-frac),bv=maxB*(1-frac);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-14}" y="${y+5}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(av))}</text><text x="${width-pad.r+14}" y="${y+5}" class="rchart-axis">${esc(moneyAxis(bv))}</text>`}).join('');
  const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-24}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`).join('');
@@ -5277,7 +5279,7 @@ function kolReportChartSvg(type,items){
    const maxA=Math.max(...aVals,1),maxB=Math.max(...bVals,1),l=105,r=105,t=88,b=75,iw=W-l-r,ih=H-t-b;
    const xAt=i=>l+(valid.length===1?iw/2:i*iw/(Math.max(1,valid.length-1))),yA=v=>t+ih-(Number(v)/maxA)*ih,yB=v=>t+ih-(Number(v)/maxB)*ih;
    const path=(k,fn,cls)=>{let pts=[];const out=[];valid.forEach((x,i)=>{const v=Number(x[k]);if(Number.isFinite(v))pts.push(`${xAt(i)},${fn(v)}`);else if(pts.length){out.push(`<polyline class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});if(pts.length)out.push(`<polyline class="${cls}" points="${pts.join(' ')}"/>`);return out.join('')};
-   const dots=(k,fn,cls,offset)=>valid.map((x,i)=>{const v=Number(x[k]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=fn(v),ly=Math.max(t+18,Math.min(H-b-8,cy+offset));let tx=cx,anchor='middle';if(i===0){tx=cx+(k==='a'?10:10);anchor='start'}else if(i===valid.length-1){tx=cx-(k==='a'?10:10);anchor='end'}if(valid.length===1){tx=cx+(k==='a'?-10:10);anchor=k==='a'?'end':'start'}return `<circle class="${cls}" cx="${cx}" cy="${cy}" r="6"/><text class="value" x="${tx}" y="${ly}" text-anchor="${anchor}">${escText(fmt(v))}</text>`}).join('');
+   const dots=(k,fn,cls,offset)=>valid.map((x,i)=>{const v=Number(x[k]);if(!Number.isFinite(v))return '';const cx=xAt(i),cy=fn(v);const dense=valid.length>5,showLabel=!dense||i%2===0||i===valid.length-1;let ly=Math.max(t+18,Math.min(H-b-8,cy+offset+(dense&&i%2?16:0)));let tx=cx,anchor='middle';if(i===0){tx=cx+10;anchor='start'}else if(i===valid.length-1){tx=cx-10;anchor='end'}if(valid.length===1){tx=cx+(k==='a'?-10:10);anchor=k==='a'?'end':'start'}return `<circle class="${cls}" cx="${cx}" cy="${cy}" r="6"/>${showLabel?`<text class="value" x="${tx}" y="${ly}" text-anchor="${anchor}">${escText(fmt(v))}</text>`:''}`}).join('');
    const gridlines=Array.from({length:5},(_,i)=>{const f=i/4,y=t+ih*f,av=maxA*(1-f),bv=maxB*(1-f);return `<line class="grid" x1="${l}" y1="${y}" x2="${W-r}" y2="${y}"/><text class="axis" x="${l-16}" y="${y+7}" text-anchor="end">${escText(fmt(av))}</text><text class="axis" x="${W-r+16}" y="${y+7}">${escText(fmt(bv))}</text>`}).join('');
    const labels=valid.map((x,i)=>`<text class="axis" x="${xAt(i)}" y="${H-30}" text-anchor="middle">${escText(x.label)}</text>`).join('');
    return base+`<text class="label" x="${l}" y="27">Observed financial movement</text><text class="axis" x="${l}" y="52">Revenue · THB</text><text class="axis" x="${W-r}" y="52" text-anchor="end">Spend · THB</text><circle class="dotA" cx="790" cy="25" r="6"/><text class="legend" x="805" y="32">Revenue</text><circle class="dotB" cx="935" cy="25" r="6"/><text class="legend" x="950" y="32">Spend</text>${gridlines}${path('a',yA,'lineA')}${path('b',yB,'lineB')}${dots('a',yA,'dotA',-18)}${dots('b',yB,'dotB',24)}${labels}</svg>`;
