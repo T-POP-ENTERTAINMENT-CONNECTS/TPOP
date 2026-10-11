@@ -34,3 +34,12 @@ SUBSCRIPTION EXPIRY REMINDERS
 - supabase/migrations/20261004_subscription_expiry_reminders.sql
 - Trial reminder: 3 days before expiry
 - Paid reminder: 1 month before expiry
+
+
+2026-10-11 INTELLIGENCE ENGINE CORS HOTFIX + ACCURACY REVIEW
+- Added x-client-info and common Supabase client headers to intelligence-engine CORS allowlist.
+- Kept OPTIONS preflight handler and POST-only endpoint behavior.
+- Added preflight cache age and Vary: Origin response headers.
+- Existing local Creator Fit scores are heuristic estimates from entered profile/campaign text and should not be represented as verified audience analytics. Performance score may be provisional when historical records are absent; confidence is a separate profile/evidence completeness signal.
+- Deployment required: redeploy supabase/functions/intelligence-engine/index.ts to the connected Supabase project. Static website redeploy alone will not update the Edge Function.
+- Validation performed: ZIP integrity and targeted source checks. Live Supabase/browser verification was not possible from this package-only review.
