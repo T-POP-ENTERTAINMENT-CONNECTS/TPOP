@@ -31,6 +31,8 @@ const formatNumericTyping=x=>{if(!x)return;const raw=String(x.value||'').replace
 // Numeric fields show thousands separators live while typing; commas are stripped before saving/parsing.
 if(!document.documentElement.dataset.kolNumberFormatBound){document.documentElement.dataset.kolNumberFormatBound='1';document.addEventListener('input',e=>{const x=e.target;if(x.matches('input[type=number],input[data-number-format]'))formatNumericTyping(x)});document.addEventListener('focusout',e=>{const x=e.target;if(x.matches('input[type=number],input[data-number-format]'))formatNumericEntry(x)});document.addEventListener('submit',e=>{e.target.querySelectorAll('input[type=number],input[data-number-format]').forEach(x=>x.value=String(x.value||'').replace(/,/g,''))},true);new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1){if(n.matches?.('input[data-number-format]'))formatNumericEntry(n);n.querySelectorAll?.('input[data-number-format]').forEach(formatNumericEntry)}}))).observe(document.body,{childList:true,subtree:true})}
 const pct=x=>x==null||Number.isNaN(Number(x))?'·':`${Math.round(Number(x)*10)/10}%`;
+// Engagement rate is a percentage value (0–100), not a fraction. Guard legacy/out-of-range records instead of displaying impossible values such as 10000%.
+const creatorERLabel=x=>{if(x==null||x==='')return '·';const n=Number(x);return Number.isFinite(n)&&n>=0&&n<=100?`${Math.round(n*10)/10}%`:'Check ER data'};
 const clamp=(x,a=0,b=100)=>Math.max(a,Math.min(b,Number(x)||0));
 const avg=a=>a.length?a.reduce((s,x)=>s+Number(x||0),0)/a.length:null;
 const ECOMMERCE_CHANNELS=['TikTok Shop','Shopee','Lazada','LINE SHOPPING','Shopify','WooCommerce','Amazon','Facebook / Instagram Shop','Brand Website','Other'];
@@ -1107,7 +1109,7 @@ function creators(c){
     const reason=overallWhy||'Fit is based on available evidence.';
     return `<article class="creator-fit-row ${tone}">
       <div class="creator-fit-main">
-       <div class="creator-identity"><label class="creator-check"><input type="checkbox" data-shortlist-creator="${x.id}" ${sel?'checked':''}><span></span></label><div class="creator-row-avatar">${photo?`<img src="${esc(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`:''}<span style="${photo?'display:none':''}">${esc(initials)}</span></div><div><div class="creator-row-name">${esc(x.name)}</div><div class="creator-handle">${esc(x.kol_code||p.handle||'Creator profile')}</div><div class="creator-mini-meta"><span>${esc(p.channel||'·')}</span><span>${p.followers==null?'·':money(p.followers)} followers</span><span>${p.er==null?'·':pct(p.er)} ER</span></div></div></div>
+       <div class="creator-identity"><label class="creator-check"><input type="checkbox" data-shortlist-creator="${x.id}" ${sel?'checked':''}><span></span></label><div class="creator-row-avatar">${photo?`<img src="${esc(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`:''}<span style="${photo?'display:none':''}">${esc(initials)}</span></div><div><div class="creator-row-name">${esc(x.name)}</div><div class="creator-handle">${esc(x.kol_code||p.handle||'Creator profile')}</div><div class="creator-mini-meta"><span>${esc(p.channel||'·')}</span><span>${p.followers==null?'·':money(p.followers)} followers</span><span>${p.er==null?'·':creatorERLabel(p.er)} ER</span></div></div></div>
        <div class="creator-score"><div class="creator-score-number">${fit}<small>/100</small></div><div class="creator-score-label">${esc(status)}</div></div>
        <div class="creator-stat"><b>${evidenceScore==null?'·':Math.round(evidenceScore)}</b><span>Evidence</span></div>
        <div class="creator-stat"><b>${confidence==null?'·':confidence}</b><span>Confidence</span></div>
@@ -1175,6 +1177,7 @@ document.getElementById('creator-action').onclick=async()=>{
   const x=creatorFormCollect();
   if(!x.name||!x.channel||!x.primaryChannelLink||!x.bio){toast('Complete the creator name, channel, profile link and creator description.','error');return}
   if(!/^https?:\/\/\S+$/i.test(x.primaryChannelLink)){toast('Enter a valid creator profile URL.','error');return}
+  if(x.er!=null&&(!Number.isFinite(Number(x.er))||Number(x.er)<0||Number(x.er)>100)){toast('Engagement Rate must be between 0 and 100%. Please check the value.','error');return}
   if(Object.values(x.intelligence).some(v=>!v.length)){toast('Creator intelligence could not be derived. Add a short creator description.','error');return}
   if(mode==='saved'){btn.textContent='Updating…';await updateSavedCreator(x);return}
   if(mode==='batch'){
@@ -5684,3 +5687,30 @@ async function buildPremiumFullPDF(){
  doc.save(pdfSaveName('KOL-IDS_Premium-Campaign-Intelligence',S.selectedCampaign?.name));toast('Premium detailed PDF saved','good');
 }
 function downloadFullPDF(){if(reportExportIsTrial()){showPaidExportGate();return}buildPremiumFullPDF().catch(err=>{console.error(err);toast('Could not generate the detailed PDF. Please try again.','error')})}
+
+
+/* MOBILE CREATOR ACTIONS · compact touch targets · 20261011 */
+(function(){
+  const id='kol-ids-mobile-creator-actions-compact-20261011';
+  if(document.getElementById(id)) return;
+  const style=document.createElement('style'); style.id=id;
+  style.textContent=`
+    @media(max-width:760px){
+      .kol-toast{left:12px!important;right:12px!important;bottom:calc(12px + env(safe-area-inset-bottom, 0px))!important;width:auto!important;max-width:560px!important;margin:0 auto!important;padding:10px 12px!important;border-radius:12px!important;font-size:11px!important;line-height:1.4!important;font-weight:750!important;white-space:normal!important;overflow-wrap:anywhere!important;box-sizing:border-box!important}
+      .creator-actions-v3{gap:7px!important;align-items:stretch!important}
+      .creator-actions-v3 .btn,.creator-actions-v3 .social-link{
+        height:46px!important;min-height:46px!important;max-height:46px!important;
+        padding:6px 4px!important;border-radius:10px!important;
+        font-size:12px!important;line-height:1.15!important;box-sizing:border-box!important;
+      }
+    }
+    @media(max-width:390px){
+      .creator-actions-v3{gap:5px!important}
+      .creator-actions-v3 .btn,.creator-actions-v3 .social-link{
+        height:43px!important;min-height:43px!important;max-height:43px!important;
+        padding:5px 2px!important;font-size:11px!important;border-radius:9px!important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
