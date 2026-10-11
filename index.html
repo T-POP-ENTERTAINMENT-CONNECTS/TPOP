@@ -796,7 +796,7 @@
    if(n.nodeValue!==out)n.nodeValue=out;
  };
  const scan=root=>{if(root.nodeType===3)translateNode(root);else if(root.querySelectorAll){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())translateNode(n);}};
- const setLang=lang=>{current=lang==='th'?'th':'en';document.documentElement.lang=current==='th'?'th':'en';document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===current)));scan(document.body);try{localStorage.setItem('tpop-language',current)}catch(e){}};
+ const setLang=lang=>{current=lang==='th'?'th':'en';document.documentElement.lang=current==='th'?'th':'en';document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===current)));const heroCopy=document.querySelector('.hero-copy');if(heroCopy)heroCopy.textContent=current==='th'?'T POP ENTERTAINMENT CONNECTS เชื่อมโยงผู้คนและโอกาสระหว่างวงการบันเทิง ธุรกิจ ครีเอเตอร์ ศิลปิน สื่อ และชุมชน พร้อมเปลี่ยนวัฒนธรรมให้กลายเป็นประสบการณ์ที่มีความหมาย':'T POP ENTERTAINMENT CONNECTS builds connections across entertainment, business, creators, artists, media and communities · turning culture into meaningful experiences.';scan(document.body);try{localStorage.setItem('tpop-language',current)}catch(e){}};
  document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
  const obs=new MutationObserver(ms=>{if(busy)return;busy=true;for(const m of ms){if(m.type==='childList')m.addedNodes.forEach(scan);else if(m.type==='characterData')translateNode(m.target)}busy=false;});
  obs.observe(document.body,{subtree:true,childList:true,characterData:true});
