@@ -821,39 +821,6 @@ function overlapScore(a,b){
  const A=new Set(fitTokens(a)), B=new Set(fitTokens(b)); if(!A.size||!B.size)return 0;
  let hit=0; A.forEach(x=>{if(B.has(x))hit++}); return Math.min(100,Math.round(hit/Math.max(3,Math.min(A.size,18))*100));
 }
-function localCreatorFit(creator){
- const cp=creator?.payload||{},ci=cp.intelligence||{},camp=S.selectedCampaign?.payload||{},aud=S.selectedAudience?.payload||{};
- const creatorText=[creator?.name,cp.bio,cp.channel,cp.secondaryChannel,(cp.ecommerceChannels||[]).join(' '),Object.values(ci).flat().join(' ')].join(' ');
- const audienceText=[aud.audienceBrief,aud.audiencePersona,aud.interests,aud.lifestyle,aud.behavior,aud.painPoints,aud.purchaseContext,aud.whyBrand,aud.market,aud.age].join(' ');
- const campaignText=[camp.goal,camp.objective,(camp.objectives||[]).join(' '),camp.category,camp.subcategory,camp.campaignType,camp.brandName,camp.brandPositioning,camp.brandPromise,camp.brandValuesText,(camp.brandPersonalities||[]).join(' '),(camp.keyMessages||[]).join(' ')].join(' ');
- const brandText=[camp.brandName,camp.brandPositioning,camp.brandPromise,camp.brandValuesText,(camp.brandPersonalities||[]).join(' '),(camp.keyMessages||[]).join(' ')].join(' ');
- const audienceFit=Math.max(20,Math.min(100,48+Math.round(overlapScore(creatorText,audienceText)*0.55)));
- const contentFit=Math.max(20,Math.min(100,48+Math.round(overlapScore(creatorText,campaignText)*0.55)));
- const brandFit=Math.max(20,Math.min(100,48+Math.round(overlapScore([ci.Personality,ci.Content_Function,ci.Values,cp.bio].flat().join(' '),brandText)*0.6)));
- const er=cp.er==null?null:Number(cp.er),followers=Number(cp.followers||0);
- const performance=er==null||Number.isNaN(er)?50:Math.min(100,Math.round(35+Math.min(55,er*8)+Math.min(10,Math.log10(followers+1)*2)));
- const performanceAvailable=er!=null&&!Number.isNaN(er);
- const budget=Number(camp.budget||0),rate=Number(cp.rate||0);let commercial=62;if(rate&&budget)commercial=Math.max(25,Math.min(100,Math.round(92-Math.max(0,rate/budget)*100)));else if(rate)commercial=55;
- const risk=Math.max(10,Math.min(70,20+(cp.primaryChannelLink?0:18)+(cp.profileImageUrl?0:4)+(cp.bio?0:12)+(er==null?8:0)));
- const confidence=Math.round(Math.min(82,35+(Object.values(ci).flat().length*2)+(cp.bio?8:0)+(performanceAvailable?10:0)+(rate&&budget?8:0)));
- const performanceComponent=50+(performance-50)*(0.55+0.45*confidence/100);
- const raw=Math.round(audienceFit*.20+contentFit*.20+brandFit*.20+performanceComponent*.15+commercial*.10+(100-risk)*.15);
- const overall=Math.round(50+(raw-50)*(0.70+0.30*confidence/100));
- const dims={
-  audienceFit:{score:audienceFit,reason:audienceFit>=70?'Creator signals overlap with the stated audience interests and context.':'Creator evidence has limited overlap with the audience brief.',action:audienceFit>=70?'Keep audience-native language and proof points.':'Refine the brief to a creator-native audience angle and add audience-specific content examples.'},
-  contentFit:{score:contentFit,reason:contentFit>=70?'Creator content signals are reasonably aligned with the campaign objective/category.':'The creator profile does not strongly evidence the current campaign objective or category.',action:contentFit>=70?'Use the creator’s native format while keeping the campaign KPI explicit.':'Give the creator a tighter objective-led content brief, required message and CTA while preserving native style.'},
-  brandFit:{score:brandFit,reason:brandFit>=70?'Creator style/signals are compatible with the available brand context.':'Brand personality or positioning is not strongly reflected in the creator evidence.',action:brandFit>=70?'Anchor execution to the existing brand guardrails.':'Provide 2–3 non-negotiable brand cues, visual rules and message examples before activation.'},
-  performance:{score:performance,available:performanceAvailable,reason:performanceAvailable?`Available engagement evidence is ${er}% with ${followers?money(followers)+' followers':'limited audience-size data'}.`:'No historical performance evidence was supplied; performance is held neutral at 50/100 rather than treated as poor.',action:performanceAvailable&&performance>=70?'Validate with a controlled test and tracked KPI.':'Request recent reach, views, saves, shares and conversion evidence before scaling.'},
-  commercial:{score:commercial,reason:rate&&budget?`Rate-to-budget fit is estimated from ${money(rate)} fee against ${money(budget)} campaign budget.`:'Commercial fit is provisional because fee and/or campaign budget is missing.',action:commercial>=70?'Set a tracked deliverable package and attribution terms.':'Renegotiate scope/package, reduce deliverables, or use a smaller test allocation before scaling.'},
-  risk:{score:risk,reason:risk<=30?'No major execution-risk signal was found in the supplied profile.':'Some creator evidence is incomplete, increasing execution uncertainty.',action:risk<=30?'Keep standard brand-safety and approval checks.':'Add pre-approval, content guardrails and a small controlled first activation.'}
- };
- const low=Object.entries(dims).filter(([k,v])=>k!=='risk'&&v.score<70).sort((a,b)=>a[1].score-b[1].score);
- const recoveryPlan=(low.length?low.slice(0,3):[['overall',{action:'Keep the creator-native style, lock the campaign KPI and validate with a controlled test.'}]]).map(([k,v])=>({area:k.replace(/([A-Z])/g,' $1').replace(/^./,x=>x.toUpperCase()),action:v.action}));
- const insufficient=!performanceAvailable;
- const evidence={audienceFit,contentFit,brandFit,performance,commercial,risk,confidence,performanceEvidenceAvailable:performanceAvailable,decisionScore:overall,reason:insufficient?'Fit is calculated from campaign, audience and creator signals, but historical performance evidence is missing.':'Fit is calculated from campaign, audience, creator signals and the available performance evidence.',dimensionEvidence:dims,recoveryPlan,method:'Local provisional fallback only. Remote V3 engine unavailable; missing performance evidence is neutral and the result is gated for review.',modelTrust:'LOW'};
- const decision=insufficient?'INSUFFICIENT HISTORICAL EVIDENCE':overall>=80?'RECOMMENDED':overall>=65?'CONSIDER':'REVIEW REQUIRED';
- return {decision,score:overall,evidence};
-}
 async function calculateCreatorFitSafe(creatorIds){
  const ids=(creatorIds||S.creators.map(x=>x.id)).filter(Boolean);
  if(!ids.length) return {success:true,rows:[]};
@@ -865,22 +832,15 @@ async function calculateCreatorFitSafe(creatorIds){
    }
    throw new Error(remote?.error||'Remote intelligence engine returned no creator results.');
  }catch(remoteErr){
-   // Never block the Creator page on the Edge Function or a DB write.
-   // Calculate locally first, render immediately, then attempt persistence best-effort.
-   const idSet=new Set(ids.map(String));
-   const creators=S.creators.filter(x=>idSet.has(String(x.id)));
-   const rows=creators.map(r=>({creator_id:r.id,...localCreatorFit(r)}));
-   S.localFitRows=rows;
-   if(sb&&S.org?.id&&S.selectedCampaign?.id&&rows.length){
-     const payload=rows.map(x=>({organization_id:S.org.id,campaign_id:S.selectedCampaign.id,creator_id:x.creator_id,decision:x.decision,score:x.score,evidence:x.evidence,created_by:S.session?.user?.id||null}));
-     try{
-       const q=await sb.from('creator_decisions').insert(payload);
-       if(!q.error) S.localFitRows=[];
-     }catch(_persistErr){
-       // Keep local results visible even when RLS/schema/network prevents persistence.
-     }
-   }
-   return {success:true,localFallback:true,rows,warning:`Remote fit unavailable (${remoteErr?.message||'request failed'}); local fit shown instead.`};
+   // Fail closed: an unavailable engine must never be replaced by a locally invented score,
+   // and no decision row may be persisted unless the authoritative engine completed.
+   S.localFitRows=[];
+   return {
+     success:false,
+     unavailable:true,
+     rows:[],
+     error:`Authoritative Creator Intelligence is unavailable (${remoteErr?.message||'request failed'}). No fit score was generated or saved. Restore the Supabase intelligence-engine before retrying.`
+   };
  }
 }
 async function runAnalysis(){
@@ -890,7 +850,7 @@ async function runAnalysis(){
  const candidates=shortlist.length?S.creators.filter(x=>shortlist.includes(x.id)):S.creators;
  if(!candidates.length){toast('Add or shortlist at least one creator before analysis.','error');S.page=2;renderPage();return}
  const btn=document.getElementById('run-analysis');if(btn){btn.disabled=true;btn.textContent='Analyzing…'}
- try{const data=await calculateCreatorFitSafe(candidates.map(x=>x.id));if(!data.success)throw new Error(data.error||'Analysis did not complete.');S.analysis=data;await refresh();toast(`${data.localFallback?'Local fit calculated':'Analysis completed'} · ${Number(data.rows?.length||0)} creator results`,'good');renderPage()}catch(err){toast(err.message||'Creator analysis failed. No decision was saved as complete.','error')}finally{if(btn){btn.disabled=false;btn.textContent='Calculate creator fit'}}
+ try{const data=await calculateCreatorFitSafe(candidates.map(x=>x.id));if(!data.success)throw new Error(data.error||'Analysis did not complete.');S.analysis=data;await refresh();toast(`Analysis completed · ${Number(data.rows?.length||0)} creator results`,'good');renderPage()}catch(err){toast(err.message||'Creator analysis failed. No decision was saved as complete.','error')}finally{if(btn){btn.disabled=false;btn.textContent='Calculate creator fit'}}
 }
 
 function slugCode(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]+/g,'').slice(0,8)||'KOL'}
@@ -913,21 +873,42 @@ async function saveGenCodeConfiguration(forceNew=false){if(!S.selectedCampaign)r
 function creatorSignalCoverage(x){const ci=x.payload?.intelligence||{};return{required:Object.keys(signalExamples).filter(k=>Array.isArray(ci[k])&&ci[k].length).length,total:Object.keys(signalExamples).length}}
 function chipGroup(key,selected){const vals=[...(signalExamples[key]||[])];const customs=(selected||[]).filter(v=>v&&!vals.includes(v));return `<div class="signal-box"><h4>${key.replaceAll('_',' ')}</h4><div class="chips" data-chips-for="${key}">${vals.map(v=>`<button type="button" class="chip ${selected.includes(v)?'selected':''}" data-chip="${key}" data-value="${esc(v)}">${esc(v)}</button>`).join('')}${customs.map(v=>`<button type="button" class="chip selected custom-signal-chip" data-custom-signal="${key}" data-custom-value="${esc(v)}">${esc(v)} <b aria-hidden="true">×</b></button>`).join('')}</div><input class="signal-other" data-other-for="${key}" placeholder="Type your own signal and press Enter" autocomplete="off" enterkeyhint="done"></div>`}
 function inferCreatorSignals(text,channel){
- const t=String(text||'').toLowerCase(), ch=String(channel||'').toLowerCase(), has=(...ks)=>ks.some(k=>t.includes(k));
- const pick=(arr, fallback)=>arr.find(x=>x[0])?.[1]||fallback;
+ // Keyword inference is a weak profile-derived signal, not verified creator truth.
+ // Only emit a trait when the supplied bio contains an explicit matching cue.
+ const t=String(text||'').toLowerCase();
+ const has=(...ks)=>ks.some(k=>t.includes(k));
  const out={Personality:[],Communication:[],Audience_Relationship:[],Social_Behavior:[],Content_Personality:[],Content_Function:[],Content_Behavior:[],Audience_Psychology:[]};
- out.Personality.push(has('expert','educat','professional','coach')?'Authoritative':has('fun','funny','playful','entertain')?'Playful':has('luxury','premium','elegant')?'Thoughtful':'Authentic');
- out.Communication.push(has('story','storytelling','vlog')?'Storytelling':has('educat','how-to','tips','guide')?'Educational':has('review','direct')?'Direct':'Conversational');
- out.Audience_Relationship.push(has('community','member','followers','family')?'Community-led':has('expert','professional','coach')?'Expert-led':'Peer-like');
- out.Social_Behavior.push(has('trend','viral','trending')?'Trend-aware':has('community','comment','followers')?'Interactive':has('niche','specialist')?'Niche-led':'Community-driven');
- out.Content_Personality.push(has('technical','data','science')?'Technical':has('premium','luxury','editorial')?'Editorial':has('aspirational','fashion','beauty')?'Aspirational':'Authentic');
- out.Content_Function.push(has('review','รีวิว')?'Review':has('demo','demonstrat','tutorial','how-to')?'Demonstrate':has('compare','comparison')?'Compare':has('educat','tips','guide')?'Educate':has('inspire','lifestyle')?'Inspire':'Review');
- out.Content_Behavior.push(has('series','episode')?'Series-led':has('evergreen','guide','tutorial')?'Evergreen':has('trend','reactive','news')?'Reactive':'Consistent');
- out.Audience_Psychology.push(has('trust','expert','review','proof')?'Trust-seeking':has('discover','explore','try')?'Discovery-led':has('identity','fashion','beauty','lifestyle')?'Identity-led':has('value','deal','price')?'Value-seeking':'Entertainment-led');
+ const add=(key,matched,value)=>{if(matched)out[key].push(value)};
+ add('Personality',has('expert','educat','professional','coach'),'Authoritative');
+ add('Personality',has('fun','funny','playful','entertain'),'Playful');
+ add('Personality',has('luxury','premium','elegant'),'Thoughtful');
+ add('Communication',has('story','storytelling','vlog'),'Storytelling');
+ add('Communication',has('educat','how-to','tips','guide'),'Educational');
+ add('Communication',has('review','direct'),'Direct');
+ add('Audience_Relationship',has('community','member','followers','family'),'Community-led');
+ add('Audience_Relationship',has('expert','professional','coach'),'Expert-led');
+ add('Social_Behavior',has('trend','viral','trending'),'Trend-aware');
+ add('Social_Behavior',has('community','comment','followers'),'Interactive');
+ add('Social_Behavior',has('niche','specialist'),'Niche-led');
+ add('Content_Personality',has('technical','data','science'),'Technical');
+ add('Content_Personality',has('premium','luxury','editorial'),'Editorial');
+ add('Content_Personality',has('aspirational','fashion','beauty'),'Aspirational');
+ add('Content_Function',has('review','รีวิว'),'Review');
+ add('Content_Function',has('demo','demonstrat','tutorial','how-to'),'Demonstrate');
+ add('Content_Function',has('compare','comparison'),'Compare');
+ add('Content_Function',has('educat','tips','guide'),'Educate');
+ add('Content_Function',has('inspire','lifestyle'),'Inspire');
+ add('Content_Behavior',has('series','episode'),'Series-led');
+ add('Content_Behavior',has('evergreen','guide','tutorial'),'Evergreen');
+ add('Content_Behavior',has('trend','reactive','news'),'Reactive');
+ add('Audience_Psychology',has('trust','expert','review','proof'),'Trust-seeking');
+ add('Audience_Psychology',has('discover','explore','try'),'Discovery-led');
+ add('Audience_Psychology',has('identity','fashion','beauty','lifestyle'),'Identity-led');
+ add('Audience_Psychology',has('value','deal','price'),'Value-seeking');
  return out;
 }
 function mergeCreatorSignals(manual,inferred){const out={};Object.keys(signalExamples).forEach(k=>{out[k]=Array.isArray(manual?.[k])&&manual[k].length?manual[k]:Array.isArray(inferred?.[k])?inferred[k]:[]});return out}
-function creatorFormCollect(){const selected={};Object.keys(signalExamples).forEach(k=>{selected[k]=[...document.querySelectorAll(`[data-chip="${k}"].selected`)].map(b=>b.dataset.value).filter(v=>v!=='Other');selected[k].push(...[...document.querySelectorAll(`[data-custom-signal="${k}"]`)].map(b=>b.dataset.customValue).filter(Boolean));const other=document.querySelector(`[data-other-for="${k}"]`)?.value.trim();if(other)selected[k].push(other)});const name=document.getElementById('cr-name').value.trim(),channel=document.getElementById('cr-channel').value,bio=document.getElementById('cr-bio')?.value.trim()||'';const inferred=inferCreatorSignals(bio,channel);return{name,channel,secondaryChannel:document.getElementById('cr-secondary').value,ecommerceChannels:[...document.querySelectorAll('[data-ecom-channel]:checked')].map(x=>x.value),ecommerceStoreLink:document.getElementById('cr-ecom-store-link')?.value.trim()||'',followers:num(document.getElementById('cr-followers').value),er:num(document.getElementById('cr-er').value),rate:num(document.getElementById('cr-rate').value),primaryChannelLink:document.getElementById('cr-primary-link').value.trim(),profileUrl:document.getElementById('cr-primary-link').value.trim(),profileImageUrl:document.getElementById('cr-photo-data').value||'',bio,intelligence:mergeCreatorSignals(selected,inferred),intelligenceSource:Object.values(selected).some(v=>v.length)?'MANUAL_PLUS_PROFILE_INFERENCE':'PROFILE_INFERENCE'}}
+function creatorFormCollect(){const selected={};Object.keys(signalExamples).forEach(k=>{selected[k]=[...document.querySelectorAll(`[data-chip="${k}"].selected`)].map(b=>b.dataset.value).filter(v=>v!=='Other');selected[k].push(...[...document.querySelectorAll(`[data-custom-signal="${k}"]`)].map(b=>b.dataset.customValue).filter(Boolean));const other=document.querySelector(`[data-other-for="${k}"]`)?.value.trim();if(other)selected[k].push(other)});const name=document.getElementById('cr-name').value.trim(),channel=document.getElementById('cr-channel').value,bio=document.getElementById('cr-bio')?.value.trim()||'';const inferred=inferCreatorSignals(bio,channel);return{name,channel,secondaryChannel:document.getElementById('cr-secondary').value,ecommerceChannels:[...document.querySelectorAll('[data-ecom-channel]:checked')].map(x=>x.value),ecommerceStoreLink:document.getElementById('cr-ecom-store-link')?.value.trim()||'',followers:num(document.getElementById('cr-followers').value),er:num(document.getElementById('cr-er').value),rate:num(document.getElementById('cr-rate').value),primaryChannelLink:document.getElementById('cr-primary-link').value.trim(),profileUrl:document.getElementById('cr-primary-link').value.trim(),profileImageUrl:document.getElementById('cr-photo-data').value||'',bio,intelligence:mergeCreatorSignals(selected,inferred),intelligenceSource:Object.values(selected).some(v=>v.length)?'MANUAL_PLUS_KEYWORD_INFERENCE':'KEYWORD_INFERENCE_ONLY'}}
 
 function renderBatch(){
  const el=document.getElementById('creator-batch-list');
@@ -1029,14 +1010,15 @@ async function removeSavedCreator(id){
  }
 }
 function creatorKolCode(x){const seed=String(x?.primaryChannelLink||x?.name||'CREATOR').trim().toUpperCase().replace(/[^A-Z0-9]+/g,'');const base=(seed.slice(0,6)||'CREATOR');const suffix=Math.random().toString(36).slice(2,8).toUpperCase();return `KOL-${base}-${suffix}`}
-async function updateSavedCreator(x){const target=S.creatorEditTarget;if(!target||target.type!=='saved')return false;const payload={channel:x.channel,secondaryChannel:x.secondaryChannel,ecommerceChannels:x.ecommerceChannels||[],ecommerceStoreLink:x.ecommerceStoreLink||'',followers:x.followers,er:x.er,rate:x.rate,primaryChannelLink:x.primaryChannelLink,profileUrl:x.primaryChannelLink,profileImageUrl:x.profileImageUrl,bio:x.bio,intelligence:x.intelligence,intelligenceSource:x.intelligenceSource,campaignId:S.selectedCampaign?.id||null,updatedAt:new Date().toISOString()};const q=await sb.from('creators').update({name:x.name,payload}).eq('id',target.id).eq('organization_id',S.org.id).select().single();if(q.error){toast(q.error.message||'Could not update creator','error');return false}await refresh();toast('Creator updated','good');clearCreatorForm();if(S.selectedCampaign?.id&&S.selectedAudience?.id){try{const fit=await calculateCreatorFitSafe([target.id]);if(!fit?.success)throw new Error(fit?.error||'Fit refresh did not complete');await refresh();if(fit.localFallback){toast('Creator updated · provisional fit refreshed locally. Remote engine is unavailable; verify the Edge Function before relying on saved decisions.','error')}else{toast('Creator updated · campaign fit refreshed','good')}}catch(err){toast(`Creator updated. Fit refresh needs attention: ${err.message||'check the campaign, audience and Edge Function logs.'}`,'error')}}renderPage();return true}
+async function updateSavedCreator(x){const target=S.creatorEditTarget;if(!target||target.type!=='saved')return false;const payload={channel:x.channel,secondaryChannel:x.secondaryChannel,ecommerceChannels:x.ecommerceChannels||[],ecommerceStoreLink:x.ecommerceStoreLink||'',followers:x.followers,er:x.er,rate:x.rate,primaryChannelLink:x.primaryChannelLink,profileUrl:x.primaryChannelLink,profileImageUrl:x.profileImageUrl,bio:x.bio,intelligence:x.intelligence,intelligenceSource:x.intelligenceSource,campaignId:S.selectedCampaign?.id||null,updatedAt:new Date().toISOString()};const q=await sb.from('creators').update({name:x.name,payload}).eq('id',target.id).eq('organization_id',S.org.id).select().single();if(q.error){toast(q.error.message||'Could not update creator','error');return false}await refresh();toast('Creator updated','good');clearCreatorForm();if(S.selectedCampaign?.id&&S.selectedAudience?.id){try{const fit=await calculateCreatorFitSafe([target.id]);if(!fit?.success)throw new Error(fit?.error||'Fit refresh did not complete');await refresh();toast('Creator updated · campaign fit refreshed by the authoritative engine','good')}catch(err){toast(`Creator updated. Fit refresh needs attention: ${err.message||'check the campaign, audience and Edge Function logs.'}`,'error')}}renderPage();return true}
 async function autoCalculateCreatorFit(){
  const campaignId=S.selectedCampaign?.id, audienceId=S.selectedAudience?.id;
  if(!campaignId||!audienceId||!S.creators.length||S.creatorFitAutoBusy)return;
  const creatorKey=S.creators.map(x=>String(x.id)).sort().join(',');
  const key=`${campaignId}|${audienceId}|${creatorKey}`;
  const rows=latestDecisionRows();
- if(rows.length>=S.creators.length && rows.every(x=>x.creator))return;
+ const allRowsCurrentAndAuthoritative=rows.length>=S.creators.length&&rows.every(x=>x.creator&&!/local provisional fallback only|localfallback/i.test(String(x.decision?.evidence?.method||'')));
+ if(allRowsCurrentAndAuthoritative)return;
  if(S.creatorFitAutoKey===key)return;
  S.creatorFitAutoKey=key;S.creatorFitAutoBusy=true;
  const wrap=document.getElementById('creator-fit-results');
@@ -1046,8 +1028,7 @@ async function autoCalculateCreatorFit(){
    if(!data?.success)throw new Error(data?.error||'Creator fit analysis failed.');
    // Render local/remote results immediately; refresh only if persistence succeeded.
    renderPage();
-   if(data.localFallback) toast('Fit calculated locally · the remote engine is unavailable, so the page will not be blocked.','info');
-   else { await refresh(); if(S.page===2)renderPage(); }
+   await refresh(); if(S.page===2)renderPage();
  }catch(err){
    S.creatorFitAutoKey=null;
    const wrap=document.getElementById('creator-fit-results');
@@ -1131,7 +1112,7 @@ function creators(c){
   document.querySelectorAll('[data-remove-saved]').forEach(b=>b.onclick=()=>removeSavedCreator(b.dataset.removeSaved));
   document.getElementById('save-shortlist-registry')?.addEventListener('click',async()=>{const btn=document.getElementById('save-shortlist-registry');if(btn?.dataset.busy==='1')return;if(!S.selectedCampaign){toast('Create a campaign first.','error');return}const ids=[...document.querySelectorAll('[data-shortlist-creator]:checked')].map(x=>x.dataset.shortlistCreator).filter(id=>S.creators.some(c=>String(c.id)===String(id)));if(!ids.length){toast('Select at least one creator before continuing.','error');return}const payload={...(S.selectedCampaign.payload||{}),decisionShortlistIds:ids,decisionShortlistUpdatedAt:new Date().toISOString()};if(btn){btn.dataset.busy='1';btn.disabled=true;btn.textContent='Saving shortlist…'}try{const q=await sb.from('campaigns').update({payload,updated_at:new Date().toISOString()}).eq('id',S.selectedCampaign.id).eq('organization_id',S.org.id).select().single();if(q.error)throw q.error;S.selectedCampaign=q.data;const i=S.campaigns.findIndex(x=>x.id===q.data.id);if(i>=0)S.campaigns[i]=q.data;toast(`${ids.length} creator${ids.length===1?'':'s'} moved to Decision`,'good');S.page=3;renderPage()}catch(err){toast(err.message||'Could not save shortlist. Your current selection is still on screen.','error')}finally{if(btn){btn.dataset.busy='0';btn.disabled=false;btn.textContent='Save shortlist → Decision'}}});
   document.getElementById('save-creator-fit-pdf')?.addEventListener('click',()=>exportGateOr(downloadCreatorFitPDF));
-  document.getElementById('run-creator-fit')?.addEventListener('click',async()=>{const btn=document.getElementById('run-creator-fit');if(!btn||btn.dataset.busy==='1')return;if(!S.selectedCampaign){toast('Create and save a campaign first.','error');return}if(!S.selectedAudience){toast('Complete Audience before calculating creator fit.','error');S.page=1;renderPage();return}btn.dataset.busy='1';btn.disabled=true;btn.textContent='Calculating…';try{const data=await calculateCreatorFitSafe(S.creators.map(x=>x.id));if(!data.success)throw new Error(data.error||'Creator fit analysis failed.');await refresh();toast(`${data.localFallback?'Local fit calculated':'Creator fit calculated'} · ${data.rows?.length||0} creators`,'good');renderPage()}catch(err){toast(err.message||'Creator fit analysis failed.','error')}finally{if(document.body.contains(btn)){btn.dataset.busy='0';btn.disabled=false;btn.textContent='Calculate / refresh fit'}}});
+  document.getElementById('run-creator-fit')?.addEventListener('click',async()=>{const btn=document.getElementById('run-creator-fit');if(!btn||btn.dataset.busy==='1')return;if(!S.selectedCampaign){toast('Create and save a campaign first.','error');return}if(!S.selectedAudience){toast('Complete Audience before calculating creator fit.','error');S.page=1;renderPage();return}btn.dataset.busy='1';btn.disabled=true;btn.textContent='Calculating…';try{const data=await calculateCreatorFitSafe(S.creators.map(x=>x.id));if(!data.success)throw new Error(data.error||'Creator fit analysis failed.');await refresh();toast(`Creator fit calculated · ${data.rows?.length||0} creators`,'good');renderPage()}catch(err){toast(err.message||'Creator fit analysis failed.','error')}finally{if(document.body.contains(btn)){btn.dataset.busy='0';btn.disabled=false;btn.textContent='Calculate / refresh fit'}}});
  };
  try{renderRegistry()}catch(err){
    console.error('[KOL IDS] Creator registry render failed',err);
