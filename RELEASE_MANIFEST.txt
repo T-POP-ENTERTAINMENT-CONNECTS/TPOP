@@ -39,3 +39,5 @@ SUBSCRIPTION EXPIRY REMINDERS
 
 
 2026-10-12 Final V4 integrity pass: current-model-only evidence, server-side campaign/performance validation, deduplicated outcome calibration, risk-evidence gating, and no fabricated display defaults. See AUDIT_20261012_EVIDENCE_FIRST.md and RELEASE_NOTES_20261012_LOGIC_INTEGRITY.md.
+
+2026-10-12 Pricing update: 1 month THB 9,500 / 6 months THB 53,500 / 12 months THB 103,000; see RELEASE_NOTES_20261012_PRICING_1M.md and migration supabase/migrations/20261012_replace_3m_with_1m.sql.
