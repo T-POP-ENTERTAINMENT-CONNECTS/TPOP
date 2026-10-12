@@ -41,3 +41,10 @@ SUBSCRIPTION EXPIRY REMINDERS
 2026-10-12 Final V4 integrity pass: current-model-only evidence, server-side campaign/performance validation, deduplicated outcome calibration, risk-evidence gating, and no fabricated display defaults. See AUDIT_20261012_EVIDENCE_FIRST.md and RELEASE_NOTES_20261012_LOGIC_INTEGRITY.md.
 
 2026-10-12 Pricing update: 1 month THB 9,500 / 6 months THB 53,500 / 12 months THB 103,000; see RELEASE_NOTES_20261012_PRICING_1M.md and migration supabase/migrations/20261012_replace_3m_with_1m.sql.
+
+2026-10-12 Engine coherence V5: primary Goal is now consistent through prediction and performance; lexical F1 fit and missing-evidence gates hardened; unsupported primary goals fail closed; THB commercial comparability enforced; portfolio only uses evidence-complete RECOMMENDED/CONSIDER rows. Details: RELEASE_NOTES_20261012_ENGINE_COHERENCE.md.
+
+Additional V5 fixes: creator similarity now uses the live PascalCase intelligence contract and ignores absent fields; ledger reconciliation selects the goal/predicted score required to pair observed outcomes; workspace and server select the same newest audience record.
+
+
+2026-10-12 Full pipeline logic audit V6: primary outcome-type scoped learning and calibration; context freshness and completed-run approval gates; strict channel-scoped impact/report formulas; count/e-commerce validation. See AUDIT_20261012_FULL_PIPELINE.md and RELEASE_NOTES_20261012_FULL_PIPELINE_V6.md.
