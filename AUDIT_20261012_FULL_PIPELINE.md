@@ -30,3 +30,19 @@ Reviewed the active workspace code, authoritative `intelligence-engine` Edge Fun
 - Evidence source labels are entered by users and are not independently authenticated by an API connector in this package. Distinct creator Gen Codes reduce duplicate attribution risk but are not transaction-level proof; unique order IDs and source reconciliation are still needed for independently deduplicated revenue.
 - This workspace did not run against a live Supabase project, Deno type checker, production data, or a deployed Edge Function. Syntax and deterministic smoke checks do not prove production integration correctness.
 - The Edge Function and static workspace must be deployed together. After deploy, choose the primary outcome type for each campaign, refresh fit, approve current recommendations, and validate with staging observations before making sales claims about engine accuracy.
+
+## V7 creator profile and multilingual evidence update (2026-10-12)
+
+The creator intake now records profile language and fee currency. Unicode word tokenization no longer hard-codes Thai, but matching remains lexical and does not translate meaning across languages. Cross-language campaigns should use a shared language or consistent standardized creator signals; do not treat token overlap as semantic understanding.
+
+Creator fees are compared with campaign budgets only when currencies match. No FX rate is guessed. Screening scores now renormalize over dimensions that have usable evidence, report `scoreCoveragePercent`, and remain null if no dimension has evidence. Missing core evidence still blocks recommendations, so a partial score is not approval or predicted outcome.
+
+Verification was limited to syntax parsing for `app.js` and the Edge Function. A live Supabase/Deno/browser integration was not run. Translation, FX feeds, and independent creator-profile verification are not included.
+
+## V8 offline multilingual matching update (2026-10-12)
+
+Campaigns now record brief language; creator profiles record bio language. A finite in-code multilingual concept glossary maps common creator-fit taxonomy terms across 12 languages to canonical concept IDs. Cross-language comparisons use these IDs only when recognized; unknown phrases remain unmatched. The engine records language pair/mode and glossary matches, calculates a partial score from evidenced dimensions, reports score coverage, and leaves score empty with zero evidence. Core evidence gaps still block recommendations.
+
+No profile or campaign content is transmitted to an external AI/translation provider. This is an explainable offline glossary, not ChatGPT-like general understanding. It cannot reliably interpret unseen paraphrases, negation, sarcasm, or context. The workspace's narrative UI is still primarily English.
+
+Syntax checks passed for `app.js` and the Edge Function. Live Supabase/Deno/browser integration was not run.
