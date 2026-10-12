@@ -10,7 +10,7 @@ if(window.__KOL_IDS_RUNTIME_STARTED__) return;
 window.__KOL_IDS_RUNTIME_STARTED__='V37.0-LOGIC-INTEGRITY';
 window.__KOL_IDS_RUNTIME_VERSION__='V37.0-LOGIC-INTEGRITY';
 const C=window.KOL_IDS_CONFIG||{},root=document.getElementById('app');
-const CURRENT_ENGINE_MODEL='KOL_IDS_LEARNING_ENGINE_V6_CHANNEL_SCOPED';
+const CURRENT_ENGINE_MODEL='KOL_IDS_LEARNING_ENGINE_V8_OFFLINE_MULTILINGUAL_GLOSSARY';
 let sb=null;
 const S={session:null,org:null,membership:null,plan:null,subscription:null,access:false,accessReason:null,page:0,campaigns:[],audiences:[],creators:[],decisions:[],reviews:[],impacts:[],selectedCampaign:null,selectedAudience:null,analysis:null,engineRuns:[],portfolioRuns:[],performance:[],predictions:[],creatorBatch:[],creatorEditTarget:null,performanceEditTarget:null,audienceDraft:null,creatorFitAutoKey:null,creatorFitAutoBusy:false,localFitRows:[]};
 const ready=C.SUPABASE_URL&&C.SUPABASE_ANON_KEY&&!String(C.SUPABASE_URL).includes('YOUR_');
