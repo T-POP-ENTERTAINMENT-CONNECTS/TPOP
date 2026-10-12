@@ -36,3 +36,6 @@ SUBSCRIPTION EXPIRY REMINDERS
 - Paid reminder: 1 month before expiry
 
 2026-10-12 Logic integrity handoff: see AUDIT_20261012_EVIDENCE_FIRST.md and RELEASE_NOTES_20261012_LOGIC_INTEGRITY.md. Updated intelligence-engine Edge Function includes ledger evidence and weight validation hardening.
+
+
+2026-10-12 Final V4 integrity pass: current-model-only evidence, server-side campaign/performance validation, deduplicated outcome calibration, risk-evidence gating, and no fabricated display defaults. See AUDIT_20261012_EVIDENCE_FIRST.md and RELEASE_NOTES_20261012_LOGIC_INTEGRITY.md.

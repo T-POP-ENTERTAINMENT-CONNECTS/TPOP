@@ -4,6 +4,8 @@
 Improve the reliability and data integrity of the supplied KOL IDS system and return the complete corrected package as a ZIP.
 
 ## Changes present in the package
+- The final package uses model V4 for all current decision evidence and excludes legacy V3 ledger rows from current learning summaries.
+- Frontend decision and PDF tables display missing measurements as unavailable, never as a neutral score. Client-side duplicate scoring and direct performance persistence paths were removed.
 - Creator Fit fails closed when the remote Intelligence Engine is unavailable; no browser-generated substitute score is persisted.
 - Explicit legacy local-fallback decisions are not treated as authoritative during refresh.
 - Keyword inference does not add unsupported default traits. Missing core audience, objective/content, or brand evidence gates recommendations.
@@ -16,6 +18,7 @@ Improve the reliability and data integrity of the supplied KOL IDS system and re
 - Server-side decision weights must be finite and non-negative for each decision dimension and must total 100 before analysis.
 
 ## Limits that remain
+- “Close all gaps” cannot be established from source inspection alone; external services, production data, user-entered facts, and deployment behavior are outside this package review.
 - Audience/content/brand matching remains a lexical overlap heuristic, not a validated semantic fit model.
 - Outcome normalization caps and weights are fixed rule assumptions, not empirically learned benchmarks.
 - The confidence field is an evidence-reliability heuristic, not a probability or accuracy claim.
