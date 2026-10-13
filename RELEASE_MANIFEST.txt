@@ -48,3 +48,5 @@ Additional V5 fixes: creator similarity now uses the live PascalCase intelligenc
 
 
 2026-10-12 Full pipeline logic audit V6: primary outcome-type scoped learning and calibration; context freshness and completed-run approval gates; strict channel-scoped impact/report formulas; count/e-commerce validation. See AUDIT_20261012_FULL_PIPELINE.md and RELEASE_NOTES_20261012_FULL_PIPELINE_V6.md.
+
+2026-10-13 Responsive spacing refresh: global workspace gutters, panel and field spacing, and tablet/mobile breakpoints; see RELEASE_NOTES_20261013_RESPONSIVE_SPACING.md.

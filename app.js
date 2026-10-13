@@ -539,6 +539,47 @@ th{background:rgba(248,249,250,.56)}
 .campaign-reference-page .intake-section{border-bottom-color:rgba(160,168,176,.14)}
 .campaign-reference-page .selected-strip,.campaign-intake .selected-strip,.workflow-side-note{background:rgba(247,249,250,.5);border-color:rgba(160,168,176,.15)}
 .reason,.creator-fit-reason{background:rgba(242,251,252,.55)}
+/* V39 · Global spacing rhythm for readable desktop and mobile workflows */
+.kol-content{width:100%;max-width:1680px!important;margin:0 auto;padding:40px clamp(28px,3.2vw,64px) 88px!important}
+.workflow-page{width:100%;max-width:1440px!important;margin:0 auto}
+.kol-top{padding-left:clamp(24px,3.2vw,56px)!important;padding-right:clamp(24px,3.2vw,56px)!important}
+.hero{min-width:0;margin:0 0 24px!important;padding:23px 27px!important;border:1px solid rgba(74,24,38,.09)!important;border-radius:20px!important;background:linear-gradient(125deg,#fff 0%,#fbfdfe 58%,#eafaff 100%)!important;box-shadow:0 12px 34px rgba(38,20,30,.055)!important;align-items:center!important}
+.hero:after{left:27px!important;bottom:10px!important;width:44px!important;height:2px!important}
+.hero h2{line-height:1.12!important;margin:0 0 8px!important;padding:0!important;overflow-wrap:anywhere}
+.hero p{line-height:1.65!important;max-width:760px!important}
+.hero-actions{gap:10px!important;align-items:center}
+.grid{gap:18px!important}
+.kol-content .form-grid{gap:18px 22px!important}
+.kol-content .field{gap:8px!important;min-width:0}
+.kol-content .field label{line-height:1.45!important;overflow-wrap:anywhere}
+.kol-content .field input,.kol-content .field select,.kol-content .field textarea{min-height:44px!important;padding:11px 13px!important;border-radius:10px!important;line-height:1.5!important}
+.kol-content .field textarea{min-height:100px!important;padding:12px 14px!important}
+.kol-content .section-head{margin-bottom:18px!important}
+.kol-content .section-head p{line-height:1.6!important}
+.card{padding:25px!important;border-radius:18px!important}
+.campaign-intake{padding:0!important;overflow:hidden}
+.campaign-reference-page .campaign-intake{border-radius:19px!important}
+.campaign-reference-page .intake-section{padding:23px clamp(22px,2.2vw,32px)!important}
+.campaign-reference-page .section-title-row{margin-bottom:16px!important}
+.campaign-reference-page .form-grid{gap:16px 20px!important}
+.campaign-reference-page .field{gap:7px!important}
+.campaign-reference-page .field label{line-height:1.45!important;overflow-wrap:anywhere}
+.campaign-reference-page .field input,.campaign-reference-page .field select,.campaign-reference-page .field textarea{min-height:45px!important;padding:11px 13px!important;border-radius:10px!important;font-size:13px!important;line-height:1.5!important}
+.campaign-reference-page .field textarea{min-height:100px!important;padding:12px 14px!important}
+.campaign-reference-page .hint{margin-top:2px!important;line-height:1.55!important}
+.campaign-reference-page .objective-grid{gap:8px!important}
+.campaign-reference-page .objective{min-height:40px!important;height:auto!important;padding:9px 11px!important;line-height:1.35!important;white-space:normal!important;overflow-wrap:anywhere}
+.campaign-reference-page .signal-grid,.campaign-reference-page .brand-intelligence-grid{gap:14px!important}
+.campaign-reference-page .signal-box{padding:16px!important;border-radius:13px!important}
+.campaign-reference-page .bottom-actions{gap:10px!important;padding-top:16px!important;margin-top:18px!important}
+.table-wrap{max-width:100%;overflow:auto}
+table{min-width:680px}
+th,td{padding:14px 15px!important;line-height:1.5!important;overflow-wrap:anywhere}
+@media(max-width:1100px){.kol-content{padding:32px 28px 72px!important}.workflow-page{max-width:none!important}.campaign-reference-page .form-grid{gap:14px 16px!important}}
+@media(max-width:900px){.kol-content{padding:26px 22px 64px!important}.kol-top{padding-left:20px!important;padding-right:20px!important}.hero{padding:21px 22px!important}.hero:after{left:22px!important}.card{padding:21px!important}.campaign-reference-page .intake-section{padding:20px 20px!important}.campaign-reference-page .form-grid,.campaign-reference-page .timeline-grid,.campaign-reference-page .brand-profile-grid,.campaign-reference-page .brand-intelligence-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.campaign-reference-page .objective-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:620px){.kol-content .form-grid{gap:14px!important}.kol-content .field input,.kol-content .field select,.kol-content .field textarea{min-height:46px!important;padding:11px 12px!important;font-size:14px!important}.kol-content .field textarea{min-height:110px!important}.kol-content .section-head{margin-bottom:15px!important}.kol-top{padding:0 14px!important}.kol-content{padding:20px 16px 56px!important}.hero{padding:18px 18px 21px!important;margin-bottom:17px!important;border-radius:16px!important}.hero:after{left:18px!important;bottom:9px!important}.hero h2{font-size:26px!important;line-height:1.12!important}.hero p{font-size:12px!important;line-height:1.6!important}.hero-actions{display:grid!important;grid-template-columns:1fr;align-items:stretch}.hero-actions .btn{width:100%;min-height:44px}.grid{gap:13px!important}.card{padding:18px!important;border-radius:15px!important}.campaign-reference-page .campaign-intake{border-radius:16px!important}.campaign-reference-page .intake-section{padding:18px 16px!important}.campaign-reference-page .form-grid,.campaign-reference-page .timeline-grid,.campaign-reference-page .brand-profile-grid,.campaign-reference-page .brand-intelligence-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}.campaign-reference-page .field label{font-size:12px!important}.campaign-reference-page .field input,.campaign-reference-page .field select,.campaign-reference-page .field textarea{min-height:46px!important;padding:11px 12px!important;font-size:14px!important}.campaign-reference-page .field textarea{min-height:112px!important}.campaign-reference-page .objective-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}.campaign-reference-page .objective{min-height:42px!important;padding:9px 10px!important;font-size:11px!important}.campaign-reference-page .section-title{font-size:11px!important;line-height:1.5!important}.campaign-reference-page .bottom-actions{margin-left:-16px!important;margin-right:-16px!important;padding:12px 16px!important;gap:8px!important}.campaign-reference-page .bottom-actions .btn{min-height:43px!important;flex:1 1 135px!important;font-size:12px!important}.table-wrap{margin-left:-2px;margin-right:-2px;border-radius:12px!important}th,td{padding:11px 12px!important}}
+@media(max-width:380px){.kol-content{padding-left:12px!important;padding-right:12px!important}.hero{padding-left:15px!important;padding-right:15px!important}.hero:after{left:15px!important}.card{padding:15px!important}.campaign-reference-page .intake-section{padding:16px 13px!important}.campaign-reference-page .objective-grid{grid-template-columns:1fr!important}.campaign-reference-page .bottom-actions{margin-left:-13px!important;margin-right:-13px!important;padding-left:13px!important;padding-right:13px!important}}
+
 ` ;document.head.appendChild(s)}
 function initials(){const s=S.session?.user?.email||S.org?.name||'KOL';return s.split(/[^A-Za-z0-9]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'K'}
 async function loadContext(){const {data,error}=await sb.rpc('bootstrap_workspace');if(error)throw error;S.org=data.organization;S.membership=data.membership;S.plan=data.plan;S.subscription=data.subscription;S.access=Boolean(data.access_granted);S.accessReason=data.access_reason||null;return data}
