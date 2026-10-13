@@ -40,7 +40,7 @@ SUBSCRIPTION EXPIRY REMINDERS
 
 2026-10-12 Final V4 integrity pass: current-model-only evidence, server-side campaign/performance validation, deduplicated outcome calibration, risk-evidence gating, and no fabricated display defaults. See AUDIT_20261012_EVIDENCE_FIRST.md and RELEASE_NOTES_20261012_LOGIC_INTEGRITY.md.
 
-2026-10-12 Pricing update: 1 month THB 9,500 / 6 months THB 53,500 / 12 months THB 103,000; see RELEASE_NOTES_20261012_PRICING_1M.md and migration supabase/migrations/20261012_replace_3m_with_1m.sql.
+2026-10-13 Pricing update: 1 month THB 9,700 / 6 months THB 54,000 / 12 months THB 103,000; see RELEASE_NOTES_20261013_PRICING_REFRESH.md and migration supabase/migrations/20261013_update_plan_prices_9700_54000_103000.sql.
 
 2026-10-12 Engine coherence V5: primary Goal is now consistent through prediction and performance; lexical F1 fit and missing-evidence gates hardened; unsupported primary goals fail closed; THB commercial comparability enforced; portfolio only uses evidence-complete RECOMMENDED/CONSIDER rows. Details: RELEASE_NOTES_20261012_ENGINE_COHERENCE.md.
 
