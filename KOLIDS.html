@@ -1243,6 +1243,47 @@ boot();
  let saved='en';try{saved=localStorage.getItem('tpop-language')||'en'}catch(e){}setLang(saved);
 })();
 </script>
+
+<style id="KOL_IDS_FORM_TEXT_VISIBILITY_FIX_20261013">
+/* Keep form values readable on the white fields in the signup/payment modal. */
+#kolIdsSignupModal input:not([type="checkbox"]):not([type="radio"]),
+#kolIdsSignupModal select,
+#kolIdsSignupModal textarea,
+#kolIdsSignupModal input[type="date"],
+#kolIdsSignupModal input[type="file"]{
+  color:#171717!important;
+  -webkit-text-fill-color:#171717!important;
+  caret-color:#171717!important;
+  background-color:#fff!important;
+  opacity:1!important;
+  text-shadow:none!important;
+  color-scheme:light;
+}
+#kolIdsSignupModal input::placeholder,
+#kolIdsSignupModal textarea::placeholder{
+  color:#777d82!important;
+  -webkit-text-fill-color:#777d82!important;
+  opacity:1!important;
+}
+#kolIdsSignupModal input:disabled,
+#kolIdsSignupModal select:disabled,
+#kolIdsSignupModal textarea:disabled{
+  color:#555!important;
+  -webkit-text-fill-color:#555!important;
+  opacity:1!important;
+}
+#kolIdsSignupModal input[type="file"]::file-selector-button{
+  color:#171717!important;
+  background:#f3f3f3!important;
+}
+#kolIdsSignupModal input:focus,
+#kolIdsSignupModal select:focus,
+#kolIdsSignupModal textarea:focus{
+  outline:2px solid #AEEFFF!important;
+  outline-offset:1px!important;
+}
+</style>
+
 </body>
 
 <style id="KOL_IDS_REFERENCE_SIZE_ONLY_V2">
