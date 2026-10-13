@@ -667,7 +667,7 @@ function auth(mode='login', notice=''){
         <div class="plan-strip">
           <button type="button" class="plan-card" data-plan="1 Month" aria-label="Open order for 1 month plan">
             <span>1 MONTH · 1 USER</span>
-            <strong>THB 9,700</strong>
+            <strong>THB 9,800</strong>
             <small>Flexible starting point · Focused teams.</small>
             <em>OPEN ORDER →</em>
           </button>
@@ -730,7 +730,7 @@ function auth(mode='login', notice=''){
   function openOrderForm(plan){ openSignupModal(plan || 'PLAN_1M'); }
   function planCode(plan){ if(['TRIAL_7','PLAN_1M','PLAN_6M','PLAN_12M'].includes(plan))return plan; return plan==='1 Month'?'PLAN_1M':plan==='6 Months'?'PLAN_6M':plan==='12 Months'?'PLAN_12M':'TRIAL_7'; }
   function planLabel(code){ return ({TRIAL_7:'7 Day Trial',PLAN_1M:'1 Month',PLAN_6M:'6 Months',PLAN_12M:'12 Months'})[code]||code; }
-  function planPrice(code){ return ({PLAN_1M:'THB 9,700',PLAN_6M:'THB 54,000',PLAN_12M:'THB 103,000'})[code]||''; }
+  function planPrice(code){ return ({PLAN_1M:'THB 9,800',PLAN_6M:'THB 54,000',PLAN_12M:'THB 103,000'})[code]||''; }
   function openSignupModal(plan){
     closeCommercialModal();
     const code=planCode(plan), label=planLabel(code), isTrial=code==='TRIAL_7';
@@ -960,7 +960,7 @@ function auth(mode='login', notice=''){
       </div>
       <div class="commercial-plan-grid commercial-plan-grid-four">
         ${mode==='trial'?`<article class="commercial-plan trial trial-primary"><span>FREE TRIAL</span><h3>7 Day Trial</h3><strong>FREE</strong><p>1 user · organization workspace.</p><small>Supabase Auth account + cloud workspace. No customer access code.</small><button type="button" class="modal-cta trial-cta trial-modal-cta" data-trial="1">Start Free Trial →</button></article>`:''}
-        <article class="commercial-plan"><span>1 MONTH · 1 USER</span><h3>THB 9,700</h3><p>Flexible starting point.</p><small>Start with a clear workspace and a lower commitment.</small><button type="button" class="modal-cta" data-order="1 Month">OPEN ORDER →</button></article>
+        <article class="commercial-plan"><span>1 MONTH · 1 USER</span><h3>THB 9,800</h3><p>Flexible starting point.</p><small>Start with a clear workspace and a lower commitment.</small><button type="button" class="modal-cta" data-order="1 Month">OPEN ORDER →</button></article>
         <article class="commercial-plan"><span>6 MONTHS · 2 USERS</span><h3>THB 54,000</h3><p>More room to collaborate.</p><small>Built for growing teams that want more time to build and optimize.</small><button type="button" class="modal-cta" data-order="6 Months">OPEN ORDER →</button></article>
         <article class="commercial-plan featured"><span>12 MONTHS · 3 USERS</span><h3>THB 103,000</h3><p>Best value.</p><small>Continuous access for teams that want the full year to build, learn and optimize.</small><button type="button" class="modal-cta" data-order="12 Months">OPEN ORDER →</button></article>
       </div>
