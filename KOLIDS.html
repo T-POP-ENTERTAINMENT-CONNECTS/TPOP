@@ -667,20 +667,20 @@ function auth(mode='login', notice=''){
         <div class="plan-strip">
           <button type="button" class="plan-card" data-plan="1 Month" aria-label="Open order for 1 month plan">
             <span>1 MONTH · 1 USER</span>
-            <strong>THB 9,800</strong>
-            <small>Flexible starting point · Focused teams.</small>
+            <strong>1 MONTH PLAN</strong>
+            <small>THB 9,800 · 1 user · Ideal for getting started.</small>
             <em>OPEN ORDER →</em>
           </button>
           <button type="button" class="plan-card" data-plan="6 Months" aria-label="Open order for 6 month plan">
             <span>6 MONTHS · 2 USERS</span>
-            <strong>THB 54,000</strong>
-            <small>More room to collaborate · Growing teams.</small>
+            <strong>6 MONTHS PLAN</strong>
+            <small>THB 54,000 · 2 users · Built for growing teams.</small>
             <em>OPEN ORDER →</em>
           </button>
           <button type="button" class="plan-card featured" data-plan="12 Months" aria-label="Open order for 12 month plan">
             <span>12 MONTHS · 3 USERS</span>
-            <strong>THB 103,000</strong>
-            <small>Best value · Continuous access.</small>
+            <strong>12 MONTHS PLAN</strong>
+            <small>THB 103,000 · 3 users · Continuous access for your team.</small>
             <em>OPEN ORDER →</em>
           </button>
         </div>
@@ -1233,6 +1233,8 @@ boot();
    for(const [from,to] of Object.entries(map)){if(from && out.includes(from))out=out.split(from).join(to);}
    if(n.nodeValue!==out)n.nodeValue=out;
  };
+ const naturalThaiLandingOverrides={"Make the budget exposure around creator decision uncertainty visible.": "ลองดูว่าความไม่แน่นอนในการเลือกครีเอเตอร์ อาจกระทบงบแคมเปญแค่ไหน", "Use your own campaign assumptions": "ลองใส่ตัวเลขแคมเปญของคุณเอง", "Campaign budget (THB)": "งบแคมเปญ (บาท)", "Illustrative uncertainty %": "สมมติว่ามีความไม่แน่นอน (%)", "What the number means": "ตัวเลขนี้หมายถึงอะไร", "Illustrative budget exposure": "งบที่อาจได้รับผลกระทบ (ตัวอย่าง)", "Assumption used": "ค่าที่ใช้คำนวณ", "This is ": "นี่ไม่ใช่", "not business value, ROI, savings, revenue uplift, or a forecast": "มูลค่าทางธุรกิจ, ROI, เงินที่ประหยัดได้, รายได้ที่เพิ่มขึ้น หรือการคาดการณ์", "Flexible starting point · Focused teams.": "เหมาะสำหรับทีมที่อยากเริ่มทดลองใช้", "More room to collaborate · Growing teams.": "ทำงานร่วมกันได้มากขึ้น เหมาะกับทีมที่กำลังเติบโต", "Best value · Continuous access.": "ใช้งานต่อเนื่อง เหมาะกับทีมที่ต้องการวางแผนระยะยาว", "OPEN ORDER →": "เลือกแพ็กเกจนี้ →", "DECISION EXPOSURE ILLUSTRATION": "ตัวอย่างผลกระทบจากความไม่แน่นอนในการตัดสินใจ", "Illustrative only": "ตัวอย่างเพื่อประกอบการตัดสินใจ"};
+ Object.assign(dict,naturalThaiLandingOverrides);
  const scan=root=>{if(root.nodeType===3)translateNode(root);else if(root.querySelectorAll){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())translateNode(n);}};
  const setLang=lang=>{current=lang==='th'?'th':'en';document.documentElement.lang=current==='th'?'th':'en';document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===current)));scan(document.body);try{localStorage.setItem('tpop-language',current)}catch(e){}};
  document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
