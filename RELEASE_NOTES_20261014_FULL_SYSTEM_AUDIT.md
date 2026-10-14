@@ -2,13 +2,13 @@
 
 ## Confirmed issues fixed
 
-- Step 04 displayed enabled creator checkboxes for decision states that server-side approval rejects. Ineligible choices are now disabled and explain what is required.
+- Step 04 displayed enabled creator checkboxes for decision states that server-side approval rejects. Fit evidence gaps still block selection, but `INSUFFICIENT HISTORICAL EVIDENCE` can now be explicitly user-approved for a measured pilot. The backend accepts performance only with a fresh current-model decision tied to the current campaign, audience and creator. This status remains excluded from portfolio optimization and scaling recommendations.
 - The signed payment webhook previously activated subscriptions and updated orders with separate database calls and did not check all write errors. Paid webhooks and email approvals now call service-only SQL functions that lock the order and update the subscription, order and activation event in one transaction. The webhook deduplicates provider events; a rollback leaves the event retryable. Signature comparison is constant-time.
 
 ## Deployment
 
 1. Apply `supabase/migrations/20261014_atomic_payment_webhook.sql`.
-2. Deploy the updated static application files and `supabase/functions/payment-webhook`.
+2. Deploy the updated static application files, `supabase/functions/payment-webhook`, `supabase/functions/payment-approval`, and `supabase/functions/intelligence-engine`.
 3. Keep existing customer orders, subscription history, and the configured payment webhook secret.
 
 ## Audit scope and limits
