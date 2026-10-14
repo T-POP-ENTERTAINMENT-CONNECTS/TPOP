@@ -49,3 +49,11 @@ If a customer previously used or expired a 7-day trial, they can select a paid p
 ## Current engine release: V6 (2026-10-12)
 
 Use [AUDIT_20261012_FULL_PIPELINE.md](AUDIT_20261012_FULL_PIPELINE.md) and [RELEASE_NOTES_20261012_FULL_PIPELINE_V6.md](RELEASE_NOTES_20261012_FULL_PIPELINE_V6.md) for the complete logic audit. Deploy the updated `intelligence-engine` Edge Function and workspace together, then choose each campaign's primary outcome model and rerun analysis.
+
+
+## Signup / package repair (2026-10-13)
+See `RELEASE_NOTES_20261013_SIGNUP_AND_PLAN_REPAIR.md`. Run the final plan catalogue SQL migration and redeploy `client-sign-up` before testing paid signup.
+
+
+## Atomic payment webhook — 2026-10-14
+Apply `supabase/migrations/20261014_atomic_payment_webhook.sql` before deploying the matching `payment-webhook` Edge Function. It makes paid event deduplication, order approval and subscription activation one database transaction, and adds an atomic service RPC for email-based payment approval.

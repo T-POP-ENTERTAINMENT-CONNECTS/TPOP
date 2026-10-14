@@ -873,10 +873,10 @@ function auth(mode='login', notice=''){
           const endpoint=String(C.CLIENT_SIGNUP_URL||'').trim();
           if(!endpoint) throw new Error('Account service is not configured yet.');
           const controller=new AbortController();
-          const timer=setTimeout(()=>controller.abort(),20000);
+          const timer=setTimeout(()=>controller.abort(),60000);
           let r;
           try{
-            r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:controller.signal});
+            r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','apikey':String(C.SUPABASE_ANON_KEY||'')},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:controller.signal});
           }catch(fetchErr){
             if(fetchErr?.name==='AbortError') throw new Error('Account creation timed out. Please try again.');
             throw new Error('Unable to reach the account service. Please check your connection and try again.');
@@ -893,10 +893,10 @@ function auth(mode='login', notice=''){
               session=existingLogin.data?.session||null;
               if(!session?.access_token) throw new Error('Secure sign-in session was not returned. Please try again.');
               const retryController=new AbortController();
-              const retryTimer=setTimeout(()=>retryController.abort(),20000);
+              const retryTimer=setTimeout(()=>retryController.abort(),60000);
               let retryResponse;
               try{
-                retryResponse=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:retryController.signal});
+                retryResponse=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','apikey':String(C.SUPABASE_ANON_KEY||''),'Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:retryController.signal});
               }catch(retryErr){
                 if(retryErr?.name==='AbortError') throw new Error('Existing account upgrade timed out. Please try again.');
                 throw new Error('Unable to continue the existing account upgrade. Please check your connection and try again.');
@@ -1037,7 +1037,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='/app.js?v=20261013-multilingual-v13';
+    script.src='/app.js?v=20261014-decision-approval-eligibility';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);
