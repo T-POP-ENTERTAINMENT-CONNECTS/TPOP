@@ -596,6 +596,8 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style id="kolids-noto-sans-thai-font">:lang(th),[lang="th"],.lang-th,body.thai-language{font-family:"Noto Sans Thai",Inter,ui-sans-serif,system-ui,sans-serif!important}html[lang="th"] body,html[lang="th"] button,html[lang="th"] input,html[lang="th"] textarea,html[lang="th"] select{font-family:"Noto Sans Thai",Inter,ui-sans-serif,system-ui,sans-serif!important}</style>
+
+
 </head>
 <body>
   <div id="app"></div>
@@ -663,22 +665,22 @@ function auth(mode='login', notice=''){
         </div>
         <p class="exposure-note">This is <b>not business value, ROI, savings, revenue uplift, or a forecast</b>. It is a transparent scenario calculation: campaign budget × the user-selected uncertainty assumption.</p>
         <div class="plan-strip">
-          <button type="button" class="plan-card" data-plan="3 Months" aria-label="Open order for 3 month plan">
-            <span>SELECTED PLAN</span>
-            <strong>3 Months</strong>
-            <small>1 user · Flexible starting point · Focused teams.</small>
+          <button type="button" class="plan-card" data-plan="1 Month" aria-label="Open order for 1 month plan">
+            <span>1 MONTH · 1 USER</span>
+            <strong>1 MONTH PLAN</strong>
+            <small>THB 9,800 · 1 user · Ideal for getting started.</small>
             <em>OPEN ORDER →</em>
           </button>
           <button type="button" class="plan-card" data-plan="6 Months" aria-label="Open order for 6 month plan">
-            <span>SELECTED PLAN</span>
-            <strong>6 Months</strong>
-            <small>2 users · More room to collaborate · Growing teams.</small>
+            <span>6 MONTHS · 2 USERS</span>
+            <strong>6 MONTHS PLAN</strong>
+            <small>THB 54,000 · 2 users · Built for growing teams.</small>
             <em>OPEN ORDER →</em>
           </button>
           <button type="button" class="plan-card featured" data-plan="12 Months" aria-label="Open order for 12 month plan">
-            <span>SELECTED PLAN</span>
-            <strong>12 Months</strong>
-            <small>3 users · Best value · Continuous access.</small>
+            <span>12 MONTHS · 3 USERS</span>
+            <strong>12 MONTHS PLAN</strong>
+            <small>THB 103,000 · 3 users · Continuous access for your team.</small>
             <em>OPEN ORDER →</em>
           </button>
         </div>
@@ -725,10 +727,10 @@ function auth(mode='login', notice=''){
   document.getElementById('entry-trial')?.addEventListener('click',()=>openCommercialModal('trial'));
   document.querySelectorAll('.plan-card').forEach(btn=>btn.addEventListener('click',()=>openOrderForm(btn.dataset.plan||'')));
 
-  function openOrderForm(plan){ openSignupModal(plan || 'PLAN_3M'); }
-  function planCode(plan){ return plan==='3 Months'?'PLAN_3M':plan==='6 Months'?'PLAN_6M':plan==='12 Months'?'PLAN_12M':'TRIAL_7'; }
-  function planLabel(code){ return ({TRIAL_7:'7 Day Trial',PLAN_3M:'3 Months',PLAN_6M:'6 Months',PLAN_12M:'12 Months'})[code]||code; }
-  function planPrice(code){ return ({PLAN_3M:'THB 29,900',PLAN_6M:'THB 55,900',PLAN_12M:'THB 105,900'})[code]||''; }
+  function openOrderForm(plan){ openSignupModal(plan || 'PLAN_1M'); }
+  function planCode(plan){ if(['TRIAL_7','PLAN_1M','PLAN_6M','PLAN_12M'].includes(plan))return plan; return plan==='1 Month'?'PLAN_1M':plan==='6 Months'?'PLAN_6M':plan==='12 Months'?'PLAN_12M':'TRIAL_7'; }
+  function planLabel(code){ return ({TRIAL_7:'7 Day Trial',PLAN_1M:'1 Month',PLAN_6M:'6 Months',PLAN_12M:'12 Months'})[code]||code; }
+  function planPrice(code){ return ({PLAN_1M:'THB 9,800',PLAN_6M:'THB 54,000',PLAN_12M:'THB 103,000'})[code]||''; }
   function openSignupModal(plan){
     closeCommercialModal();
     const code=planCode(plan), label=planLabel(code), isTrial=code==='TRIAL_7';
@@ -871,10 +873,10 @@ function auth(mode='login', notice=''){
           const endpoint=String(C.CLIENT_SIGNUP_URL||'').trim();
           if(!endpoint) throw new Error('Account service is not configured yet.');
           const controller=new AbortController();
-          const timer=setTimeout(()=>controller.abort(),20000);
+          const timer=setTimeout(()=>controller.abort(),60000);
           let r;
           try{
-            r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:controller.signal});
+            r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','apikey':String(C.SUPABASE_ANON_KEY||'')},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:controller.signal});
           }catch(fetchErr){
             if(fetchErr?.name==='AbortError') throw new Error('Account creation timed out. Please try again.');
             throw new Error('Unable to reach the account service. Please check your connection and try again.');
@@ -891,10 +893,10 @@ function auth(mode='login', notice=''){
               session=existingLogin.data?.session||null;
               if(!session?.access_token) throw new Error('Secure sign-in session was not returned. Please try again.');
               const retryController=new AbortController();
-              const retryTimer=setTimeout(()=>retryController.abort(),20000);
+              const retryTimer=setTimeout(()=>retryController.abort(),60000);
               let retryResponse;
               try{
-                retryResponse=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:retryController.signal});
+                retryResponse=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','apikey':String(C.SUPABASE_ANON_KEY||''),'Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({email,password,name,organization_name:company,plan:code,billing}),signal:retryController.signal});
               }catch(retryErr){
                 if(retryErr?.name==='AbortError') throw new Error('Existing account upgrade timed out. Please try again.');
                 throw new Error('Unable to continue the existing account upgrade. Please check your connection and try again.');
@@ -958,9 +960,9 @@ function auth(mode='login', notice=''){
       </div>
       <div class="commercial-plan-grid commercial-plan-grid-four">
         ${mode==='trial'?`<article class="commercial-plan trial trial-primary"><span>FREE TRIAL</span><h3>7 Day Trial</h3><strong>FREE</strong><p>1 user · organization workspace.</p><small>Supabase Auth account + cloud workspace. No customer access code.</small><button type="button" class="modal-cta trial-cta trial-modal-cta" data-trial="1">Start Free Trial →</button></article>`:''}
-        <article class="commercial-plan"><span>SELECTED PLAN</span><h3>3 Months</h3><p>1 user · Flexible starting point.</p><small>Focused teams can start with a clear workspace and a lower commitment.</small><button type="button" class="modal-cta" data-order="3 Months">OPEN ORDER →</button></article>
-        <article class="commercial-plan"><span>SELECTED PLAN</span><h3>6 Months</h3><p>2 users · More room to collaborate.</p><small>Built for growing teams that want more time to build and optimize.</small><button type="button" class="modal-cta" data-order="6 Months">OPEN ORDER →</button></article>
-        <article class="commercial-plan featured"><span>SELECTED PLAN</span><h3>12 Months</h3><p>3 users · Best value.</p><small>Continuous access for teams that want the full year to build, learn and optimize.</small><button type="button" class="modal-cta" data-order="12 Months">OPEN ORDER →</button></article>
+        <article class="commercial-plan"><span>1 MONTH · 1 USER</span><h3>THB 9,800</h3><p>Flexible starting point.</p><small>Start with a clear workspace and a lower commitment.</small><button type="button" class="modal-cta" data-order="1 Month">OPEN ORDER →</button></article>
+        <article class="commercial-plan"><span>6 MONTHS · 2 USERS</span><h3>THB 54,000</h3><p>More room to collaborate.</p><small>Built for growing teams that want more time to build and optimize.</small><button type="button" class="modal-cta" data-order="6 Months">OPEN ORDER →</button></article>
+        <article class="commercial-plan featured"><span>12 MONTHS · 3 USERS</span><h3>THB 103,000</h3><p>Best value.</p><small>Continuous access for teams that want the full year to build, learn and optimize.</small><button type="button" class="modal-cta" data-order="12 Months">OPEN ORDER →</button></article>
       </div>
     </div>`;
     document.body.appendChild(m);requestAnimationFrame(()=>m.classList.add('show'));
@@ -1035,7 +1037,7 @@ async function launchWorkspace(){
   if(window.__KOL_IDS_PROCESS_TIMER__)clearInterval(window.__KOL_IDS_PROCESS_TIMER__);
   if(!document.querySelector('script[data-kol-ids-app]')){
     const script=document.createElement('script');
-    script.src='/app.js?v=20261006-investment-decision-v2';
+    script.src='/app.js?v=20261014-decision-approval-eligibility';
     script.async=false;
     script.dataset.kolIdsApp='1';
     document.body.appendChild(script);
@@ -1221,7 +1223,7 @@ boot();
 <div id="tpop-language-switch" aria-label="Language"><button type="button" data-lang="th">ไทย</button><button type="button" data-lang="en">EN</button></div>
 <script>
 (()=>{
- const dict={"Sign in to your intelligence workspace": "เข้าสู่พื้นที่ทำงานอัจฉริยะของคุณ", "Use your KOL IDS account Email + Password. Your organization workspace, plan and user seats are managed securely in the cloud.": "ใช้ Email และ Password ของบัญชี KOL IDS พื้นที่ทำงาน แพ็กเกจ และสิทธิ์ผู้ใช้ขององค์กรจัดการอย่างปลอดภัยบนคลาวด์", "Stop choosing creators by instinct.": "หยุดเลือกครีเอเตอร์ด้วยความรู้สึกเพียงอย่างเดียว", "KOL IDS turns creator selection into an evidence based decision process · combining fit, impact, commercial efficiency, confidence, risk and post campaign learning in one intelligence workspace.": "KOL IDS เปลี่ยนการเลือกครีเอเตอร์ให้เป็นกระบวนการตัดสินใจจากหลักฐาน รวมความเหมาะสม ผลลัพธ์ ประสิทธิภาพเชิงพาณิชย์ ความเชื่อมั่น ความเสี่ยง และการเรียนรู้หลังแคมเปญไว้ในที่เดียว", "WHO should we choose?": "เราควรเลือกใคร?", "Rank creators against the campaign context, not follower count alone.": "จัดอันดับครีเอเตอร์ตามบริบทแคมเปญ ไม่ใช่จำนวนผู้ติดตามอย่างเดียว", "WHY should we choose them?": "ทำไมจึงควรเลือก?", "Expose decision signals, evidence gaps and confidence instead of hiding the reasoning.": "แสดงสัญญาณการตัดสินใจ ช่องว่างของหลักฐาน และระดับความเชื่อมั่นอย่างโปร่งใส", "WHAT did we learn?": "เราเรียนรู้อะไร?", "Compare predicted decisions with actual outcomes and feed the learning loop.": "เปรียบเทียบการคาดการณ์กับผลจริง แล้วนำข้อมูลกลับไปพัฒนาการตัดสินใจ", "DECISION DEMO": "ตัวอย่างการตัดสินใจ", "See the decision logic before using your own campaign data.": "ดูตรรกะการตัดสินใจก่อนใช้ข้อมูลแคมเปญจริง", "Illustrative example": "ตัวอย่างจำลอง", "Show how KOL IDS decides": "ดูวิธีที่ KOL IDS ใช้ตัดสินใจ", "No customer data is used in this demo.": "ตัวอย่างนี้ไม่ใช้ข้อมูลลูกค้า", "Make the budget exposure around creator decision uncertainty visible.": "ทำให้ความเสี่ยงด้านงบประมาณจากความไม่แน่นอนในการเลือกครีเอเตอร์มองเห็นได้", "What the number means": "ตัวเลขนี้หมายถึงอะไร", "Illustrative budget exposure": "งบประมาณที่อาจได้รับผลกระทบ (ตัวอย่าง)", "Assumption used": "สมมติฐานที่ใช้", "This is not business value, ROI, savings, revenue uplift, or a forecast. It is a transparent scenario calculation: campaign budget × the user-selected uncertainty assumption.": "ตัวเลขนี้ไม่ใช่มูลค่าทางธุรกิจ ROI เงินประหยัด รายได้ที่เพิ่มขึ้น หรือการพยากรณ์ แต่เป็นการคำนวณสถานการณ์อย่างโปร่งใส: งบแคมเปญ × สมมติฐานความไม่แน่นอนที่เลือก", "ACCOUNT LOGIN": "เข้าสู่ระบบบัญชี", "Open your organization workspace": "เปิดพื้นที่ทำงานขององค์กร", "Sign in": "เข้าสู่ระบบ", "Show Password": "แสดงรหัสผ่าน", "Organization Workspace": "พื้นที่ทำงานองค์กร", "Owner/Admin can invite members. Available seats are verified from cloud data.": "Owner/Admin สามารถเชิญสมาชิกได้ จำนวนที่นั่งตรวจสอบจากข้อมูลบนคลาวด์", "KOL IDS™ · 7 DAY FREE TRIAL": "KOL IDS™ · ทดลองใช้งานฟรี 7 วัน", "Start Free Trial / Request Access": "เริ่มทดลองใช้ฟรี / ขอสิทธิ์เข้าใช้งาน", "7 days · 1 user seat. Your organization workspace and account are created in the cloud.": "7 วัน · 1 ผู้ใช้ ระบบจะสร้างบัญชีและพื้นที่ทำงานองค์กรบนคลาวด์", "Start Free Trial": "เริ่มทดลองใช้ฟรี", "Create Account": "สร้างบัญชี", "Back": "กลับ", "Show": "แสดง", "Password": "รหัสผ่าน", "Selected Plan": "แพ็กเกจที่เลือก", "BILLING / DOCUMENT REQUEST": "ข้อมูลใบแจ้งหนี้ / เอกสาร", "PAYMENT": "การชำระเงิน", "Complete your payment": "ดำเนินการชำระเงิน", "Your workspace will be activated after we verify your payment.": "พื้นที่ทำงานจะเปิดใช้งานหลังตรวจสอบการชำระเงินแล้ว", "KOL IDS™ · CREATOR DECISION INTELLIGENCE": "KOL IDS™ · ระบบอัจฉริยะเพื่อการตัดสินใจเลือกครีเอเตอร์", "SELECTED PLAN": "แพ็กเกจที่เลือก", "3 Months": "3 เดือน", "6 Months": "6 เดือน", "12 Months": "12 เดือน", "Illustrative only": "ตัวอย่างเพื่ออธิบายเท่านั้น", "FREE TRIAL": "ทดลองใช้ฟรี", "Create Account & Submit Payment": "สร้างบัญชีและส่งข้อมูลการชำระเงิน", "7 Day Trial": "ทดลองใช้ 7 วัน", "No customer access code.": "ไม่ต้องใช้รหัสเข้าใช้งานจากลูกค้า", "Decision logic": "ตรรกะการตัดสินใจ"}; const inverse=Object.fromEntries(Object.entries(dict).map(([en,th])=>[th,en]));
+ const dict={"Sign in to your intelligence workspace": "เข้าสู่พื้นที่ทำงานอัจฉริยะของคุณ", "Use your KOL IDS account Email + Password. Your organization workspace, plan and user seats are managed securely in the cloud.": "ใช้ Email และ Password ของบัญชี KOL IDS พื้นที่ทำงาน แพ็กเกจ และสิทธิ์ผู้ใช้ขององค์กรจัดการอย่างปลอดภัยบนคลาวด์", "Stop choosing creators by instinct.": "หยุดเลือกครีเอเตอร์ด้วยความรู้สึกเพียงอย่างเดียว", "KOL IDS turns creator selection into an evidence based decision process · combining fit, impact, commercial efficiency, confidence, risk and post campaign learning in one intelligence workspace.": "KOL IDS เปลี่ยนการเลือกครีเอเตอร์ให้เป็นกระบวนการตัดสินใจจากหลักฐาน รวมความเหมาะสม ผลลัพธ์ ประสิทธิภาพเชิงพาณิชย์ ความเชื่อมั่น ความเสี่ยง และการเรียนรู้หลังแคมเปญไว้ในที่เดียว", "WHO should we choose?": "เราควรเลือกใคร?", "Rank creators against the campaign context, not follower count alone.": "จัดอันดับครีเอเตอร์ตามบริบทแคมเปญ ไม่ใช่จำนวนผู้ติดตามอย่างเดียว", "WHY should we choose them?": "ทำไมจึงควรเลือก?", "Expose decision signals, evidence gaps and confidence instead of hiding the reasoning.": "แสดงสัญญาณการตัดสินใจ ช่องว่างของหลักฐาน และระดับความเชื่อมั่นอย่างโปร่งใส", "WHAT did we learn?": "เราเรียนรู้อะไร?", "Compare predicted decisions with actual outcomes and feed the learning loop.": "เปรียบเทียบการคาดการณ์กับผลจริง แล้วนำข้อมูลกลับไปพัฒนาการตัดสินใจ", "DECISION DEMO": "ตัวอย่างการตัดสินใจ", "See the decision logic before using your own campaign data.": "ดูตรรกะการตัดสินใจก่อนใช้ข้อมูลแคมเปญจริง", "Illustrative example": "ตัวอย่างจำลอง", "Show how KOL IDS decides": "ดูวิธีที่ KOL IDS ใช้ตัดสินใจ", "No customer data is used in this demo.": "ตัวอย่างนี้ไม่ใช้ข้อมูลลูกค้า", "Make the budget exposure around creator decision uncertainty visible.": "ทำให้ความเสี่ยงด้านงบประมาณจากความไม่แน่นอนในการเลือกครีเอเตอร์มองเห็นได้", "What the number means": "ตัวเลขนี้หมายถึงอะไร", "Illustrative budget exposure": "งบประมาณที่อาจได้รับผลกระทบ (ตัวอย่าง)", "Assumption used": "สมมติฐานที่ใช้", "This is not business value, ROI, savings, revenue uplift, or a forecast. It is a transparent scenario calculation: campaign budget × the user-selected uncertainty assumption.": "ตัวเลขนี้ไม่ใช่มูลค่าทางธุรกิจ ROI เงินประหยัด รายได้ที่เพิ่มขึ้น หรือการพยากรณ์ แต่เป็นการคำนวณสถานการณ์อย่างโปร่งใส: งบแคมเปญ × สมมติฐานความไม่แน่นอนที่เลือก", "ACCOUNT LOGIN": "เข้าสู่ระบบบัญชี", "Open your organization workspace": "เปิดพื้นที่ทำงานขององค์กร", "Sign in": "เข้าสู่ระบบ", "Show Password": "แสดงรหัสผ่าน", "Organization Workspace": "พื้นที่ทำงานองค์กร", "Owner/Admin can invite members. Available seats are verified from cloud data.": "Owner/Admin สามารถเชิญสมาชิกได้ จำนวนที่นั่งตรวจสอบจากข้อมูลบนคลาวด์", "KOL IDS™ · 7 DAY FREE TRIAL": "KOL IDS™ · ทดลองใช้งานฟรี 7 วัน", "Start Free Trial / Request Access": "เริ่มทดลองใช้ฟรี / ขอสิทธิ์เข้าใช้งาน", "7 days · 1 user seat. Your organization workspace and account are created in the cloud.": "7 วัน · 1 ผู้ใช้ ระบบจะสร้างบัญชีและพื้นที่ทำงานองค์กรบนคลาวด์", "Start Free Trial": "เริ่มทดลองใช้ฟรี", "Create Account": "สร้างบัญชี", "Back": "กลับ", "Show": "แสดง", "Password": "รหัสผ่าน", "Selected Plan": "แพ็กเกจที่เลือก", "BILLING / DOCUMENT REQUEST": "ข้อมูลใบแจ้งหนี้ / เอกสาร", "PAYMENT": "การชำระเงิน", "Complete your payment": "ดำเนินการชำระเงิน", "Your workspace will be activated after we verify your payment.": "พื้นที่ทำงานจะเปิดใช้งานหลังตรวจสอบการชำระเงินแล้ว", "KOL IDS™ · CREATOR DECISION INTELLIGENCE": "KOL IDS™ · ระบบอัจฉริยะเพื่อการตัดสินใจเลือกครีเอเตอร์", "SELECTED PLAN": "แพ็กเกจที่เลือก", "1 Month": "1 เดือน", "6 Months": "6 เดือน", "12 Months": "12 เดือน", "Illustrative only": "ตัวอย่างเพื่ออธิบายเท่านั้น", "FREE TRIAL": "ทดลองใช้ฟรี", "Create Account & Submit Payment": "สร้างบัญชีและส่งข้อมูลการชำระเงิน", "7 Day Trial": "ทดลองใช้ 7 วัน", "No customer access code.": "ไม่ต้องใช้รหัสเข้าใช้งานจากลูกค้า", "Decision logic": "ตรรกะการตัดสินใจ"}; const inverse=Object.fromEntries(Object.entries(dict).map(([en,th])=>[th,en]));
  const originals=new WeakMap(); let current='en',busy=false;
  const translateNode=n=>{
    if(!n||n.nodeType!==3||!n.nodeValue.trim())return;
@@ -1231,6 +1233,8 @@ boot();
    for(const [from,to] of Object.entries(map)){if(from && out.includes(from))out=out.split(from).join(to);}
    if(n.nodeValue!==out)n.nodeValue=out;
  };
+ const naturalThaiLandingOverrides={"Make the budget exposure around creator decision uncertainty visible.": "ลองดูว่าความไม่แน่นอนในการเลือกครีเอเตอร์ อาจกระทบงบแคมเปญแค่ไหน", "Use your own campaign assumptions": "ลองใส่ตัวเลขแคมเปญของคุณเอง", "Campaign budget (THB)": "งบแคมเปญ (บาท)", "Illustrative uncertainty %": "สมมติว่ามีความไม่แน่นอน (%)", "What the number means": "ตัวเลขนี้หมายถึงอะไร", "Illustrative budget exposure": "งบที่อาจได้รับผลกระทบ (ตัวอย่าง)", "Assumption used": "ค่าที่ใช้คำนวณ", "This is ": "นี่ไม่ใช่", "not business value, ROI, savings, revenue uplift, or a forecast": "มูลค่าทางธุรกิจ, ROI, เงินที่ประหยัดได้, รายได้ที่เพิ่มขึ้น หรือการคาดการณ์", "Flexible starting point · Focused teams.": "เหมาะสำหรับทีมที่อยากเริ่มทดลองใช้", "More room to collaborate · Growing teams.": "ทำงานร่วมกันได้มากขึ้น เหมาะกับทีมที่กำลังเติบโต", "Best value · Continuous access.": "ใช้งานต่อเนื่อง เหมาะกับทีมที่ต้องการวางแผนระยะยาว", "OPEN ORDER →": "เลือกแพ็กเกจนี้ →", "DECISION EXPOSURE ILLUSTRATION": "ตัวอย่างผลกระทบจากความไม่แน่นอนในการตัดสินใจ", "Illustrative only": "ตัวอย่างเพื่อประกอบการตัดสินใจ"};
+ Object.assign(dict,naturalThaiLandingOverrides);
  const scan=root=>{if(root.nodeType===3)translateNode(root);else if(root.querySelectorAll){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())translateNode(n);}};
  const setLang=lang=>{current=lang==='th'?'th':'en';document.documentElement.lang=current==='th'?'th':'en';document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===current)));scan(document.body);try{localStorage.setItem('tpop-language',current)}catch(e){}};
  document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
@@ -1239,6 +1243,47 @@ boot();
  let saved='en';try{saved=localStorage.getItem('tpop-language')||'en'}catch(e){}setLang(saved);
 })();
 </script>
+
+<style id="KOL_IDS_FORM_TEXT_VISIBILITY_FIX_20261013">
+/* Keep form values readable on the white fields in the signup/payment modal. */
+#kolIdsSignupModal input:not([type="checkbox"]):not([type="radio"]),
+#kolIdsSignupModal select,
+#kolIdsSignupModal textarea,
+#kolIdsSignupModal input[type="date"],
+#kolIdsSignupModal input[type="file"]{
+  color:#171717!important;
+  -webkit-text-fill-color:#171717!important;
+  caret-color:#171717!important;
+  background-color:#fff!important;
+  opacity:1!important;
+  text-shadow:none!important;
+  color-scheme:light;
+}
+#kolIdsSignupModal input::placeholder,
+#kolIdsSignupModal textarea::placeholder{
+  color:#777d82!important;
+  -webkit-text-fill-color:#777d82!important;
+  opacity:1!important;
+}
+#kolIdsSignupModal input:disabled,
+#kolIdsSignupModal select:disabled,
+#kolIdsSignupModal textarea:disabled{
+  color:#555!important;
+  -webkit-text-fill-color:#555!important;
+  opacity:1!important;
+}
+#kolIdsSignupModal input[type="file"]::file-selector-button{
+  color:#171717!important;
+  background:#f3f3f3!important;
+}
+#kolIdsSignupModal input:focus,
+#kolIdsSignupModal select:focus,
+#kolIdsSignupModal textarea:focus{
+  outline:2px solid #AEEFFF!important;
+  outline-offset:1px!important;
+}
+</style>
+
 </body>
 
 <style id="KOL_IDS_REFERENCE_SIZE_ONLY_V2">
@@ -2189,4 +2234,52 @@ button,input,textarea,select{line-height:1.35;vertical-align:middle}
   color:#ffb8c4!important;
   font-weight:700!important;
 }
+</style>
+
+<style id="kolids-premium-interface-refresh">
+:root{--lux-ink:#21161d;--lux-muted:#746a72;--lux-line:#e9e3e8;--lux-panel:#fff;--lux-cyan:#d9f7fc;--lux-cyan-strong:#71d7e9;--lux-maroon:#4a1826;--lux-bg:#f5f7f9;--lux-shadow:0 18px 50px rgba(38,20,30,.075);--lux-shadow-hover:0 22px 55px rgba(38,20,30,.12)}
+html,body{background:radial-gradient(900px 520px at 88% -12%,rgba(113,215,233,.15),transparent 64%),#f5f7f9!important;color:var(--lux-ink)!important}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.app-shell{background:transparent!important}
+.sidebar{background:linear-gradient(180deg,#211820 0%,#171318 100%)!important;border-right:1px solid rgba(255,255,255,.07)!important;color:#f6f1f4!important;box-shadow:12px 0 40px rgba(23,14,19,.08)!important}
+.brandmark strong{color:#fff!important;letter-spacing:-.04em!important}.brandmark span{color:#b7aab2!important}
+.brandmark .brand-dot{background:linear-gradient(145deg,#c9f5fc,#67d4e8)!important;box-shadow:0 0 0 5px rgba(113,215,233,.09),0 8px 20px rgba(61,190,216,.18)!important}
+.nav-item{color:#c5bac1!important;border:1px solid transparent!important;transition:background .18s ease,border-color .18s ease,transform .18s ease!important}
+.nav-item:hover{background:rgba(255,255,255,.07)!important;color:#fff!important;transform:translateX(2px)}
+.nav-item.active{background:linear-gradient(110deg,rgba(113,215,233,.2),rgba(74,24,38,.52))!important;color:#fff!important;border-color:rgba(143,229,242,.32)!important;box-shadow:inset 3px 0 #8de5f2,0 9px 24px rgba(0,0,0,.13)!important}
+.sidebar-foot{border-top-color:rgba(255,255,255,.12)!important;color:#aa9da5!important}.cloud-pill{background:rgba(113,215,233,.12)!important;border-color:rgba(113,215,233,.24)!important;color:#b8f2fb!important}
+.main{background:transparent!important}.topbar{background:rgba(255,255,255,.84)!important;border-bottom:1px solid rgba(74,24,38,.08)!important;backdrop-filter:blur(16px)!important}
+.eyebrow{color:#8b727f!important;letter-spacing:.16em!important}.topbar h1{color:var(--lux-ink)!important;letter-spacing:-.045em!important}.user-email{color:#756a72!important}
+.content{max-width:1540px!important}
+.hero,.workspace-hero{position:relative!important;overflow:hidden!important;border:1px solid rgba(74,24,38,.09)!important;border-radius:24px!important;background:linear-gradient(130deg,#fff 0%,#fbfdfe 52%,#eafaff 100%)!important;box-shadow:var(--lux-shadow)!important}
+.hero:after,.workspace-hero:after{content:"";position:absolute;right:-110px;top:-190px;width:430px;height:430px;border-radius:50%;background:radial-gradient(circle,rgba(113,215,233,.2),rgba(113,215,233,0) 68%);pointer-events:none}
+.hero h2,.hero-copy h2{color:#21161d!important;letter-spacing:-.065em!important}.hero h2 em,.hero-copy h2 em{color:var(--lux-maroon)!important}.hero p,.hero-copy p{color:#756b72!important}
+.section-card,.kpi,.profile-chip,.analysis-card,.decision-card,.report-summary,.modal{border:1px solid rgba(74,24,38,.09)!important;border-radius:17px!important;background:rgba(255,255,255,.96)!important;box-shadow:0 10px 30px rgba(38,20,30,.045)!important;transition:box-shadow .18s ease,border-color .18s ease,transform .18s ease}
+.section-card:hover,.analysis-card:hover,.decision-card:hover{border-color:rgba(74,24,38,.16)!important;box-shadow:0 16px 38px rgba(38,20,30,.08)!important}
+.kpi strong,.stat-grid strong{color:var(--lux-maroon)!important;letter-spacing:-.055em!important}.kpi-accent{background:linear-gradient(135deg,#4a1826,#783849)!important;color:#fff!important}
+.primary,.btn.primary,.hero-actions .primary{background:linear-gradient(135deg,#4a1826,#35121d)!important;border:1px solid #4a1826!important;color:#fff!important;border-radius:11px!important;box-shadow:0 10px 22px rgba(74,24,38,.18)!important;transition:transform .16s ease,box-shadow .16s ease,filter .16s ease!important}
+.primary:hover,.btn.primary:hover,.hero-actions .primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(74,24,38,.24)!important;filter:brightness(1.08)}
+.ghost,.hero-secondary{background:#fff!important;color:#4a1826!important;border:1px solid #e7dfe4!important;border-radius:11px!important}.ghost:hover,.hero-secondary:hover{background:#f7fcfd!important;border-color:#b7e9f1!important}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid rgba(91,199,220,.48)!important;outline-offset:2px!important}
+input,textarea,select{border-color:#ddd6dc!important;border-radius:10px!important;background:#fff!important}input:focus,textarea:focus,select:focus{border-color:#71cddd!important;box-shadow:0 0 0 3px rgba(113,215,233,.16)!important}
+.table-wrap table thead,.decision-table thead{background:#211820!important;color:#e8faff!important}.status,.cloud-pill{border-radius:999px!important}
+.toast{border-radius:12px!important;box-shadow:0 14px 35px rgba(20,12,18,.2)!important}
+.modal{border-radius:20px!important;box-shadow:0 28px 80px rgba(27,14,21,.2)!important}
+@media(max-width:650px){.topbar{background:rgba(255,255,255,.96)!important}.content{padding:14px!important}.hero,.workspace-hero{border-radius:18px!important}.section-card,.kpi,.modal{border-radius:14px!important}.nav-item:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+<style id="kolids-premium-brand-refresh">
+.entry-page{background:radial-gradient(850px 560px at 88% 4%,rgba(75,200,221,.13),transparent 65%),radial-gradient(700px 500px at 0% 50%,rgba(110,38,58,.22),transparent 64%),#111016!important;color:#f8f5f6!important}
+.entry-brand{border-bottom-color:rgba(255,255,255,.1)!important}.entry-brand-mark{background:linear-gradient(145deg,#d8f8fc,#69d5e8)!important;color:#21161d!important;border-radius:12px!important;box-shadow:0 8px 24px rgba(91,207,226,.18)!important}
+.entry-heading h1{background:linear-gradient(105deg,#fff 8%,#f7eaf0 58%,#aeeef7 100%);background-clip:text;-webkit-background-clip:text;color:transparent!important}
+.entry-eyebrow,.sales-kicker,.trial-kicker{color:#9fdfea!important;letter-spacing:.2em!important}
+.sales-panel,.demo-panel,.exposure-panel,.access-panel,.trial-offer{border-radius:20px!important;box-shadow:0 18px 50px rgba(0,0,0,.2)!important}
+.sales-panel{background:linear-gradient(135deg,#211820,#17151b 68%,#1d2930)!important;border-color:rgba(168,231,240,.2)!important}
+.sales-grid{gap:10px!important;background:transparent!important;border:0!important}.sales-grid article{border:1px solid rgba(255,255,255,.1)!important;border-radius:14px!important;background:rgba(255,255,255,.045)!important;transition:transform .18s ease,border-color .18s ease,background .18s ease}.sales-grid article:hover{transform:translateY(-2px);border-color:rgba(141,229,242,.35)!important;background:rgba(141,229,242,.07)!important}
+.demo-panel,.access-panel{background:linear-gradient(145deg,#fff,#f4fbfc)!important;border-color:#dcebee!important}.panel-head h3{color:#21161d!important}.demo-logic{gap:8px!important;background:transparent!important;border:0!important}.demo-logic>div{border:1px solid #e6e1e5!important;border-radius:12px!important;background:#fff!important}.demo-point{background:#e8f9fc!important;border-color:#c4edf3!important;color:#37626a!important;border-radius:9px!important}
+.exposure-panel{background:linear-gradient(145deg,#201820,#17151a)!important;border-color:rgba(141,229,242,.18)!important}.exposure-card,.exposure-metrics>div{border-radius:13px!important;border-color:rgba(255,255,255,.1)!important;background:rgba(255,255,255,.045)!important}
+.plan-strip{gap:10px!important;background:transparent!important;border:0!important}.plan-card{border:1px solid rgba(255,255,255,.12)!important;border-radius:15px!important;background:#1b191f!important;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important}.plan-card:hover{transform:translateY(-3px)!important;border-color:rgba(141,229,242,.35)!important;box-shadow:0 16px 30px rgba(0,0,0,.24)!important}.plan-card.featured,.plan-strip .featured{background:linear-gradient(145deg,#f4fcfd,#e5f8fb)!important;border-color:#9bdeea!important;box-shadow:inset 0 3px #65cde0,0 14px 30px rgba(67,187,209,.12)!important}
+.entry-primary,.demo-btn,.trial-hero-btn{border-radius:11px!important;background:linear-gradient(135deg,#d5f7fb,#8de0ec)!important;border:1px solid #a8e8f0!important;color:#21161d!important;box-shadow:0 10px 26px rgba(81,194,215,.16)!important;transition:transform .16s ease,box-shadow .16s ease!important}.entry-primary:hover,.demo-btn:hover,.trial-hero-btn:hover{transform:translateY(-2px)!important;box-shadow:0 15px 32px rgba(81,194,215,.23)!important}
+.entry-ghost{border-radius:11px!important;border-color:#d3cbd1!important}.commercial-modal-card{border-radius:22px!important;border-color:rgba(141,229,242,.2)!important;background:linear-gradient(145deg,#211820,#17151b)!important}.commercial-plan-grid-four{gap:10px!important;background:transparent!important;border:0!important}.commercial-plan-grid-four .commercial-plan{border:1px solid rgba(255,255,255,.1)!important;border-radius:15px!important;background:#211e25!important}.commercial-plan-grid-four .commercial-plan.featured{background:linear-gradient(145deg,#f4fcfd,#e5f8fb)!important;border-color:#9bdeea!important;box-shadow:inset 0 3px #65cde0!important}
+@media(max-width:760px){.sales-panel,.demo-panel,.exposure-panel,.access-panel,.trial-offer{border-radius:16px!important}.sales-grid{gap:8px!important}.commercial-modal-card{border-radius:17px!important}}
 </style>

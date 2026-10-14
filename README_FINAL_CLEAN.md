@@ -44,3 +44,12 @@ If a customer previously used or expired a 7-day trial, they can select a paid p
 - Opening Step 07 automatically records the selected campaign as `COMPLETE`. If a completed campaign is edited and saved again, it returns to `DRAFT` until the report is reached again.
 - ROI and ROAS UI now shows the calculation formula beside the result for clarity.
 - No database migration is required for this lifecycle change; the existing `campaigns.status` field is used.
+
+
+## Current engine release: V6 (2026-10-12)
+
+Use [AUDIT_20261012_FULL_PIPELINE.md](AUDIT_20261012_FULL_PIPELINE.md) and [RELEASE_NOTES_20261012_FULL_PIPELINE_V6.md](RELEASE_NOTES_20261012_FULL_PIPELINE_V6.md) for the complete logic audit. Deploy the updated `intelligence-engine` Edge Function and workspace together, then choose each campaign's primary outcome model and rerun analysis.
+
+
+## Signup / package repair (2026-10-13)
+See `RELEASE_NOTES_20261013_SIGNUP_AND_PLAN_REPAIR.md`. Run the final plan catalogue SQL migration and redeploy `client-sign-up` before testing paid signup.

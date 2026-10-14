@@ -39,3 +39,7 @@ The repository can be statically audited here, but a live Supabase account with 
 - Performance leaderboard (`Top 3 Performance`) now falls back to the local outcome calculation when `actual_score` has not yet been written to the prediction ledger.
 - Creator decision engine no longer adds an extra 20% historical prediction score outside the configured 100% decision weights.
 - `0` remains a real recorded zero; missing evidence is surfaced separately where the UI can distinguish it.
+
+
+## Pricing superseded on 2026-10-12
+The catalog above records the original 3/6/12-month pricing as of this audit date. The catalog was later updated to 1 month THB 9,800, 6 months THB 54,000, and 12 months THB 103,000. Apply `supabase/migrations/20261013_update_plan_prices_9800_54000_103000.sql`; existing orders retain their recorded amount.
