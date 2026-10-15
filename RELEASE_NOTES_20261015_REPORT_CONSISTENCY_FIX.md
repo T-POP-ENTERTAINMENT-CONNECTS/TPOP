@@ -29,3 +29,4 @@ Runtime behaviour still needs confirmation on the deployed site.
    (revenue 186,441 / spend 50,000 / ROAS 3.73x / chart total / commission 17,193 / offline 53,100 / orders check). Run: node tests/golden.test.js
 
 Known, intentionally not changed: outcome-score caps (business calibration), earlier duplicate function definitions that are overridden by later ones (dead code, removal needs a browser regression pass), Full premium PDF section, verified-data connectors, incrementality.
+- Step 05 evidence table Score column now shows the derived outcome score (same as Step 07).
