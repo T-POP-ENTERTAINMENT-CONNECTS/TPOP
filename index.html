@@ -789,6 +789,7 @@
  const originals=new WeakMap(); let current='en',busy=false;
  const translateNode=n=>{
    if(!n||n.nodeType!==3||!n.nodeValue.trim())return;
+   if(n.parentElement&&n.parentElement.closest('.seo-brand-copy, #products .product .hero-copy'))return;
    if(!originals.has(n)) originals.set(n,n.nodeValue);
    const raw=originals.get(n); let out=raw;
    const map=current==='th'?dict:inverse;
@@ -796,7 +797,21 @@
    if(n.nodeValue!==out)n.nodeValue=out;
  };
  const scan=root=>{if(root.nodeType===3)translateNode(root);else if(root.querySelectorAll){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())translateNode(n);}};
- const setLang=lang=>{current=lang==='th'?'th':'en';document.documentElement.lang=current==='th'?'th':'en';document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===current)));scan(document.body);try{localStorage.setItem('tpop-language',current)}catch(e){}};
+ const setLang=lang=>{
+   current=lang==='th'?'th':'en';
+   document.documentElement.lang=current==='th'?'th':'en';
+   document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===current)));
+   scan(document.body);
+   const brandCopy=document.querySelector('.seo-brand-copy');
+   if(brandCopy) brandCopy.innerHTML=current==='th'
+     ? 'ที ป็อป เอนเตอร์เทนเมนท์ คอนเนคส์ หรือที่รู้จักในชื่อ T POP ENTERTAINMENT CONNECTS เป็นแพลตฟอร์มที่เชื่อมโยงวงการบันเทิง ธุรกิจ และโอกาสด้านความคิดสร้างสรรค์เข้าด้วยกัน <strong style="color:#f5f5f2">KOL IDS™</strong> คือผลิตภัณฑ์ด้านระบบวิเคราะห์ข้อมูลเชิงลึกเพื่อการตัดสินใจเลือกครีเอเตอร์ (Creator Decision Intelligence) สำหรับการคัดเลือก KOL การวิเคราะห์แคมเปญ และการตัดสินใจบนพื้นฐานของข้อมูลและหลักฐานที่ตรวจสอบได้'
+     : 'T POP Entertainment Connects · also known as T POP ENTERTAINMENT CONNECTS · connects entertainment, business and creative opportunities. <strong style="color:#f5f5f2">KOL IDS™</strong> is the creator decision intelligence product for KOL selection, campaign analysis and evidence-based decisions.';
+   const productCopy=document.querySelector('#products .product .hero-copy');
+   if(productCopy) productCopy.textContent=current==='th'
+     ? 'พื้นที่ทำงานอัจฉริยะด้านข้อมูลครีเอเตอร์ ที่ออกแบบมาเพื่อเปลี่ยนข้อมูล KOL ให้เป็นการตัดสินใจด้านแคมเปญที่ชัดเจนยิ่งขึ้น ช่วยให้คัดเลือกครีเอเตอร์ได้อย่างเหมาะสม และเพิ่มประสิทธิภาพในการดำเนินงานเชิงพาณิชย์'
+     : 'A creator intelligence workspace designed to turn KOL data into clearer campaign decisions, creator selection and commercial efficiency.';
+   try{localStorage.setItem('tpop-language',current)}catch(e){}
+ };
  document.querySelectorAll('#tpop-language-switch button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
  const obs=new MutationObserver(ms=>{if(busy)return;busy=true;for(const m of ms){if(m.type==='childList')m.addedNodes.forEach(scan);else if(m.type==='characterData')translateNode(m.target)}busy=false;});
  obs.observe(document.body,{subtree:true,childList:true,characterData:true});
