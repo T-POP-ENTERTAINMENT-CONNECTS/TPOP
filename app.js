@@ -1749,41 +1749,37 @@ function reportSvgBarChart(items, opts={}){
 }
 
 function reportSvgLineChart(items, opts={}){
- const width=opts.width||760,height=opts.height||420,pad={l:104,r:104,t:104,b:72};
- if(!items.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- const aVals=items.map(x=>Number(x.a)).filter(Number.isFinite),bVals=items.map(x=>Number(x.b)).filter(Number.isFinite);
- if(!aVals.length&&!bVals.length)return `<div class="report-chart-empty">Not enough evidence to visualize</div>`;
- const maxA=Math.max(...aVals,1),maxB=Math.max(...bVals,1),innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
- const xAt=i=>pad.l+(items.length===1?innerW/2:i*innerW/(Math.max(1,items.length-1)));
- const yA=v=>pad.t+innerH-(Number(v)/maxA)*innerH,yB=v=>pad.t+innerH-(Number(v)/maxB)*innerH;
- const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1000000)return `฿${(n/1000000).toFixed(1)}M`;if(Math.abs(n)>=1000)return `฿${Math.round(n/1000)}K`;return `฿${Math.round(n).toLocaleString()}`};
- const path=(key,fn,cls)=>{let pts=[];const out=[];items.forEach((x,i)=>{const v=Number(x[key]);if(Number.isFinite(v))pts.push(`${xAt(i).toFixed(1)},${fn(v).toFixed(1)}`);else if(pts.length){out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);pts=[];}});if(pts.length)out.push(`<polyline fill="none" class="${cls}" points="${pts.join(' ')}"/>`);return out.join('')};
- const pointLabels=(key,fn,cls)=>items.map((x,i)=>{
-  const v=Number(x[key]);if(!Number.isFinite(v))return '';
-  const px=xAt(i),py=fn(v),atLeft=i===0,atRight=i===items.length-1;
-  // Dense timelines keep every point and line, but label alternate dates (plus the final date).
-  // This prevents adjacent currency values from becoming an unreadable block.
-  const dense=items.length>5;
-  const showLabel=!dense || i%2===0 || i===items.length-1;
-  let tx=px,anchor='middle';
-  // Increase horizontal separation between adjacent value labels to avoid overlap.
-  const labelGap=items.length>4?22:14;
-  if(atLeft){tx=px+labelGap;anchor='start'}else if(atRight){tx=px-labelGap;anchor='end'}
-  let y=py+(key==='a'?-20:26);
-  if(Number.isFinite(Number(x.a))&&Number.isFinite(Number(x.b))&&Math.abs(yA(Number(x.a))-yB(Number(x.b)))<42){
-    y=py+(key==='a'?-38:44);
-  }
-  if(y<pad.t+12)y=Math.min(pad.t+innerH-8,py+28);
-  if(y>pad.t+innerH-4)y=Math.max(pad.t+14,py-28);
-  // For dense data, nudge visible labels outward from alternating points.
-  if(dense && i>0 && i<items.length-1){tx=px+(i%2===0?labelGap:-labelGap);anchor=i%2===0?'start':'end';}
-  if(items.length===1){tx=px+(key==='a'?-12:12);anchor=key==='a'?'end':'start';}
-  return `<circle cx="${px}" cy="${py}" r="4" class="${cls}"/>${showLabel?`<text x="${tx}" y="${y}" text-anchor="${anchor}" class="rchart-point-value ${cls}-text">${esc(moneyAxis(v))}</text>`:''}`;
+ const width=opts.width||760,height=opts.height||420,pad={l:82,r:28,t:76,b:66};
+ const valid=(items||[]).map(x=>({...x,a:x.a==null?null:Number(x.a),b:x.b==null?null:Number(x.b)}))
+   .filter(x=>(x.a!=null&&Number.isFinite(x.a))||(x.b!=null&&Number.isFinite(x.b)));
+ if(!valid.length)return `<div class="report-chart-empty">Not enough revenue or spend evidence to visualize</div>`;
+ const values=valid.flatMap(x=>[x.a,x.b]).filter(v=>v!=null&&Number.isFinite(v));
+ const max=Math.max(...values,1),min=0,innerW=width-pad.l-pad.r,innerH=height-pad.t-pad.b;
+ const xAt=i=>pad.l+(valid.length===1?innerW/2:i*innerW/Math.max(1,valid.length-1));
+ const yAt=v=>pad.t+innerH-(v-min)/(max-min)*innerH;
+ const moneyAxis=v=>{const n=Number(v)||0;if(Math.abs(n)>=1e6)return `฿${(n/1e6).toFixed(1)}M`;if(Math.abs(n)>=1e3)return `฿${(n/1e3).toFixed(n>=100000?0:1)}K`;return `฿${Math.round(n).toLocaleString()}`};
+ const grid=Array.from({length:5},(_,i)=>{const v=max*(1-i/4),y=pad.t+innerH*i/4;return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-12}" y="${y+4}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(v))}</text>`}).join('');
+ const series=[{key:'a',line:'rchart-line-a',dot:'rchart-dot-a',label:'Revenue'},{key:'b',line:'rchart-line-b',dot:'rchart-dot-b',label:'Spend'}];
+ const plots=series.map(ser=>{
+   const pts=valid.map((x,i)=>x[ser.key]==null?null:{x:xAt(i),y:yAt(x[ser.key]),v:x[ser.key],i}).filter(Boolean);
+   const path=pts.length>1?`<polyline fill="none" class="${ser.line}" points="${pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}"/>`:'';
+   const marks=pts.map(p=>{
+     const last=p.i===valid.length-1;
+     const single=valid.length===1;
+     const showValue=last||single;
+     const labelY=Math.max(pad.t+12,Math.min(height-pad.b-8,p.y+(ser.key==='a'?-13:19)));
+     return `<circle cx="${p.x}" cy="${p.y}" r="4.5" class="${ser.dot}"/>${showValue?`<text x="${p.x}" y="${labelY}" text-anchor="middle" class="rchart-point-value ${ser.dot}-text">${esc(moneyAxis(p.v))}</text>`:''}`;
+   }).join('');
+   return path+marks;
  }).join('');
- const grid=Array.from({length:5},(_,i)=>{const frac=i/4,y=pad.t+innerH*frac;const av=maxA*(1-frac),bv=maxB*(1-frac);return `<line x1="${pad.l}" y1="${y}" x2="${width-pad.r}" y2="${y}" class="rchart-gridline"/><text x="${pad.l-14}" y="${y+5}" text-anchor="end" class="rchart-axis">${esc(moneyAxis(av))}</text><text x="${width-pad.r+14}" y="${y+5}" class="rchart-axis">${esc(moneyAxis(bv))}</text>`}).join('');
- const labels=items.map((x,i)=>`<text x="${xAt(i)}" y="${height-24}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`).join('');
- const legendX=(width-240)/2;
- return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}"><g transform="translate(${legendX},24)"><circle cx="5" cy="0" r="4.5" class="rchart-dot-a"/><text x="16" y="4" class="rchart-legend">Revenue</text><circle cx="112" cy="0" r="4.5" class="rchart-dot-b"/><text x="123" y="4" class="rchart-legend">Spend</text></g><text x="${pad.l}" y="57" class="rchart-axis">Revenue · THB</text><text x="${width-pad.r}" y="57" text-anchor="end" class="rchart-axis">Spend · THB</text>${grid}${path('a',yA,'rchart-line-a')}${path('b',yB,'rchart-line-b')}${pointLabels('a',yA,'rchart-dot-a')}${pointLabels('b',yB,'rchart-dot-b')}${labels}</svg>`;
+ const labels=valid.map((x,i)=>{
+   // Keep date labels legible on long timelines while preserving the first and last period.
+   const step=Math.max(1,Math.ceil(valid.length/7));
+   if(valid.length>7&&i!==0&&i!==valid.length-1&&i%step!==0)return '';
+   return `<text x="${xAt(i)}" y="${height-24}" text-anchor="middle" class="rchart-label rchart-date-label">${esc(String(x.label||''))}</text>`;
+ }).join('');
+ const legendX=(width-220)/2;
+ return `<svg class="report-chart-svg report-chart-trend" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(opts.aria||'Revenue and spend over observed dates')}"><g transform="translate(${legendX},24)"><circle cx="5" cy="0" r="4.5" class="rchart-dot-a"/><text x="16" y="4" class="rchart-legend">Revenue</text><circle cx="112" cy="0" r="4.5" class="rchart-dot-b"/><text x="123" y="4" class="rchart-legend">Spend</text></g>${grid}${plots}${labels}</svg>`;
 }
 
 function reportSvgRevenueContribution(items, opts={}){
@@ -1838,7 +1834,7 @@ function buildReportVisuals(snap){
    else if(x.metadata?.gmv!=null)q.a=(q.a||0)+(Number(x.metadata.gmv)||0);
    if(x.spend_thb!=null)q.b=(q.b||0)+(Number(x.spend_thb)||0);
  });
- const trend=Object.values(dated).sort((a,b)=>a.date.localeCompare(b.date)).slice(-10);
+ const trend=Object.values(dated).sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);
  const mix=[{label:'Digital',value:digital.length},{label:'E-commerce',value:ecommerce.length},{label:'Event / Offline',value:offline.length}].filter(x=>x.value>0);
  return {bars,revBars,trend,mix};
 }
