@@ -41,6 +41,34 @@ const aggregateCampaignMetrics=(rows)=>{
  const digital=list.filter(x=>type(x)==='DIGITAL'),ecommerce=list.filter(x=>type(x)==='ECOMMERCE'),offline=list.filter(x=>type(x)==='OFFLINE');
  return {revenue:sumOrNull(perCreatorRevenue),spend:sumOrNull(perCreatorSpend),conversions:sumOrNull(perCreatorConversions),reach:sumKnown(digital,'reach'),views:sumKnown(digital,'views'),clicks:sumKnown(digital,'clicks'),impressions:sumKnown(digital,'impressions'),digitalConversions:sumKnown(digital,'conversions'),engagement:sumKnown(digital,'engagement'),attendance:sumMetaKnown(offline,'attendance'),leads:sumMetaKnown(offline,'qualifiedLeads'),digital,ecommerce,offline};
 };
+
+function calculatedPerformanceOutcomeScore(o){
+ if(!o||String(o.status||'COMPLETED').toUpperCase()!=='COMPLETED')return null;
+ const meta=o.metadata||{},type=String(meta.channelType||o.performance_type||'DIGITAL').toUpperCase(),goal=String(o.goal||S.selectedCampaign?.payload?.objective||'AWARENESS').toUpperCase();
+ const nval=v=>v===null||v===undefined||v===''||!Number.isFinite(Number(v))?null:Number(v);
+ const norm=(v,cap)=>v==null?null:Math.max(0,Math.min(100,v/cap*100));
+ const weighted=parts=>{const valid=parts.filter(([v])=>v!==null);const w=valid.reduce((a,x)=>a+x[1],0);return w?Math.max(0,Math.min(100,valid.reduce((a,x)=>a+x[0]*x[1],0)/w)):null};
+ const spend=nval(o.spend_thb),rev=nval(o.revenue_thb),clicks=nval(o.clicks),conv=nval(o.conversions),eng=nval(o.engagement)??((nval(o.likes)||0)+(nval(o.comments)||0)+(nval(o.shares)||0));
+ if(type==='ECOMMERCE'){
+  const gmv=nval(meta.gmv)??rev,net=nval(meta.netSales)??rev,orders=nval(meta.paidOrders)??conv,newCustomers=nval(meta.newCustomers),roas=spend>0&&net!=null?net/spend:null,cvr=clicks>0&&orders!=null?orders/clicks*100:null,take=gmv>0&&net!=null?net/gmv*100:null;
+  if(/SALES|CONVERSION|REVENUE/.test(goal))return weighted([[norm(roas,6),.4],[norm(net,500000),.25],[norm(cvr,8),.15],[norm(newCustomers,300),.1],[norm(orders,500),.1]]);
+  if(/ENGAGEMENT|CONSIDERATION/.test(goal))return weighted([[norm(orders,500),.3],[norm(net,500000),.25],[norm(cvr,8),.2],[norm(take,100),.1],[norm(gmv,600000),.15]]);
+  return weighted([[norm(gmv,600000),.3],[norm(net,500000),.3],[norm(orders,500),.2],[norm(newCustomers,300),.1],[norm(take,100),.1]]);
+ }
+ if(type==='OFFLINE'){
+  const capacity=nval(meta.capacity),att=nval(meta.attendance),leads=nval(meta.qualifiedLeads),scans=nval(meta.qrScans),demos=nval(meta.demos),leadRate=att>0&&leads!=null?leads/att*100:null,convRate=att>0&&conv!=null?conv/att*100:null,scanRate=att>0&&scans!=null?scans/att*100:null,demoRate=att>0&&demos!=null?demos/att*100:null,roas=spend>0&&rev!=null?rev/spend:null,attRate=capacity>0&&att!=null?att/capacity*100:null;
+  if(/CONVERSION|SALES/.test(goal))return weighted([[norm(roas,6),.4],[norm(convRate,10),.2],[norm(leadRate,25),.15],[norm(rev,500000),.15],[norm(demoRate,15),.1]]);
+  if(/ENGAGEMENT|COMMUNITY/.test(goal))return weighted([[norm(leadRate,20),.3],[norm(demoRate,15),.25],[norm(scanRate,30),.2],[norm(attRate,100),.25]]);
+  return weighted([[norm(attRate,100),.3],[norm(leads,500),.25],[norm(demos,300),.15],[norm(scans,500),.15],[norm(rev,500000),.15]]);
+ }
+ const imp=nval(o.impressions),views=nval(o.views),reach=nval(o.reach),er=imp>0&&eng!=null?eng/imp*100:null,ctr=imp>0&&clicks!=null?clicks/imp*100:null,cvr=clicks>0&&conv!=null?conv/clicks*100:null,roas=spend>0&&rev!=null?rev/spend:null;
+ if(/CONVERSION|SALES/.test(goal))return weighted([[norm(roas,6),.4],[norm(cvr,8),.25],[norm(ctr,5),.15],[norm(rev,500000),.2]]);
+ if(goal.includes('ENGAGEMENT'))return weighted([[norm(er,8),.65],[norm(views,2000000),.15],[norm(eng,100000),.2]]);
+ if(goal.includes('CONSIDERATION'))return weighted([[norm(ctr,5),.4],[norm(er,8),.35],[norm(cvr,8),.25]]);
+ if(goal.includes('LAUNCH'))return weighted([[norm(reach,2000000),.45],[norm(views,2000000),.25],[norm(er,8),.2],[norm(ctr,5),.1]]);
+ return weighted([[norm(reach,2000000),.55],[norm(views,2000000),.2],[norm(er,8),.25]]);
+}
+
 const statusLabel=x=>x?.actual_score!=null?'Completed':'Pending';
 const scoreState=x=>x?.actual_score!=null?`${Math.round(Number(x.actual_score))}/100`:'Pending';
 const avgOutcomeScore=(rows)=>{const vals=(rows||[]).map(x=>x?.actual_score!=null?Number(x.actual_score):null).filter(Number.isFinite);return vals.length?clamp(vals.reduce((s,v)=>s+v,0)/vals.length):null;};
@@ -1711,7 +1739,7 @@ function downloadReportCSV(){exportGateOr(()=>{
 })}
 function reportLiveSnapshot(){
  const p=S.selectedCampaign?.payload||{};
- const perf=S.performance.filter(x=>x.campaign_id===S.selectedCampaign?.id);
+ const perf=S.performance.filter(x=>x.campaign_id===S.selectedCampaign?.id).map(x=>({...x,actual_score:x.actual_score!=null?Number(x.actual_score):calculatedPerformanceOutcomeScore(x)}));
  const digital=perf.filter(x=>String(x.metadata?.channelType||'').toUpperCase()==='DIGITAL');
  const ecommerce=perf.filter(x=>String(x.metadata?.channelType||'').toUpperCase()==='ECOMMERCE');
  const offline=perf.filter(x=>String(x.metadata?.channelType||'').toUpperCase()==='OFFLINE');
