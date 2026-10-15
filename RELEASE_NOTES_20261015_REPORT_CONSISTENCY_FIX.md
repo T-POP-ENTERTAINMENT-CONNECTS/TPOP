@@ -20,3 +20,12 @@ Scope: calculation logic in app.js only. No layout, styles, auth, billing or dat
 
 Validation: node --check app.js passed; buildReportVisuals tested on the 12 sample records (chart total 186,441; trend 186,441 / 50,000).
 Runtime behaviour still needs confirmation on the deployed site.
+
+6. Single source of truth for money logic (app.js, "Central money logic" block):
+   channelTypeOf, groupByCreator, creatorRevenueBasis (net sales > GMV > digital > offline, with per-record contrib), creatorSpendOnce.
+   aggregateCampaignMetrics, buildReportVisuals (bars, revenue chart, trend) and buildImpactTransparency now all use them, so the three can no longer drift apart.
+7. Transparency data (impactTransparencyModel) feeds three outputs from one model: on-screen card (Step 06/07), Impact CSV rows ("Transparency · ...") and Impact PDF section.
+8. tests/golden.test.js (outside the deployed folder): 9 regression tests on the 12 sample records
+   (revenue 186,441 / spend 50,000 / ROAS 3.73x / chart total / commission 17,193 / offline 53,100 / orders check). Run: node tests/golden.test.js
+
+Known, intentionally not changed: outcome-score caps (business calibration), earlier duplicate function definitions that are overridden by later ones (dead code, removal needs a browser regression pass), Full premium PDF section, verified-data connectors, incrementality.

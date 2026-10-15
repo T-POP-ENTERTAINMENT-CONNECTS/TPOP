@@ -23,6 +23,22 @@ const hasNumeric=(rows,key)=>Array.isArray(rows)&&rows.some(x=>hasValue(x?.[key]
 const metricOrNot=(value,hasData=hasValue(value))=>hasData?money(value):'Not recorded';
 const sumKnown=(rows,key)=>{const vals=(rows||[]).map(x=>num(x?.[key])).filter(v=>v!=null);return vals.length?vals.reduce((a,b)=>a+b,0):null};
 const sumMetaKnown=(rows,key)=>{const vals=(rows||[]).map(x=>num(x?.metadata?.[key])).filter(v=>v!=null);return vals.length?vals.reduce((a,b)=>a+b,0):null};
+
+/* ===== Central money logic: every page, chart, CSV and PDF must use these ===== */
+const channelTypeOf=x=>String(x?.metadata?.channelType||x?.performance_type||'').toUpperCase();
+const groupByCreator=rows=>{const m=new Map();(Array.isArray(rows)?rows:[]).forEach(x=>{const id=String(x?.creator_id??x?.creatorId??x?.id??'unknown');(m.get(id)||m.set(id,[]).get(id)).push(x)});return m};
+/* One revenue basis per creator so the same sales are never counted twice across Digital + E-commerce + Offline records.
+   Priority: e-commerce net sales > GMV > digital revenue > offline revenue. contrib(x) = what record x adds to the chosen basis. */
+const creatorRevenueBasis=rs=>{
+ const list=Array.isArray(rs)?rs:[],ec=list.filter(x=>channelTypeOf(x)==='ECOMMERCE'),of=list.filter(x=>channelTypeOf(x)==='OFFLINE'),dg=list.filter(x=>{const t=channelTypeOf(x);return t==='DIGITAL'||t===''});
+ const net=sumMetaKnown(ec,'netSales'),gmv=sumMetaKnown(ec,'gmv'),dgRev=sumKnown(dg,'revenue_thb'),ofRev=sumKnown(of,'revenue_thb');
+ const basis=net!=null?'ECOMMERCE_NET':gmv!=null?'ECOMMERCE_GMV':dgRev!=null?'DIGITAL':ofRev!=null?'OFFLINE':null;
+ const value=basis==='ECOMMERCE_NET'?net:basis==='ECOMMERCE_GMV'?gmv:basis==='DIGITAL'?dgRev:basis==='OFFLINE'?ofRev:null;
+ const contrib=x=>{const t=channelTypeOf(x);if(basis==='ECOMMERCE_NET'&&t==='ECOMMERCE')return num(x?.metadata?.netSales);if(basis==='ECOMMERCE_GMV'&&t==='ECOMMERCE')return num(x?.metadata?.gmv);if(basis==='DIGITAL'&&(t==='DIGITAL'||t===''))return num(x?.revenue_thb);if(basis==='OFFLINE'&&t==='OFFLINE')return num(x?.revenue_thb);return null};
+ return {basis,value,offlineExtra:(ofRev!=null&&basis!=='OFFLINE')?ofRev:0,contrib};
+};
+/* Identical spend repeated on a creator's channel records is one shared creator fee; distinct amounts add up. */
+const creatorSpendOnce=rs=>{const sp=[...new Set((Array.isArray(rs)?rs:[]).map(x=>num(x?.spend_thb)).filter(v=>v!=null))];return sp.length?sp.reduce((a,b)=>a+b,0):null};
 // Canonical campaign aggregation: keep channel-specific evidence separate and avoid counting the same creator-level commercial value repeatedly across Digital, E-commerce and Offline records.
 const aggregateCampaignMetrics=(rows)=>{
  const list=Array.isArray(rows)?rows:[],type=x=>String(x?.metadata?.channelType||'').toUpperCase(),group=new Map();
@@ -30,10 +46,9 @@ const aggregateCampaignMetrics=(rows)=>{
  const perCreatorRevenue=[],perCreatorSpend=[],perCreatorConversions=[];
  for(const cr of group.values()){
   const ec=cr.filter(x=>type(x)==='ECOMMERCE'),dg=cr.filter(x=>type(x)==='DIGITAL'),of=cr.filter(x=>type(x)==='OFFLINE');
-  const net=sumMetaKnown(ec,'netSales'),gmv=sumMetaKnown(ec,'gmv'),digitalRevenue=sumKnown(dg,'revenue_thb'),offlineRevenue=sumKnown(of,'revenue_thb');
-  const rv=net!=null?net:gmv!=null?gmv:digitalRevenue!=null?digitalRevenue:offlineRevenue; if(rv!=null)perCreatorRevenue.push(rv);
+  const rv=creatorRevenueBasis(cr).value; if(rv!=null)perCreatorRevenue.push(rv);
   // Identical spend values repeated on a creator's channel records are treated as one shared creator fee; distinct amounts remain additive.
-  const spends=[...new Set(cr.map(x=>num(x?.spend_thb)).filter(v=>v!=null))];if(spends.length)perCreatorSpend.push(spends.reduce((a,b)=>a+b,0));
+  const spd=creatorSpendOnce(cr);if(spd!=null)perCreatorSpend.push(spd);
   const paid=sumMetaKnown(ec,'paidOrders'),ecConv=sumKnown(ec,'conversions'),dgConv=sumKnown(dg,'conversions'),ofConv=sumKnown(of,'conversions');
   const cv=paid!=null?paid:ecConv!=null?ecConv:dgConv!=null?dgConv:ofConv;if(cv!=null)perCreatorConversions.push(cv);
  }
@@ -1858,91 +1873,86 @@ function reportSvgDonut(parts, opts={}){
 /* Revenue / ROI transparency: shows the headline next to the alternative definitions (offline revenue, commission) and reconciles Orders vs Paid orders. */
 function buildImpactTransparency(rows){
  const list=Array.isArray(rows)?rows:[];
- const tp=x=>String(x?.metadata?.channelType||x?.performance_type||'').toUpperCase();
- const by=new Map();list.forEach(x=>{const id=String(x?.creator_id??'unknown');(by.get(id)||by.set(id,[]).get(id)).push(x)});
- let headline=0,hasHeadline=false,offlineExtra=0,spend=0,hasSpend=false,commission=0,commEstimated=false,commRecorded=false,commNoRate=false;
- const nameOf=id=>S.creators.find(c=>String(c.id)===String(id))?.name||'Creator';
- const orderIssues=[];let ordersSum=0,ordersN=0,paidSum=0,paidN=0,ecN=0;
- by.forEach((rs,id)=>{
-  const ec=rs.filter(x=>tp(x)==='ECOMMERCE'),dg=rs.filter(x=>tp(x)==='DIGITAL'),of=rs.filter(x=>tp(x)==='OFFLINE');
-  const net=sumMetaKnown(ec,'netSales'),gmv=sumMetaKnown(ec,'gmv'),dgRev=sumKnown(dg,'revenue_thb'),ofRev=sumKnown(of,'revenue_thb');
-  const rv=net!=null?net:gmv!=null?gmv:dgRev!=null?dgRev:ofRev;
-  if(rv!=null){headline+=rv;hasHeadline=true}
-  const offlineIsHeadline=net==null&&gmv==null&&dgRev==null&&ofRev!=null;
-  if(ofRev!=null&&!offlineIsHeadline)offlineExtra+=ofRev;
-  const sp=[...new Set(rs.map(x=>num(x?.spend_thb)).filter(v=>v!=null))];if(sp.length){spend+=sp.reduce((a,b)=>a+b,0);hasSpend=true}
-  ec.forEach(x=>{
+ let headline=0,hasHeadline=false,offlineExtra=0,spend=0,hasSpend=false,commission=0,commEstimated=false,commRecorded=false,commNoRate=false,ecN=0,ordersSum=0,ordersN=0,paidSum=0,paidN=0;
+ const issues=[],nameOf=id=>S.creators.find(c=>String(c.id)===String(id))?.name||'Creator';
+ groupByCreator(list).forEach(rs=>{
+  const rb=creatorRevenueBasis(rs);
+  if(rb.value!=null){headline+=rb.value;hasHeadline=true}
+  offlineExtra+=rb.offlineExtra;
+  const sp=creatorSpendOnce(rs);if(sp!=null){spend+=sp;hasSpend=true}
+  rs.filter(x=>channelTypeOf(x)==='ECOMMERCE').forEach(x=>{
    const m=x.metadata||{};ecN++;
    const base=num(m.netSales)??num(m.gmv)??num(x.revenue_thb);
-   let amt=num(m.commissionAmount);
+   const amt=num(m.commissionAmount);
    if(amt!=null){commission+=amt;commRecorded=true}
-   else{let rate=num(m.commissionRate),src='rec';if(rate==null){rate=num(campaignGenCodeForCreator(x.creator_id)?.commissionRate);src='gen'}
+   else{const rate=num(m.commissionRate)??num(campaignGenCodeForCreator(x.creator_id)?.commissionRate);
     if(rate!=null&&base!=null){commission+=base*rate/100;commEstimated=true}else if(base!=null)commNoRate=true}
    const o=num(m.orders),p=num(m.paidOrders)??num(x.conversions);
    if(o!=null){ordersSum+=o;ordersN++}if(p!=null){paidSum+=p;paidN++}
-   if(o!=null&&p!=null&&p>o)orderIssues.push(`${nameOf(x.creator_id)}: orders ${money(o)} < paid orders ${money(p)}`);
-   else if(o==null&&p!=null)orderIssues.push(`${nameOf(x.creator_id)}: orders not recorded (paid orders ${money(p)})`);
+   if(o!=null&&p!=null&&p>o)issues.push(`${nameOf(x.creator_id)}: orders ${money(o)} < paid orders ${money(p)}`);
+   else if(o==null&&p!=null)issues.push(`${nameOf(x.creator_id)}: orders not recorded (paid orders ${money(p)})`);
   });
  });
- return {hasHeadline,headline,offlineExtra,spend,hasSpend,commission,commEstimated,commRecorded,commNoRate,orders:{ordersSum,ordersN,paidSum,paidN,ecN,issues:orderIssues}};
+ return {hasHeadline,headline,offlineExtra,spend,hasSpend,commission,commEstimated,commRecorded,commNoRate,orders:{ordersSum,ordersN,paidSum,paidN,ecN,issues}};
 }
-function impactTransparencyHtml(rows){
+function impactTransparencyModel(rows){
  const t=buildImpactTransparency(rows);
- if(!t.hasHeadline||!t.hasSpend||!(t.spend>0))return '';
- const f=n=>money(n),x2=n=>Number(n).toFixed(2)+'x',pct=n=>Math.round(n)+'%';
- const sg=(n,u)=>(n>=0?'+':'−')+Math.abs(n).toFixed(2)+u,sp=n=>(Math.round(n)>=0?'+':'−')+Math.abs(Math.round(n))+' pts';
+ if(!t.hasHeadline||!t.hasSpend||!(t.spend>0))return null;
  const calc=(rev,cost)=>({rev,cost,roas:rev/cost,roi:(rev-cost)/cost*100});
- const cur=calc(t.headline,t.spend);
- const cell=(c,extra)=>`<b>ROAS ${x2(c.roas)} · ROI ${pct(c.roi)}</b><div class="hint">Revenue ${f(c.rev)} ÷ Cost ${f(c.cost)}${extra?' '+esc(extra):''}</div>`;
- const items=[];
+ const cur=calc(t.headline,t.spend),f=n=>money(n),items=[];
  if(t.commission>0)items.push({name:'Commission',inc:calc(t.headline,t.spend+t.commission),extra:`(Spend + ${f(t.commission)} commission)`,why:`Commission (${t.commRecorded&&!t.commEstimated?'recorded':t.commRecorded?'recorded + estimated':'estimated from rate × net sales'}) is a real cost of these sales but is not in Spend. Ignore this row if Spend already includes it.`});
  if(t.offlineExtra>0)items.push({name:'Offline / event revenue',inc:calc(t.headline+t.offlineExtra,t.spend),extra:`(Revenue + ${f(t.offlineExtra)} event sales)`,why:'Event sales are not in the headline revenue. Count them if Spend already includes the event cost, so revenue and cost match.'});
  if(t.commission>0&&t.offlineExtra>0)items.push({name:'Both together',inc:calc(t.headline+t.offlineExtra,t.spend+t.commission),extra:'',why:'The most complete view: all revenue against all cost.'});
- const body=items.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${cell(cur,'')}</td><td>${cell(r.inc,r.extra)}</td><td><b>ROAS ${sg(r.inc.roas-cur.roas,'x')}</b><div class="hint">ROI ${sp(r.inc.roi-cur.roi)}</div></td><td class="hint">${r.why}</td></tr>`).join('');
+ items.forEach(r=>{r.dRoas=r.inc.roas-cur.roas;r.dRoi=r.inc.roi-cur.roi});
  const notes=['Headline = e-commerce net sales ÷ creator Spend. Online sales are counted once, even if also logged as Digital.'];
  if(!items.length)notes.push(t.commNoRate?'No commission rate or amount is recorded, and no offline revenue is recorded, so nothing else can be added.':'No offline revenue or commission is recorded, so the headline is the only view.');
- const o=t.orders;let ordersHtml='';
- if(o.ecN){const diff=o.paidSum-o.ordersSum,part=o.ordersN<o.ecN||o.paidN<o.ecN,bad=o.issues.length>0||diff>0;
-  ordersHtml=`<div class="signal-box" style="margin-top:12px"><h4>Orders vs Paid orders</h4><p><b>Orders ${o.ordersN?f(o.ordersSum):'not recorded'}</b>${part?` <span class="hint">(${o.ordersN} of ${o.ecN} records)</span>`:''} · <b>Paid orders ${o.paidN?f(o.paidSum):'not recorded'}</b>${part?` <span class="hint">(${o.paidN} of ${o.ecN} records)</span>`:''}${o.ordersN&&o.paidN?` · <b>Difference ${diff>=0?'+':'−'}${f(Math.abs(diff))}</b>`:''}</p><p class="hint">${bad?'Paid orders cannot exceed Orders, and totals only compare when every record has both. '+(o.issues.length?'Fix: '+esc(o.issues.join('; '))+'. ':'Check the e-commerce records. ')+'Conversions use Paid orders.':'Orders and Paid orders reconcile. Conversions use Paid orders.'}</p></div>`}
- const table=items.length?`<div class="table-wrap"><table><thead><tr><th>Item</th><th>Not included (current headline)</th><th>If included</th><th>Difference</th><th>What it means</th></tr></thead><tbody>${body}</tbody></table></div>`:'';
- return `<section class="card" data-kol-transparency="1" style="margin-top:14px"><div class="section-head"><div><div class="label">REVENUE · ROI TRANSPARENCY</div><h2>Not included vs. if included</h2><p class="sub">The headline above is unchanged. Each row shows what ROAS/ROI becomes if that item were counted, and the difference.</p></div></div>${table}<div style="margin-top:10px">${notes.map(n=>`<p class="sub">• ${n}</p>`).join('')}</div>${ordersHtml}</section>`;
+ const o=t.orders;let orders=null;
+ if(o.ecN){const diff=o.paidSum-o.ordersSum,part=o.ordersN<o.ecN||o.paidN<o.ecN;orders={...o,diff,part,bad:o.issues.length>0||diff>0}}
+ return {t,cur,items,notes,orders};
 }
+function impactTransparencyRows(rows){
+ const m=impactTransparencyModel(rows);if(!m)return [];
+ const x2=n=>Number(n).toFixed(2)+'x',pct=n=>Math.round(n)+'%',sg=n=>(n>=0?'+':'−')+Math.abs(n).toFixed(2)+'x',sp=n=>(Math.round(n)>=0?'+':'−')+Math.abs(Math.round(n))+' pts',txt=c=>`ROAS ${x2(c.roas)} · ROI ${pct(c.roi)} (Revenue ${money(c.rev)} / Cost ${money(c.cost)})`;
+ const out=m.items.map(r=>[r.name,txt(m.cur),txt(r.inc),`ROAS ${sg(r.dRoas)} · ROI ${sp(r.dRoi)}`,r.why]);
+ if(m.orders){const o=m.orders;out.push(['Orders vs Paid orders',`Orders ${o.ordersN?money(o.ordersSum):'not recorded'}${o.part?` (${o.ordersN} of ${o.ecN} records)`:''}`,`Paid orders ${o.paidN?money(o.paidSum):'not recorded'}${o.part?` (${o.paidN} of ${o.ecN} records)`:''}`,o.ordersN&&o.paidN?`Difference ${o.diff>=0?'+':'−'}${money(Math.abs(o.diff))}`:'n/a',o.bad?'Paid orders cannot exceed Orders. '+(o.issues.length?'Fix: '+o.issues.join('; ')+'. ':'')+'Conversions use Paid orders.':'Orders and Paid orders reconcile. Conversions use Paid orders.'])}
+ return out;
+}
+function impactTransparencyHtml(rows){
+ const m=impactTransparencyModel(rows);if(!m)return '';
+ const f=n=>money(n),x2=n=>Number(n).toFixed(2)+'x',pct=n=>Math.round(n)+'%',sg=(n,u)=>(n>=0?'+':'−')+Math.abs(n).toFixed(2)+u,sp=n=>(Math.round(n)>=0?'+':'−')+Math.abs(Math.round(n))+' pts';
+ const cell=(c,extra)=>`<b>ROAS ${x2(c.roas)} · ROI ${pct(c.roi)}</b><div class="hint">Revenue ${f(c.rev)} ÷ Cost ${f(c.cost)}${extra?' '+esc(extra):''}</div>`;
+ const body=m.items.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${cell(m.cur,'')}</td><td>${cell(r.inc,r.extra)}</td><td><b>ROAS ${sg(r.dRoas,'x')}</b><div class="hint">ROI ${sp(r.dRoi)}</div></td><td class="hint">${esc(r.why)}</td></tr>`).join('');
+ const table=m.items.length?`<div class="table-wrap"><table><thead><tr><th>Item</th><th>Not included (current headline)</th><th>If included</th><th>Difference</th><th>What it means</th></tr></thead><tbody>${body}</tbody></table></div>`:'';
+ let ordersHtml='';
+ if(m.orders){const o=m.orders;ordersHtml=`<div class="signal-box" style="margin-top:12px"><h4>Orders vs Paid orders</h4><p><b>Orders ${o.ordersN?f(o.ordersSum):'not recorded'}</b>${o.part?` <span class="hint">(${o.ordersN} of ${o.ecN} records)</span>`:''} · <b>Paid orders ${o.paidN?f(o.paidSum):'not recorded'}</b>${o.part?` <span class="hint">(${o.paidN} of ${o.ecN} records)</span>`:''}${o.ordersN&&o.paidN?` · <b>Difference ${o.diff>=0?'+':'−'}${f(Math.abs(o.diff))}</b>`:''}</p><p class="hint">${o.bad?'Paid orders cannot exceed Orders, and totals only compare when every record has both. '+(o.issues.length?'Fix: '+esc(o.issues.join('; '))+'. ':'Check the e-commerce records. ')+'Conversions use Paid orders.':'Orders and Paid orders reconcile. Conversions use Paid orders.'}</p></div>`}
+ return `<section class="card" data-kol-transparency="1" style="margin-top:14px"><div class="section-head"><div><div class="label">REVENUE · ROI TRANSPARENCY</div><h2>Not included vs. if included</h2><p class="sub">The headline above is unchanged. Each row shows what ROAS/ROI becomes if that item were counted, and the difference.</p></div></div>${table}<div style="margin-top:10px">${m.notes.map(n=>`<p class="sub">• ${esc(n)}</p>`).join('')}</div>${ordersHtml}</section>`;
+}
+
 function buildReportVisuals(snap){
  const {perf,impact,digital,ecommerce,offline}=snap;
  const creatorName=id=>S.creators.find(x=>String(x.id)===String(id))?.name||'Creator';
  const byCreator={};
  perf.forEach(x=>{
    const id=String(x.creator_id||'unknown');
-   const o=byCreator[id]||(byCreator[id]={name:creatorName(x.creator_id),revenue:0,score:[],records:0});
-   o.records++;
-   {const t=String(x?.metadata?.channelType||x?.performance_type||'').toUpperCase(),k=(v)=>{const n=Number(v);return v!=null&&v!==''&&Number.isFinite(n)?n:null},add=(f,v)=>{if(v!=null)o[f]=(o[f]==null?0:o[f])+v};
-     if(t==='ECOMMERCE'){add('rvNet',k(x.metadata?.netSales));add('rvGmv',k(x.metadata?.gmv));}
-     else if(t==='OFFLINE')add('rvOff',k(x.revenue_thb));
-     else add('rvDig',k(x.revenue_thb));}
+   const o=byCreator[id]||(byCreator[id]={name:creatorName(x.creator_id),rows:[],score:[]});
+   o.rows.push(x);
    if(x.actual_score!=null&&Number.isFinite(Number(x.actual_score)))o.score.push(Number(x.actual_score));
  });
  const creators=Object.values(byCreator);
- // One revenue basis per creator (net sales > GMV > digital > offline) so the same sales are never counted across Digital + E-commerce + Offline records.
- creators.forEach(x=>{x.revBasis=x.rvNet!=null?'ECOMMERCE_NET':x.rvGmv!=null?'ECOMMERCE_GMV':x.rvDig!=null?'DIGITAL':x.rvOff!=null?'OFFLINE':null;x.revenue=x.rvNet??x.rvGmv??x.rvDig??x.rvOff??0;});
+ creators.forEach(o=>{o.rb=creatorRevenueBasis(o.rows);o.revenue=o.rb.value??0});
  const bars=creators.filter(x=>x.score.length).map(x=>({label:x.name,value:x.score.reduce((a,b)=>a+b,0)/x.score.length})).sort((a,b)=>b.value-a.value).slice(0,8);
  const revBars=creators.filter(x=>x.revenue>0).map(x=>({label:x.name,value:x.revenue})).sort((a,b)=>b.value-a.value).slice(0,8);
- const dated={};
+ const dated=new Map(),spendSeen=new Set();
  perf.forEach(x=>{
    if(!x.observed_at)return;
-   const date=String(x.observed_at).slice(0,10);
-   const q=dated[date]||(dated[date]={date,label:date.slice(5),a:null,b:null});
-   {const cr=byCreator[String(x.creator_id||'unknown')]||{},t=String(x?.metadata?.channelType||x?.performance_type||'').toUpperCase(),kn=v=>{const n=Number(v);return v!=null&&v!==''&&Number.isFinite(n)?n:null};
-     let rv=null;
-     if(cr.revBasis==='ECOMMERCE_NET'&&t==='ECOMMERCE')rv=kn(x.metadata?.netSales);
-     else if(cr.revBasis==='ECOMMERCE_GMV'&&t==='ECOMMERCE')rv=kn(x.metadata?.gmv);
-     else if(cr.revBasis==='DIGITAL'&&t!=='ECOMMERCE'&&t!=='OFFLINE')rv=kn(x.revenue_thb);
-     else if(cr.revBasis==='OFFLINE'&&t==='OFFLINE')rv=kn(x.revenue_thb);
-     if(rv!=null)q.a=(q.a||0)+rv;
-     const sp=kn(x.spend_thb),sk=String(x.creator_id||'unknown')+'|'+date+'|'+sp;
-     dated.__spendSeen=dated.__spendSeen||new Set();
-     if(sp!=null&&!dated.__spendSeen.has(sk)){dated.__spendSeen.add(sk);q.b=(q.b||0)+sp;}}
+   const date=String(x.observed_at).slice(0,10),cid=String(x.creator_id||'unknown');
+   const q=dated.get(date)||dated.set(date,{date,label:date.slice(5),a:null,b:null}).get(date);
+   const rv=byCreator[cid]?.rb.contrib(x);
+   if(rv!=null)q.a=(q.a||0)+rv;
+   const sp=num(x.spend_thb),sk=cid+'|'+date+'|'+sp;
+   if(sp!=null&&!spendSeen.has(sk)){spendSeen.add(sk);q.b=(q.b||0)+sp}
  });
- const trend=Object.entries(dated).filter(([k])=>k!=='__spendSeen').map(([,v])=>v).sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);
+ const trend=[...dated.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);
  const mix=[{label:'Digital',value:digital.length},{label:'E-commerce',value:ecommerce.length},{label:'Event / Offline',value:offline.length}].filter(x=>x.value>0);
  return {bars,revBars,trend,mix};
 }
@@ -4554,6 +4564,7 @@ function downloadImpactPDF(){
    ['Attendance',i.attendance==null?'Not recorded':pdfFmt(i.attendance),'Observed event attendance'],
    ['Qualified leads',i.leads==null?'Not recorded':pdfFmt(i.leads),'Observed lead volume']
   ],[42,48,90]);
+  {const tr=impactTransparencyRows(snap.perf);if(tr.length){pdfSection(doc,ctx,'Revenue · ROI transparency','Not included vs. if included');pdfRows(doc,ctx,['Item','Not included (current)','If included','Difference'],tr.map(r=>[r[0],r[1],r[2],r[3]]),[34,52,52,42]);tr.forEach(r=>pdfNarrative(doc,ctx,r[0],r[4]))}}
   pdfSection(doc,ctx,'Learning & next action','03 · reusable operating intelligence');
   pdfNarrative(doc,ctx,'What worked',l.worked||'No learning recorded yet.');
   pdfNarrative(doc,ctx,'Friction',l.friction||'No friction recorded yet.');
@@ -4638,7 +4649,7 @@ function downloadImpactCSV(){exportGateOr(()=>{
  const {snap}=reportContext(),i=snap.impact||{},d=reportDecisionSignal(snap);
  const headers=['Campaign','Campaign ID','Metric','Value','Unit','Evidence Status','Decision Interpretation'];
  const pairs=[['Impact score',i.score,'score','Observed outcome score'],['Revenue',i.revenue,'THB',i.hasRevenue?'AVAILABLE':'MISSING',i.hasRevenue?'Observed commercial output':'Do not infer commercial return'],['Spend',i.spend,'THB',i.hasSpend?'AVAILABLE':'MISSING',i.hasSpend?'Observed investment base':'Unit economics incomplete'],['ROAS',i.roas,'x',i.roas!=null?'CALCULABLE':'MISSING REVENUE OR SPEND',i.roas!=null?'Observed efficiency':'Requires revenue + spend'],['ROI',i.roi,'%',i.roi!=null?'CALCULABLE':'MISSING REVENUE OR SPEND',i.roi!=null?'Observed return':'Requires revenue + spend'],['Conversions',i.conversions,'count',i.hasConversionEvidence?'AVAILABLE':'MISSING',i.hasConversionEvidence?'Observed conversion outcome':'Do not overstate sales impact'],['Reach',i.reach,'count','AVAILABLE','Observed reach'],['Views',i.views,'count','AVAILABLE','Observed views'],['Clicks',i.clicks,'count',i.hasClickEvidence?'AVAILABLE':'MISSING',i.hasClickEvidence?'Observed traffic response':'CTR / CVR may be unavailable'],['Engagement',i.engagement,'count','AVAILABLE','Observed engagement'],['Event attendance',i.attendance,'count',i.attendance!=null?'AVAILABLE':'MISSING',i.attendance!=null?'Observed attendance':'No event evidence'],['Event leads',i.leads,'count',i.leads!=null?'AVAILABLE':'MISSING',i.leads!=null?'Observed qualified leads':'No event lead evidence'],['CTR',i.ctr,'%',i.ctr!=null?'CALCULABLE':'MISSING','Traffic efficiency'],['Engagement rate',i.engagementRate,'%',i.engagementRate!=null?'CALCULABLE':'MISSING','Audience response'],['Conversion rate',i.conversionRate,'%',i.conversionRate!=null?'CALCULABLE':'MISSING','Conversion efficiency']];
- downloadEnterpriseCSV(`KOL-IDS_Business-Impact_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,pairs.map(x=>[S.selectedCampaign?.name,S.selectedCampaign?.id,...x]),'Business impact');toast(`Impact CSV saved · ${d.action}`,'good')
+ downloadEnterpriseCSV(`KOL-IDS_Business-Impact_${csvSafeName(S.selectedCampaign?.name)}_${csvDateStamp()}.csv`,headers,pairs.concat(impactTransparencyRows(snap.perf).map(r=>['Transparency · '+r[0],r[1],'text','COMPARISON','If included: '+r[2]+' | Difference: '+r[3]+' | '+r[4]])).map(x=>[S.selectedCampaign?.name,S.selectedCampaign?.id,...x]),'Business impact');toast(`Impact CSV saved · ${d.action}`,'good')
 })}
 
 
