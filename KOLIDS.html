@@ -919,8 +919,11 @@ function auth(mode='login', notice=''){
           }
         }
         if(isTrial){
-          set('Account created. Trial activated. Opening your workspace…','good');
-          await boot();
+          set('Account created. Trial activated. Redirecting to login…','good');
+          // Trial signups must land on the login screen instead of entering the workspace automatically.
+          try{await sb.auth.signOut()}catch(_){ }
+          m.remove();
+          auth('login','Your 7-day Trial is active. Please sign in with the email and password you just created.');
           return;
         }
         const proofFile=payment?.file||null;
